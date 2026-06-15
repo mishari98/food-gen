@@ -58,16 +58,17 @@
 
 ### 2.1 MVP (Phase 1)
 
-| Feature | Description |
-|---------|-------------|
-| **Generate Today's Meals** | One tap to see meals for the current day |
-| **Generate Weekly Plan** | Generate a full 7-day meal plan (Mon–Sun) |
-| **Configurable Meals Per Day** | Choose **1**, **2**, or **3** meals per day (see section 2.3 below) |
-| **View Meal Details** | Tap any meal card to see ingredients, prep time, difficulty, and step-by-step instructions |
-| **Add Custom Meal** | User can manually add their own meal if it's not in the default list (see section 2.5) |
-| **Local Data Store** | All meals, recipes, and generated plans persisted on-device using **expo-sqlite** |
-| **Random & Balanced Generation** | Algorithm ensures variety across the week — no repeated meals within the same plan |
-| **Per-Day Customisation** | Random-generate the whole week/today, then customise individual days |
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Generate Today's Meals** | One tap to see meals for the current day | ✅ Implemented |
+| **Generate Weekly Plan** | Generate a full 7-day meal plan (Mon–Sun) | ✅ Implemented |
+| **Configurable Meals Per Day** | Choose **1**, **2**, or **3** meals per day (see section 2.3 below) | ✅ Implemented |
+| **View Meal Details** | Tap any meal card to see ingredients, prep time, difficulty, and step-by-step instructions | ✅ Implemented |
+| **Add Custom Meal** | User can manually add their own meal if it's not in the default list (see section 2.5) | ✅ Implemented |
+| **Local Data Store** | All meals, recipes, and generated plans persisted on-device using **expo-sqlite** | ✅ Implemented |
+| **Random & Balanced Generation** | Algorithm ensures variety across the week — no repeated meals within the same plan | ✅ Implemented |
+| **Per-Day Customisation** | Random-generate the whole week/today, then customise individual days | ✅ Implemented |
+| **Meal Plan Saving/Loading** | Save a generated week plan and load it later | ✅ Implemented |
 
 ### 2.2 Meals Per Day Configuration
 
@@ -106,8 +107,8 @@
 Users can manually add their own meals to the local database if a desired dish is not included in the default seed list.
 
 **Access points:**
-- **"+" button** in the top navigation bar (visible on Today and Week screens)
-- **"Add Custom Meal" option** at the bottom of the meal category list in Settings
+- **"+" button** in the top navigation bar (visible on Today and Week screens) — ✅ Implemented
+- **"Add Custom Meal" option** at the bottom of the meal category list in Settings — ❌ Not yet implemented
 
 **Add Meal Form fields:**
 
@@ -137,10 +138,10 @@ Users can manually add their own meals to the local database if a desired dish i
 ```
 
 **Distinction from seed meals:**
-- Custom meals have `is_custom = 1` flag in the database
-- Custom meals are displayed with a "👤 You" badge on meal cards
-- Custom meals can be edited or deleted by the user
-- Seed meals are read-only (cannot be edited or deleted)
+- Custom meals have `is_custom = 1` flag in the database ✅ Implemented
+- Custom meals are displayed with a "👤 You" badge on meal cards ✅ Implemented
+- Custom meals can be edited or deleted by the user ❌ Not yet implemented (backend functions exist, UI pending)
+- Seed meals are read-only (cannot be edited or deleted) ✅ Implemented
 
 ### 2.6 Future Phases (Post-MVP)
 
@@ -598,7 +599,7 @@ App Launch → Check AsyncStorage flag "seed_data_loaded"
 - Suggested for shown as pill tags
 - Difficulty color-coded: Easy=green, Medium=orange, Hard=red
 
-### 7.6 Add Custom Meal Screen (Final — To Be Implemented)
+### 7.6 Add Custom Meal Screen (Final — ✅ Implemented)
 
 ```
 ┌──────────────────────────────────────────┐
@@ -660,7 +661,7 @@ App Launch → Check AsyncStorage flag "seed_data_loaded"
 └──────────────────────────────────────────┘
 ```
 
-### 7.7 Settings Screen (Final — To Be Implemented)
+### 7.7 Settings Screen (Final — ✅ Implemented)
 
 ```
 ┌──────────────────────────────────────────┐
@@ -695,21 +696,21 @@ App Launch → Check AsyncStorage flag "seed_data_loaded"
 └──────────────────────────────────────────┘
 ```
 
-### 7.8 Key UX Principles (Final)
+### 7.8 Key UX Principles (Final — Implementation Status)
 
-- **Zero-config**: Open app → see today's meals immediately (auto-generated on first launch).
-- **One-tap generation**: Generate week with a single prominent orange button.
-- **Pull to refresh**: Swipe down to regenerate today's meals.
-- **Label toggle**: Settings + quick toggle to show/hide Breakfast/Lunch/Dinner headers.
-- **Week info**: Displays current week number + date range (e.g., "Week 25 - Jun 15–21").
-- **Collapsible days**: Week days start collapsed; tap to expand and see meals.
-- **Per-day regeneration**: Each day has its own ↻ button to regenerate just that day.
-- **Confirmation dialogs**: "Generate New Week" and "Regenerate Day" show confirmations before replacing.
-- **Meal Detail**: Bottom sheet modal with ingredients, steps, optional photo, optional YouTube link.
-- **Custom meal badge**: User-added meals show "👤 You" badge in purple.
-- **Haptic feedback**: `Haptics.impactAsync()` on generation actions.
-- **Dark mode support**: Uses `useColorScheme()` from React Native.
-- **Accessibility**: Proper `aria-label` / `accessible` props on all interactive elements.
+- ✅ **Zero-config**: Open app → see today's meals immediately (auto-generated on first launch).
+- ✅ **One-tap generation**: Generate week with a single prominent orange button.
+- ✅ **Pull to refresh**: Swipe down to regenerate today's meals.
+- ✅ **Label toggle**: Settings + quick toggle to show/hide Breakfast/Lunch/Dinner headers.
+- ✅ **Week info**: Displays current week number + date range (e.g., "Week 25 - Jun 15–21").
+- ✅ **Collapsible days**: Week days start collapsed; tap to expand and see meals.
+- ✅ **Per-day regeneration**: Each day has its own ↻ button to regenerate just that day.
+- ✅ **Confirmation dialogs**: "Generate New Week" and "Regenerate Day" show confirmations before replacing.
+- ✅ **Meal Detail**: Bottom sheet modal with ingredients, steps, optional photo, optional YouTube link.
+- ✅ **Custom meal badge**: User-added meals show "👤 You" badge in purple.
+- ❌ **Haptic feedback**: `Haptics.impactAsync()` on generation actions — `expo-haptics` installed but not yet wired up.
+- ❌ **Dark mode support**: Uses `useColorScheme()` from React Native — not yet implemented.
+- ❌ **Accessibility**: Proper `aria-label` / `accessible` props on all interactive elements — not yet implemented.
 
 ---
 
