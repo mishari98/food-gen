@@ -3,62 +3,108 @@
 ## Table of Contents
 
 1. [Overview](#1-overview)
-2. [Prerequisites](#2-prerequisites)
-3. [Option A: Expo Go (Development/Testing)](#3-option-a-expo-go-developmenttesting)
-4. [Option B: EAS Build — Development Build (Recommended)](#4-option-b-eas-build--development-build-recommended)
-5. [Option C: EAS Build — Preview Build (Testing)](#5-option-c-eas-build--preview-build-testing)
-6. [Option D: EAS Build — Ad Hoc Distribution (Personal Use)](#6-option-d-eas-build--ad-hoc-distribution-personal-use)
-7. [Step-by-Step: EAS Build Setup](#7-step-by-step-eas-build-setup)
-8. [Installing the Built App on iPhone](#8-installing-the-built-app-on-iphone)
-9. [Troubleshooting](#9-troubleshooting)
-10. [Cost Summary](#10-cost-summary)
-11. [Comparison Table](#11-comparison-table)
+2. [Important: iOS Limitations](#2-important-ios-limitations)
+3. [Free Alternatives](#3-free-alternatives)
+4. [Option A: Expo Go (Development/Testing)](#4-option-a-expo-go-developmenttesting)
+5. [Option B: Expo Web (Web App - Free)](#5-option-b-expo-web-web-app---free)
+6. [Option C: Android APK (Free)](#6-option-c-android-apk-free)
+7. [Paid Option: EAS Build (iOS Real App)](#7-paid-option-eas-build-ios-real-app)
+8. [Step-by-Step: EAS Build Setup](#8-step-by-step-eas-build-setup)
+9. [Installing the Built App on iPhone](#9-installing-the-built-app-on-iphone)
+10. [Troubleshooting](#10-troubleshooting)
+11. [Cost Summary](#11-cost-summary)
+12. [Comparison Table](#12-comparison-table)
 
 ---
 
 ## 1. Overview
 
-This guide explains how to install **FoodGen** on your iPhone **without publishing to the Apple App Store**. There are several approaches, each with different trade-offs:
+This guide explains how to install **FoodGen** on your iPhone **without publishing to the Apple App Store**.
 
-| Approach | Apple Developer Account? | Mac Required? | Real App on iPhone? | Best For |
-|----------|--------------------------|---------------|---------------------|----------|
-| **Expo Go** | ❌ No | ❌ No | ❌ No (dev environment) | Development & testing |
-| **EAS Development Build** | ✅ Yes ($99/year) | ❌ No | ✅ Yes | Daily development |
-| **EAS Preview Build** | ✅ Yes ($99/year) | ❌ No | ✅ Yes | Testing & sharing |
-| **EAS Ad Hoc Distribution** | ✅ Yes ($99/year) | ❌ No | ✅ Yes | Personal use (no App Store) |
+### Critical iOS Limitation
 
-**Recommended approach for personal use:** Option D (Ad Hoc Distribution) — this gives you a real app on your iPhone without App Store submission.
+**iOS does NOT allow installing standalone apps without code signing.** This is a hard limitation imposed by Apple. There is **no way** to generate a free `.ipa` file and install it on a non-jailbroken iPhone without an Apple Developer account ($99/year).
 
----
+**Why?** Apple requires all iOS apps to be signed with a valid certificate. Without this certificate, the app will not install on your iPhone. This is a security feature built into iOS.
 
-## 2. Prerequisites
+### Important: Expo Free Tier vs Apple Developer Account
 
-### For All Options
+These are **two separate things**:
 
-| Requirement | Details |
-|-------------|---------|
-| **Windows PC** | Windows 10/11 (already have) |
-| **Node.js** | v18+ (already installed) |
-| **Expo CLI** | `npm install -g expo-cli` |
-| **EAS CLI** | `npm install -g eas-cli` |
-| **iPhone** | iOS 15+ (your physical device) |
-| **USB Cable** | Lightning or USB-C (for development builds) |
-| **Wi-Fi Network** | Same network as your PC (for Expo Go) |
+| Service | What It Is | Cost | What It Gives You |
+|---------|-----------|------|-------------------|
+| **Expo Free Tier** | Expo's cloud build service | Free | 30 builds/month, but iOS builds still need Apple Developer |
+| **Apple Developer Account** | Apple's signing certificate | $99/year | Required to sign and install iOS apps |
 
-### For Options B, C, D (EAS Build)
+**Key point**: Even with Expo's free tier (30 builds/month), you **still need** an Apple Developer account ($99/year) to build and install iOS apps. The Expo free tier only covers the cloud build service — Apple's signing requirement is separate.
 
-| Requirement | Details |
-|-------------|---------|
-| **Apple Developer Account** | $99/year — [developer.apple.com](https://developer.apple.com) |
-| **Apple ID** | Your personal Apple ID |
-| **Xcode** | Not required — EAS Build handles compilation in the cloud |
-| **Mac** | Not required — EAS Build is cloud-based |
+### What This Means
+
+| Scenario | Can You Do It? | Cost |
+|----------|---------------|------|
+| Generate a free `.ipa` file and install on iPhone | **No** | N/A |
+| Use Expo Go to test on iPhone | **Yes** | Free |
+| Use Expo Web to run as a web app | **Yes** | Free |
+| Build a real iOS app (EAS Build) | **Yes** | $99/year (Apple Developer) + Free Expo tier |
+| Build a free Android APK | **Yes** | Free (Expo free tier) |
 
 ---
 
-## 3. Option A: Expo Go (Development/Testing)
+## 2. Important: iOS Limitations
 
-This is the **simplest** way to test the app on your iPhone. It's not a "real" app installation — it's a development environment that runs your app.
+### Why iOS Is Different from Android
+
+| Feature | Android | iOS |
+|---------|---------|-----|
+| Install APK directly | Yes | No |
+| Install without signing | Yes (with "Unknown Sources") | No |
+| Free app distribution | Yes (APK file) | No (requires Apple Developer) |
+| Jailbreak required | No | Yes (for unsigned apps) |
+
+### The iOS Signing Requirement
+
+1. **All iOS apps must be signed** with a valid Apple Developer certificate
+2. **Without signing**, the app will not install on your iPhone
+3. **Apple Developer account** costs $99/year
+4. **There is no workaround** for non-jailbroken iPhones
+
+### What About Jailbreaking?
+
+- **Jailbreaking** removes Apple's restrictions and allows installing unsigned apps
+- **However**, jailbreaking is:
+  - Not recommended (security risks, voids warranty)
+  - Not necessary for this project
+  - Not covered in this guide
+
+---
+
+## 3. Free Alternatives
+
+Since you cannot install a free `.ipa` file on iPhone, here are the **free alternatives**:
+
+### Option A: Expo Go (Free - Development/Testing)
+- **What it is**: A development environment that runs your app on iPhone
+- **How it works**: Scan a QR code with your iPhone camera
+- **Cost**: Free
+- **Limitations**: Not a "real" app, requires your PC to be running
+
+### Option B: Expo Web (Free - Web App)
+- **What it is**: A web version of your app that runs in Safari
+- **How it works**: Build the web version and host it on a free service
+- **Cost**: Free
+- **Limitations**: Not a native app, no offline support, no app icon
+
+### Option C: Android APK (Free - Android Only)
+- **What it is**: A standalone Android app that can be installed on Android devices
+- **How it works**: Build the APK and install it on Android
+- **Cost**: Free
+- **Limitations**: Android only, not iOS
+
+---
+
+## 4. Option A: Expo Go (Development/Testing)
+
+This is the **simplest** way to test the app on your iPhone. It's not a "real" app installation - it's a development environment that runs your app.
 
 ### Steps
 
@@ -76,16 +122,16 @@ npx expo start
 ```
 
 ### Pros
-- ✅ No Apple Developer account needed
-- ✅ No Mac needed
-- ✅ Free
-- ✅ Instant hot-reload on code changes
+- No Apple Developer account needed
+- No Mac needed
+- Free
+- Instant hot-reload on code changes
 
 ### Cons
-- ❌ Not a "real" app — it's a development environment
-- ❌ Requires Expo Go app installed on iPhone
-- ❌ Requires your PC to be running and on the same network
-- ❌ No app icon on home screen (it's inside Expo Go)
+- Not a "real" app - it's a development environment
+- Requires Expo Go app installed on iPhone
+- Requires your PC to be running and on the same network
+- No app icon on home screen (it's inside Expo Go)
 
 ### When to Use
 - During development and testing
@@ -93,104 +139,94 @@ npx expo start
 
 ---
 
-## 4. Option B: EAS Build — Development Build (Recommended)
+## 5. Option B: Expo Web (Web App - Free)
 
-This creates a **real iOS app** that you can install on your iPhone. It's the best option for daily development.
+This is the **best free option** for personal use. It creates a web version of your app that can be accessed from Safari on your iPhone.
 
 ### What It Does
-- Builds a real iOS app using Expo's cloud build service
-- Installs on your iPhone via a provisioning profile
-- Supports hot-reload (like Expo Go) but as a real app
-- Requires Apple Developer account ($99/year)
+- Builds a web version of your app
+- Hosts it on a free service (e.g., Vercel, Netlify, GitHub Pages)
+- Accessible from Safari on your iPhone
+- No Apple Developer account needed
 
 ### Steps
 
 ```bash
-# 1. Install EAS CLI
-npm install -g eas-cli
+# 1. Build the web version
+cd FoodGen
+npx expo export --platform web
 
-# 2. Log in to your Expo account
-eas login
-
-# 3. Configure EAS Build
-eas build:configure
-
-# 4. Build for iOS (development)
-eas build --platform ios --profile development
-
-# 5. Install on iPhone
-# - After build completes, you'll get a URL
-# - Open the URL on your iPhone
-# - Install the app
+# 2. The output will be in the `dist/` directory
+# 3. Upload the `dist/` directory to a free hosting service
+# 4. Access the URL on your iPhone's Safari browser
 ```
 
 ### Pros
-- ✅ Real app on iPhone
-- ✅ No Mac needed
-- ✅ Hot-reload support
-- ✅ App icon on home screen
+- Free
+- No Apple Developer account needed
+- No Mac needed
+- Accessible from any device with a web browser
 
 ### Cons
-- ❌ Requires Apple Developer account ($99/year)
-- ❌ Build takes 10-30 minutes
-- ❌ Limited to 30 builds/month on free tier
+- Not a native app (no app icon, no offline support)
+- Requires internet connection
+- Some features may not work (e.g., haptics, camera)
+- Not as smooth as a native app
+
+### When to Use
+- When you want a free way to use the app on iPhone
+- When you don't need native features (haptics, camera, etc.)
+- When you want to share the app with others
 
 ---
 
-## 5. Option C: EAS Build — Preview Build (Testing)
+## 6. Option C: Android APK (Free)
 
-This creates a **real iOS app** for testing purposes. It's similar to Option B but without hot-reload.
+This is the **best free option** for Android users. It creates a standalone Android app that can be installed on Android devices.
 
 ### What It Does
-- Builds a real iOS app using Expo's cloud build service
-- Installs on your iPhone via a provisioning profile
-- No hot-reload — it's a standalone app
-- Requires Apple Developer account ($99/year)
+- Builds a standalone Android APK
+- Can be installed on any Android device
+- No Google Play Store submission required
+- No Apple Developer account needed
 
 ### Steps
 
 ```bash
-# 1. Install EAS CLI
-npm install -g eas-cli
+# 1. Build the Android APK
+cd FoodGen
+npx expo build:android
 
-# 2. Log in to your Expo account
-eas login
-
-# 3. Configure EAS Build
-eas build:configure
-
-# 4. Build for iOS (preview)
-eas build --platform ios --profile preview
-
-# 5. Install on iPhone
-# - After build completes, you'll get a URL
-# - Open the URL on your iPhone
-# - Install the app
+# 2. Download the APK file
+# 3. Transfer the APK to your Android device
+# 4. Install the APK on your Android device
 ```
 
 ### Pros
-- ✅ Real app on iPhone
-- ✅ No Mac needed
-- ✅ App icon on home screen
-- ✅ Good for sharing with testers
+- Free
+- No Apple Developer account needed
+- No Mac needed
+- Real app on Android device
 
 ### Cons
-- ❌ Requires Apple Developer account ($99/year)
-- ❌ No hot-reload
-- ❌ Build takes 10-30 minutes
+- Android only, not iOS
+- Requires Android device
+
+### When to Use
+- When you have an Android device
+- When you want a free real app on your device
 
 ---
 
-## 6. Option D: EAS Build — Ad Hoc Distribution (Personal Use)
+## 7. Paid Option: EAS Build (iOS Real App)
 
-This is the **best option for personal use** — it creates a real app that you can install on your iPhone without App Store submission.
+This is the **only way** to get a real iOS app on your iPhone without publishing to the App Store. It requires an Apple Developer account ($99/year).
 
 ### What It Does
 - Builds a real iOS app using Expo's cloud build service
 - Installs on your iPhone via a provisioning profile
-- No hot-reload — it's a standalone app
+- No App Store submission required
 - Requires Apple Developer account ($99/year)
-- **No App Store submission required**
 
 ### Steps
 
@@ -214,20 +250,19 @@ eas build --platform ios --profile production
 ```
 
 ### Pros
-- ✅ Real app on iPhone
-- ✅ No Mac needed
-- ✅ App icon on home screen
-- ✅ No App Store submission required
-- ✅ Personal use
+- Real app on iPhone
+- No Mac needed
+- App icon on home screen
+- No App Store submission required
 
 ### Cons
-- ❌ Requires Apple Developer account ($99/year)
-- ❌ No hot-reload
-- ❌ Build takes 10-30 minutes
+- Requires Apple Developer account ($99/year)
+- Build takes 10-30 minutes
+- Limited to 30 builds/month on free tier
 
 ---
 
-## 7. Step-by-Step: EAS Build Setup
+## 8. Step-by-Step: EAS Build Setup
 
 This section provides a detailed step-by-step guide for setting up EAS Build.
 
@@ -304,7 +339,7 @@ After the build completes, you'll get a URL. Open this URL on your iPhone to ins
 
 ---
 
-## 8. Installing the Built App on iPhone
+## 9. Installing the Built App on iPhone
 
 ### Method 1: Direct Install via URL
 
@@ -331,18 +366,18 @@ After the build completes, you'll get a URL. Open this URL on your iPhone to ins
 
 ---
 
-## 9. Troubleshooting
+## 10. Troubleshooting
 
 ### Common Issues
 
 | Issue | Solution |
 |-------|----------|
-| **Build fails** | Check your `eas.json` configuration. Ensure all dependencies are installed. |
-| **App won't install on iPhone** | Ensure your iPhone is registered with your Apple Developer account. |
-| **App crashes on launch** | Check the console logs for errors. Ensure all dependencies are installed. |
-| **Build takes too long** | This is normal. EAS Build can take 10-30 minutes. |
-| **QR code doesn't work** | Ensure you're on the same Wi-Fi network as your PC. |
-| **Expo Go app not found** | Download it from the App Store. |
+| Build fails | Check your `eas.json` configuration. Ensure all dependencies are installed. |
+| App won't install on iPhone | Ensure your iPhone is registered with your Apple Developer account. |
+| App crashes on launch | Check the console logs for errors. Ensure all dependencies are installed. |
+| Build takes too long | This is normal. EAS Build can take 10-30 minutes. |
+| QR code doesn't work | Ensure you're on the same Wi-Fi network as your PC. |
+| Expo Go app not found | Download it from the App Store. |
 
 ### Debugging Tips
 
@@ -353,30 +388,32 @@ After the build completes, you'll get a URL. Open this URL on your iPhone to ins
 
 ---
 
-## 10. Cost Summary
+## 11. Cost Summary
 
 | Item | Cost | Notes |
 |------|------|-------|
-| **Expo Go** | **Free** | Development/testing only |
-| **EAS Build (Free Tier)** | **Free** | 30 builds/month |
-| **EAS Build (Paid Tier)** | **$20/month** | Unlimited builds |
-| **Apple Developer Program** | **$99/year** | Required for EAS Build |
-| **Total (Free Tier)** | **$99/year** | Apple Developer Program only |
-| **Total (Paid Tier)** | **$99/year + $20/month** | Apple Developer Program + EAS Build |
+| Expo Go | **Free** | Development/testing only |
+| Expo Web | **Free** | Web app, no native features |
+| Android APK | **Free** | Android only |
+| EAS Build (Free Tier) | **Free** | 30 builds/month |
+| EAS Build (Paid Tier) | **$20/month** | Unlimited builds |
+| Apple Developer Program | **$99/year** | Required for EAS Build |
+| Total (Free Tier) | **$99/year** | Apple Developer Program only |
+| Total (Paid Tier) | **$99/year + $20/month** | Apple Developer Program + EAS Build |
 
 ---
 
-## 11. Comparison Table
+## 12. Comparison Table
 
-| Feature | Expo Go | EAS Development | EAS Preview | EAS Ad Hoc |
-|---------|---------|-----------------|-------------|------------|
-| **Real App on iPhone** | ❌ | ✅ | ✅ | ✅ |
-| **Hot Reload** | ✅ | ✅ | ❌ | ❌ |
-| **App Icon** | ❌ | ✅ | ✅ | ✅ |
-| **Apple Developer Account** | ❌ | ✅ | ✅ | ✅ |
-| **Mac Required** | ❌ | ❌ | ❌ | ❌ |
-| **Cost** | Free | $99/year | $99/year | $99/year |
-| **Best For** | Development | Daily Dev | Testing | Personal Use |
+| Feature | Expo Go | Expo Web | Android APK | EAS Build |
+|---------|---------|----------|-------------|-----------|
+| Real App on iPhone | No | No | No (Android only) | Yes |
+| Hot Reload | Yes | No | No | No |
+| App Icon | No | No | Yes | Yes |
+| Apple Developer Account | No | No | No | Yes |
+| Mac Required | No | No | No | No |
+| Cost | Free | Free | Free | $99/year |
+| Best For | Development | Personal Use (Web) | Android Users | iOS Users |
 
 ---
 
@@ -392,7 +429,18 @@ npx expo start
 # Scan QR code with iPhone
 ```
 
-### For Personal Use (With Apple Developer Account)
+### For Personal Use (Free - Web App)
+
+```bash
+# Build web version
+cd FoodGen
+npx expo export --platform web
+
+# Upload to free hosting service (Vercel, Netlify, GitHub Pages)
+# Access URL on iPhone Safari
+```
+
+### For Personal Use (Paid - iOS Real App)
 
 ```bash
 # Install EAS CLI
