@@ -11,10 +11,20 @@ interface Props {
 export default function MealDetailModal({ visible, meal, onClose }: Props) {
   if (!visible || !meal) return null;
 
-  const suggestedFor: string[] = JSON.parse(meal.suggestedFor || '[]');
-  const ingredients: { name: string; quantity: string }[] = JSON.parse(meal.ingredients || '[]');
-  const steps: string[] = JSON.parse(meal.steps || '[]');
-  const dietaryTags: string[] = JSON.parse(meal.dietaryTags || '[]');
+  const parseJsonField = (field: any, fallback: any[] = []): any[] => {
+    if (!field) return fallback;
+    if (Array.isArray(field)) return field;
+    try {
+      return JSON.parse(field as string);
+    } catch {
+      return fallback;
+    }
+  };
+
+  const suggestedFor: string[] = parseJsonField(meal.suggestedFor);
+  const ingredients: { name: string; quantity: string }[] = parseJsonField(meal.ingredients);
+  const steps: string[] = parseJsonField(meal.steps);
+  const dietaryTags: string[] = parseJsonField(meal.dietaryTags);
 
   const slotEmojis: Record<string, string> = {
     breakfast: '🌅',

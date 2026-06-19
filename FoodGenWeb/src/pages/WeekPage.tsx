@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useMealPlan } from '../context/MealPlanContext';
 import { getSlotsForMealsPerDay } from '../utils/constants';
 import { getWeekNumber, getDateRangeString, formatDateString, getWeekDates } from '../utils/dateHelpers';
-import { saveWeekPlan } from '../database/planRepository';
+import { saveWeekPlanToFirestore } from '../firebase/firestore';
 import DayRow from '../components/DayRow';
 import MealDetailModal from '../components/MealDetailModal';
 import MealsPerDayPicker from '../components/MealsPerDayPicker';
@@ -12,7 +12,7 @@ import type { Meal } from '../types/meal';
 
 export default function WeekPage() {
   const navigate = useNavigate();
-  const { weekPlans, mealsPerDay, isLoading, selectedWeek, setSelectedWeek, weekStartDay, setWeekStartDay, generateWeekPlan, refreshWeek, regenerateDay } = useMealPlan();
+  const { weekPlans, mealsPerDay, isLoading, selectedWeek, setSelectedWeek, weekStartDay, setWeekStartDay, generateWeekPlan, refreshWeek, regenerateDay, user } = useMealPlan();
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
 
   const today = new Date();
@@ -35,7 +35,16 @@ export default function WeekPage() {
     weekEnd.setDate(weekStart.getDate() + 6);
     const name = `Week ${selectedWeek} (${formatDateString(weekStart)} - ${formatDateString(weekEnd)})`;
     try {
-      await saveWeekPlan(name, selectedWeek, year);
+      if (!user?.uid) {
+        alert('You must be logged in to save plans.');
+        return;
+      }
+      await saveWeekPlanToFirestore(user.uid, {
+        name,
+        weekOfYear: selectedWeek,
+        year,
+        createdAt: new Date().toISOString(),
+      });
       alert(`💾 Week ${selectedWeek} plan saved!`);
     } catch (e) {
       console.error('Failed to save plan:', e);

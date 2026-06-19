@@ -7,6 +7,7 @@ import HistoryPage from './pages/HistoryPage';
 import AddMealPage from './pages/AddMealPage';
 import SettingsPage from './pages/SettingsPage';
 import OnboardingPage from './pages/OnboardingPage';
+import DebugPage from './pages/DebugPage';
 import { isOnboardingComplete } from './services/preferenceManager';
 import './App.css';
 
@@ -98,6 +99,7 @@ export default function App() {
             </ProtectedRoute>
           } />
           <Route path="/onboarding" element={<OnboardingPage />} />
+          <Route path="/debug" element={<DebugPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </HashRouter>

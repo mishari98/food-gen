@@ -1,13 +1,22 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import type { DayPlanWithMeals } from '../types/meal';
-import { getMealsPerDay, isSeedDataLoaded, setSeedDataLoaded, getWeekStartDay, setWeekStartDay, getDisplayName, setMealsPerDay as setMealsPerDayLocal } from '../services/preferenceManager';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
+import type { DayPlanWithMeals, Meal } from '../types/meal';
+import { getMealsPerDay, getWeekStartDay, setMealsPerDay, setWeekStartDay, isSeedDataLoaded, setSeedDataLoaded, getDisplayName, setDisplayName } from '../services/preferenceManager';
 import { generateTodayPlan, generateWeeklyPlan, regenerateDay as regenerateDayService } from '../services/mealPlanGenerator';
-import { getWeekPlans, getDayPlan } from '../database/planRepository';
-import { getMealCount } from '../database/mealRepository';
 import { getWeekNumber, formatDateString } from '../utils/dateHelpers';
 import { seedDatabase } from '../services/seedDataLoader';
 import { getCurrentUser, onAuthChange } from '../firebase/auth';
-import { pushDayPlan, listenToDayPlans, upsertDayPlanToIndexedDB } from '../services/syncService';
+import {
+  getDayPlanFromFirestore,
+  saveDayPlanToFirestore,
+  getWeekPlansFromFirestore,
+  getAllDayPlansFromFirestore,
+  getMealsFromFirestore,
+  saveCustomMeal,
+  getPreferencesFromFirestore,
+  savePreferencesToFirestore,
+  listenToDayPlans,
+  listenToCustomMeals,
+} from '../firebase/firestore';
 
 interface MealPlanContextType {
   user: { uid: string; displayName: string } | null;
@@ -44,6 +53,8 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
   const [historyPlans, setHistoryPlans] = useState<DayPlanWithMeals[]>([]);
   const [mealsPerDay, setMealsPerDayState] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [allMeals, setAllMeals] = useState<Meal[]>([]);
+  const [mealsLoaded, setMealsLoaded] = useState(false);
 
   const loadPreferences = useCallback(async () => {
     const mpd = await getMealsPerDay();
@@ -52,17 +63,24 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
     setWeekStartDayState(wsd);
   }, []);
 
-  const enrichWithMeals = async (plan: DayPlanWithMeals): Promise<DayPlanWithMeals> => {
-    const { getMealById } = await import('../database/mealRepository');
-    const [breakfast, lunch, dinner, snack] = await Promise.all([
-      plan.breakfastId ? getMealById(plan.breakfastId) : undefined,
-      plan.lunchId ? getMealById(plan.lunchId) : undefined,
-      plan.dinnerId ? getMealById(plan.dinnerId) : undefined,
-      plan.snackId ? getMealById(plan.snackId) : undefined,
-    ]);
+  const enrichWithMeals = useCallback(async (plan: DayPlanWithMeals): Promise<DayPlanWithMeals> => {
+    const findMeal = (id: number | null) => allMeals.find(m => m.id === id);
+    const [breakfast, lunch, dinner, snack] = [
+      plan.breakfastId ? findMeal(plan.breakfastId) : undefined,
+      plan.lunchId ? findMeal(plan.lunchId) : undefined,
+      plan.dinnerId ? findMeal(plan.dinnerId) : undefined,
+      plan.snackId ? findMeal(plan.snackId) : undefined,
+    ];
     return { ...plan, breakfast, lunch, dinner, snack };
-  };
+  }, [allMeals]);
 
+  // Use refs to avoid infinite loops with listeners
+  const enrichWithMealsRef = useRef(enrichWithMeals);
+  enrichWithMealsRef.current = enrichWithMeals;
+  const selectedDateRef = useRef(selectedDate);
+  selectedDateRef.current = selectedDate;
+
+  // Initialize Firebase auth and sync
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -71,22 +89,22 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
           const displayName = await getDisplayName();
           setUser({ uid: currentUser.uid, displayName });
           
+          // Load preferences from Firestore
+          const prefs = await getPreferencesFromFirestore(currentUser.uid);
+          if (prefs) {
+            await setDisplayName(prefs.displayName);
+            await setMealsPerDay(prefs.mealsPerDay);
+            await setWeekStartDay(prefs.weekStartDay);
+            setMealsPerDayState(prefs.mealsPerDay);
+            setWeekStartDayState(prefs.weekStartDay);
+            setUser({ uid: currentUser.uid, displayName: prefs.displayName });
+          }
+          
+          // Listen for auth changes
           const unsubscribe = onAuthChange((firebaseUser) => {
             if (firebaseUser) {
               getDisplayName().then(dn => {
                 setUser({ uid: firebaseUser.uid, displayName: dn });
-              });
-              
-              listenToDayPlans(firebaseUser.uid, async (plan) => {
-                await upsertDayPlanToIndexedDB(plan);
-                const today = new Date();
-                const week = await getWeekPlans(getWeekNumber(today), today.getFullYear());
-                setWeekPlans(week);
-                const current = await getDayPlan(selectedDate);
-                if (current) {
-                  const withMeals = await enrichWithMeals(current);
-                  setDayPlan(withMeals);
-                }
               });
             } else {
               setUser(null);
@@ -107,9 +125,53 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Separate effect for Firestore listeners - only depends on user.uid
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    // Load meals once
+    getMealsFromFirestore(user.uid).then(initialMeals => {
+      console.log('[MealPlanContext] Initial meals load, count:', initialMeals.length);
+      if (initialMeals.length > 0) {
+        setAllMeals(initialMeals);
+        setMealsLoaded(true);
+      }
+    });
+
+    // Listen for custom meal changes
+    const unsubMeals = listenToCustomMeals(user.uid, (meals) => {
+      console.log('[MealPlanContext] Custom meals listener fired, count:', meals.length);
+      setAllMeals(meals);
+      setMealsLoaded(meals.length > 0);
+    });
+
+    // Listen for day plan changes
+    const unsubPlans = listenToDayPlans(user.uid, async (plans) => {
+      const today = new Date();
+      const week = await getWeekPlansFromFirestore(user.uid, getWeekNumber(today), today.getFullYear());
+      const enrichedWeek = await Promise.all(week.map(p => enrichWithMealsRef.current(p)));
+      setWeekPlans(enrichedWeek);
+      
+      const current = await getDayPlanFromFirestore(user.uid, selectedDateRef.current);
+      if (current) {
+        const withMeals = await enrichWithMealsRef.current(current);
+        setDayPlan(withMeals);
+      }
+    });
+
+    return () => {
+      unsubMeals();
+      unsubPlans();
+    };
+  }, [user?.uid]); // Only re-run when user changes
+
   const loadPlanForDate = useCallback(async (dateStr: string) => {
+    if (!user?.uid) {
+      setDayPlan(null);
+      return;
+    }
     try {
-      const plan = await getDayPlan(dateStr);
+      const plan = await getDayPlanFromFirestore(user.uid, dateStr);
       if (plan) {
         const withMeals = await enrichWithMeals(plan);
         setDayPlan(withMeals);
@@ -120,84 +182,109 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
       console.error('Error loading plan for date:', e);
       setDayPlan(null);
     }
-  }, []);
+  }, [user, enrichWithMeals]);
 
   const generateDayPlan = useCallback(async (dateStr: string) => {
     try {
-      await generateTodayPlan();
-      await loadPlanForDate(dateStr);
-      
-      if (user?.uid) {
-        const plan = await getDayPlan(dateStr);
-        if (plan) {
-          await pushDayPlan(plan, user.uid);
-        }
+      console.log('[MealPlanContext] generateDayPlan called, mealsLoaded:', mealsLoaded, 'allMeals count:', allMeals.length);
+      if (!mealsLoaded || allMeals.length === 0) {
+        alert('Meals are still loading. Please wait a moment and try again.');
+        return;
+      }
+      const plan = await generateTodayPlan(allMeals);
+      console.log('[MealPlanContext] Generated plan:', plan);
+      if (plan && user?.uid) {
+        await saveDayPlanToFirestore(user.uid, plan);
+        console.log('[MealPlanContext] Plan saved to Firestore');
+        await loadPlanForDate(dateStr);
       }
     } catch (e) {
       console.error('Error generating day plan:', e);
     }
-  }, [user, loadPlanForDate]);
+  }, [user, loadPlanForDate, allMeals, mealsLoaded]);
 
   const generateWeekPlan = useCallback(async (weekOfYear: number, year: number) => {
     try {
-      await generateWeeklyPlan();
-      const week = await getWeekPlans(weekOfYear, year);
-      setWeekPlans(week);
-      
-      if (user?.uid) {
-        for (const plan of week) {
-          await pushDayPlan(plan, user.uid);
+      if (!mealsLoaded || allMeals.length === 0) {
+        alert('Meals are still loading. Please wait a moment and try again.');
+        return;
+      }
+      const plans = await generateWeeklyPlan(allMeals);
+      if (plans.length > 0 && user?.uid) {
+        for (const plan of plans) {
+          await saveDayPlanToFirestore(user.uid, plan);
         }
+        const week = await getWeekPlansFromFirestore(user.uid, weekOfYear, year);
+        const enriched = await Promise.all(week.map(p => enrichWithMeals(p)));
+        setWeekPlans(enriched);
       }
     } catch (e) {
       console.error('Error generating week plan:', e);
     }
-  }, [user]);
+  }, [user, allMeals, mealsLoaded, enrichWithMeals]);
 
   const regenerateDay = useCallback(async (dateStr: string) => {
     try {
-      await regenerateDayService(dateStr);
-      await loadPlanForDate(dateStr);
-      
-      if (user?.uid) {
-        const plan = await getDayPlan(dateStr);
-        if (plan) {
-          await pushDayPlan(plan, user.uid);
-        }
+      console.log('[MealPlanContext] regenerateDay called, mealsLoaded:', mealsLoaded, 'allMeals count:', allMeals.length);
+      if (!mealsLoaded || allMeals.length === 0) {
+        alert('Meals are still loading. Please wait a moment and try again.');
+        return;
+      }
+      const plan = await regenerateDayService(dateStr, allMeals);
+      console.log('[MealPlanContext] Regenerated plan:', plan);
+      if (plan && user?.uid) {
+        await saveDayPlanToFirestore(user.uid, plan);
+        console.log('[MealPlanContext] Plan saved to Firestore');
+        await loadPlanForDate(dateStr);
       }
     } catch (e) {
       console.error('Error regenerating day:', e);
     }
-  }, [user, loadPlanForDate]);
+  }, [user, loadPlanForDate, allMeals, mealsLoaded]);
 
   const refreshWeek = useCallback(async () => {
+    if (!user?.uid) return;
     const today = new Date();
-    const week = await getWeekPlans(getWeekNumber(today), today.getFullYear());
-    setWeekPlans(week);
-  }, []);
+    const week = await getWeekPlansFromFirestore(user.uid, getWeekNumber(today), today.getFullYear());
+    const enriched = await Promise.all(week.map(p => enrichWithMeals(p)));
+    setWeekPlans(enriched);
+  }, [user, enrichWithMeals]);
 
   const handleSetMealsPerDay = useCallback(async (count: number) => {
-    await setMealsPerDayLocal(count);
+    await setMealsPerDay(count);
     setMealsPerDayState(count);
+    if (user?.uid) {
+      await savePreferencesToFirestore(user.uid, {
+        displayName: await getDisplayName(),
+        mealsPerDay: count,
+        weekStartDay: await getWeekStartDay(),
+      });
+    }
     await generateDayPlan(selectedDate);
-  }, [selectedDate, generateDayPlan]);
+  }, [selectedDate, generateDayPlan, user]);
 
   const handleSetWeekStartDay = useCallback(async (day: 'monday' | 'sunday') => {
     await setWeekStartDay(day);
     setWeekStartDayState(day);
-  }, []);
+    if (user?.uid) {
+      await savePreferencesToFirestore(user.uid, {
+        displayName: await getDisplayName(),
+        mealsPerDay: await getMealsPerDay(),
+        weekStartDay: day,
+      });
+    }
+  }, [user]);
 
+  // Initialize
   useEffect(() => {
     const init = async () => {
       try {
         await loadPreferences();
         
+        // Seed data if needed
         const loaded = await isSeedDataLoaded();
-        if (!loaded) {
-          const count = await getMealCount();
-          if (count === 0) {
-            await seedDatabase();
-          }
+        if (!loaded && user?.uid) {
+          await seedDatabase(user.uid);
           await setSeedDataLoaded();
         }
 
@@ -205,19 +292,25 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
         const todayStr = formatDateString(today);
         setSelectedDate(todayStr);
         
-        const existingPlan = await getDayPlan(todayStr);
-        if (existingPlan) {
-          const withMeals = await enrichWithMeals(existingPlan);
-          setDayPlan(withMeals);
+        // Load current day plan from Firestore
+        if (user?.uid) {
+          const existingPlan = await getDayPlanFromFirestore(user.uid, todayStr);
+          if (existingPlan) {
+            const withMeals = await enrichWithMeals(existingPlan);
+            setDayPlan(withMeals);
+          }
+          
+          // Load current week
+          const week = await getWeekPlansFromFirestore(user.uid, getWeekNumber(today), today.getFullYear());
+          const enrichedWeek = await Promise.all(week.map(p => enrichWithMeals(p)));
+          setWeekPlans(enrichedWeek);
+          
+          // Load history (all past dates)
+          const allPlans = await getAllDayPlansFromFirestore(user.uid);
+          const pastPlans = allPlans.filter(p => p.date < todayStr);
+          const enrichedHistory = await Promise.all(pastPlans.map(p => enrichWithMeals(p)));
+          setHistoryPlans(enrichedHistory);
         }
-
-        const week = await getWeekPlans(getWeekNumber(today), today.getFullYear());
-        setWeekPlans(week);
-
-        const allPastPlans = await getWeekPlans(getWeekNumber(new Date('2000-01-01')), 2000);
-        const pastPlans = allPastPlans.filter(p => p.date < todayStr);
-        const enriched = await Promise.all(pastPlans.map((p: DayPlanWithMeals) => enrichWithMeals(p)));
-        setHistoryPlans(enriched);
       } catch (e) {
         console.error('Initialization error:', e);
       } finally {
@@ -226,8 +319,9 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
     };
 
     init();
-  }, [loadPreferences]);
+  }, [loadPreferences, user, enrichWithMeals]);
 
+  // Online/offline detection
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);

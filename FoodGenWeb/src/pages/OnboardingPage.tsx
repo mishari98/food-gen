@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setDisplayName, setOnboardingComplete, getFirebaseUid, setFirebaseUid, getDisplayName, getMealsPerDay, getWeekStartDay } from '../services/preferenceManager';
 import { loginAnonymously, getCurrentUser } from '../firebase/auth';
-import { pushPreferences } from '../services/syncService';
+import { savePreferencesToFirestore } from '../firebase/firestore';
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
@@ -60,7 +60,7 @@ export default function OnboardingPage() {
       if (uid) {
         const mpd = await getMealsPerDay();
         const wsd = await getWeekStartDay();
-        await pushPreferences(uid, {
+        await savePreferencesToFirestore(uid, {
           displayName: trimmedName,
           mealsPerDay: mpd,
           weekStartDay: wsd,

@@ -34,11 +34,17 @@ export interface DayPlan {
 }
 
 export interface SavedWeekPlan {
-  id?: number;
+  id?: string;
   name: string | null;
   createdAt: string;
   weekOfYear: number;
   year: number;
+}
+
+export interface UserPreferences {
+  displayName: string;
+  mealsPerDay: number;
+  weekStartDay: 'monday' | 'sunday';
 }
 
 export interface DayPlanWithMeals extends DayPlan {

@@ -1,7 +1,5 @@
-import { getAllMeals } from '../database/mealRepository';
-import { insertDayPlan, deleteDayPlan, deleteWeekPlans } from '../database/planRepository';
+import type { Meal, DayPlan } from '../types/meal';
 import { getMealsPerDay } from './preferenceManager';
-import type { DayPlan } from '../types/meal';
 import { getSlotsForMealsPerDay } from '../utils/constants';
 import { getWeekNumber, formatDateString } from '../utils/dateHelpers';
 
@@ -14,8 +12,7 @@ function shuffleArray<T>(array: T[]): T[] {
   return arr;
 }
 
-export async function generateTodayPlan(): Promise<DayPlan | null> {
-  const allMeals = await getAllMeals();
+export async function generateTodayPlan(allMeals: Meal[] = []): Promise<Omit<DayPlan, 'id'> | null> {
   const mealsPerDay = await getMealsPerDay();
   const activeSlots = getSlotsForMealsPerDay(mealsPerDay);
 
@@ -42,7 +39,7 @@ export async function generateTodayPlan(): Promise<DayPlan | null> {
     }
   }
 
-  const plan: Omit<DayPlan, 'id'> = {
+  return {
     date: dateStr,
     weekOfYear,
     year,
@@ -52,16 +49,9 @@ export async function generateTodayPlan(): Promise<DayPlan | null> {
     snackId: slotToMeal.snack,
     isGenerated: 1,
   };
-
-  // Delete existing plan for today to avoid duplicates
-  await deleteDayPlan(dateStr);
-
-  const id = await insertDayPlan(plan);
-  return { ...plan, id };
 }
 
-export async function generateWeeklyPlan(): Promise<DayPlan[]> {
-  const allMeals = await getAllMeals();
+export async function generateWeeklyPlan(allMeals: Meal[] = []): Promise<Omit<DayPlan, 'id'>[]> {
   const mealsPerDay = await getMealsPerDay();
   const activeSlots = getSlotsForMealsPerDay(mealsPerDay);
 
@@ -72,10 +62,7 @@ export async function generateWeeklyPlan(): Promise<DayPlan[]> {
   const weekOfYear = getWeekNumber(today);
   const year = today.getFullYear();
 
-  // Delete existing week plans
-  await deleteWeekPlans(weekOfYear, year);
-
-  const plans: DayPlan[] = [];
+  const plans: Omit<DayPlan, 'id'>[] = [];
   let mealIndex = 0;
 
   for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
@@ -95,14 +82,13 @@ export async function generateWeeklyPlan(): Promise<DayPlan[]> {
         slotToMeal[slot] = shuffled[mealIndex].id;
         mealIndex++;
       } else {
-        // If we ran out of unique meals, reshuffle and reuse
         const reshuffled = shuffleArray(allMeals);
         slotToMeal[slot] = reshuffled[0].id;
         mealIndex++;
       }
     }
 
-    const plan: Omit<DayPlan, 'id'> = {
+    plans.push({
       date: dateStr,
       weekOfYear,
       year,
@@ -111,17 +97,13 @@ export async function generateWeeklyPlan(): Promise<DayPlan[]> {
       dinnerId: slotToMeal.dinner,
       snackId: slotToMeal.snack,
       isGenerated: 1,
-    };
-
-    const id = await insertDayPlan(plan);
-    plans.push({ ...plan, id });
+    });
   }
 
   return plans;
 }
 
-export async function regenerateDay(dateStr: string): Promise<DayPlan | null> {
-  const allMeals = await getAllMeals();
+export async function regenerateDay(dateStr: string, allMeals: Meal[] = []): Promise<Omit<DayPlan, 'id'> | null> {
   const mealsPerDay = await getMealsPerDay();
   const activeSlots = getSlotsForMealsPerDay(mealsPerDay);
 
@@ -147,7 +129,7 @@ export async function regenerateDay(dateStr: string): Promise<DayPlan | null> {
     }
   }
 
-  const plan: Omit<DayPlan, 'id'> = {
+  return {
     date: dateStr,
     weekOfYear,
     year,
@@ -157,10 +139,4 @@ export async function regenerateDay(dateStr: string): Promise<DayPlan | null> {
     snackId: slotToMeal.snack,
     isGenerated: 1,
   };
-
-  // Delete existing plan for that date only
-  await deleteDayPlan(dateStr);
-
-  const id = await insertDayPlan(plan);
-  return { ...plan, id };
 }

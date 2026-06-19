@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { insertMeal } from '../database/mealRepository';
+import { useMealPlan } from '../context/MealPlanContext';
+import { saveCustomMeal } from '../firebase/firestore';
 
 interface IngredientField {
   name: string;
@@ -9,6 +10,7 @@ interface IngredientField {
 
 export default function AddMealPage() {
   const navigate = useNavigate();
+  const { user } = useMealPlan();
 
   const [name, setName] = useState('');
   const [suggestedFor, setSuggestedFor] = useState<string[]>(['lunch', 'dinner']);
@@ -88,13 +90,13 @@ export default function AddMealPage() {
     };
 
     try {
-      const newId = await insertMeal(mealData);
-      if (newId > 0) {
-        alert('🍽️ ' + name.trim() + ' added to your meals!');
-        navigate('/');
-      } else {
-        alert('Failed to save meal. The database returned no ID.');
+      if (!user?.uid) {
+        alert('You must be logged in to add meals.');
+        return;
       }
+      const newId = await saveCustomMeal(user.uid, { ...mealData, isCustom: 1 } as any);
+      alert('🍽️ ' + name.trim() + ' added to your meals!');
+      navigate('/');
     } catch (e) {
       console.error('Error saving meal:', e);
       alert('Failed to save meal. Please try again. Error: ' + (e instanceof Error ? e.message : 'Unknown error'));
