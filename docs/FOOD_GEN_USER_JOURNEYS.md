@@ -39,6 +39,7 @@ This document maps out all user journeys in FoodGen to:
 - Users CANNOT plan meals without belonging to a household
 - All household members see the SAME shared meal plan
 - Roles determine what each member can do (admin/editor/viewer)
+- Meals are stored in a flexible `meals[]` array with optional labels and per-meal cooking status
 
 ---
 
@@ -72,10 +73,10 @@ This document maps out all user journeys in FoodGen to:
     │   - householdRole: null
     │         ↓
     │   [Save preferences]
-    │   - displayName, mealsPerDay: 2, weekStartDay: 'monday'
+    │   - displayName
     │   - onboardingComplete: true
     │         ↓
-    │   [Navigate to Household Setup Page]
+    │   [Navigate to Household Dashboard]
     │   - User must create or join a household
     │         ↓
     └── YES → [Go to Journey 6: Login]
@@ -100,13 +101,13 @@ This document maps out all user journeys in FoodGen to:
 ```typescript
 {
   displayName: string;
-  mealsPerDay: 2;              // Default: 2 meals
-  weekStartDay: 'monday';
   onboardingComplete: true;
   seedDataLoaded: true;
   updatedAt: timestamp;
 }
 ```
+
+**Note**: `mealsPerDay` and `weekStartDay` have been removed from User Preferences. `weekStartDay` is now a household-level setting (set when creating the household). `mealsPerDay` is chosen per-generation.
 
 ---
 
@@ -182,6 +183,7 @@ This document maps out all user journeys in FoodGen to:
   - State *
   - Postcode *
   - Country *
+- Week start day (monday or sunday, default: monday)
 - Timezone (optional, default: Australia/Sydney)
 - Description (optional)
     ↓
@@ -193,7 +195,7 @@ This document maps out all user journeys in FoodGen to:
 - codeExpiresAt (30 days from now)
     ↓
 [Write to Firestore:]
-1. households/{householdId} (with address, inviteCode, codeExpiresAt)
+1. households/{householdId} (with address, weekStartDay, inviteCode, codeExpiresAt)
 2. households/{householdId}/members/{uid} (role: admin)
 3. Update user profile: householdId, householdRole: 'admin'
     ↓
@@ -219,6 +221,9 @@ This document maps out all user journeys in FoodGen to:
     postcode: "2000",
     country: "Australia"
   },
+  weekStartDay: "monday",
+  timezone: "Australia/Sydney",
+  description: "The Smith family meal plan",
   inviteCode: "SMITH-JUN2026",
   codeExpiresAt: "2026-07-20T00:00:00Z",
   createdBy: "abc123",
@@ -364,7 +369,7 @@ This document maps out all user journeys in FoodGen to:
       [Load preferences from Firestore]
               ↓
       [Check: Does user have householdId?]
-         ├── NO → [Redirect to Household Setup]
+         ├── NO → [Redirect to Household Dashboard]
          │         (Journey 2: Create or Join)
          │
          └── YES → [Load household data]
@@ -372,17 +377,22 @@ This document maps out all user journeys in FoodGen to:
             [Load household members]
             - Get role (admin/editor/viewer)
                     ↓
+            [Load household settings]
+            - weekStartDay, timezone, description
+                    ↓
             [Load reference meals]
             - Query referenceMeals/ collection
                     ↓
             [Load household plans]
             - Query households/{householdId}/plans/{date}
+            - Parse meals[] array
                     ↓
             [Enrich plans with meal data]
-            - Match IDs to meal documents
+            - Match mealIds to meal documents
                     ↓
             [Navigate to Day View]
             - If viewer: no "Generate" button visible
+            - All roles: can update meal statuses
 ```
 
 ---
@@ -399,12 +409,13 @@ This document maps out all user journeys in FoodGen to:
 [Day Page Loads]
     ↓
 [Check: User role?]
-    ├── admin/editor → [Show full controls]
-    │   - Generate, Regenerate, Edit buttons
+    ├── admin/editor → [Show generation controls]
+    │   - Generate, Regenerate buttons
+    │   - Can add/remove/edit meals
     │
-    └── viewer → [Show read-only view]
+    └── viewer → [Show status-only view]
         - No generate/edit buttons
-        - Can only view meals
+        - Can update meal status only
     ↓
 [Show date picker]
 - Default: Today
@@ -413,10 +424,14 @@ This document maps out all user journeys in FoodGen to:
 - Query: households/{householdId}/plans/{date}
     ↓
 {Plan exists?}
-    ├── YES → [Enrich with meal data]
-    │         - Show meal cards with emoji, name, prep time, difficulty
+    ├── YES → [Display meals[] array]
+    │         For each meal in meals[]:
+    │         - Show emoji, name, prep time, difficulty
+    │         - Show optional label tag (breakfast/lunch/dinner/snack)
+    │         - Show current status badge: planned/in_progress/completed/skipped
     │         - Tap card → open Meal Detail Modal
-    │         - Admin/Editor: "Regenerate" button
+    │         - Tap status → cycle to next status
+    │         - Admin/Editor: can edit/remove meal from array
     │
     └── NO → [Show Empty State]
               - "No meals planned for this date"
@@ -425,10 +440,17 @@ This document maps out all user journeys in FoodGen to:
     ↓
 {Admin/Editor taps Generate}
     ↓
+[Show prompt: "How many meals for this day?"]
+- Select: 1 / 2 / 3 / 4 (or custom number)
+- Optional: add labels (breakfast, lunch, dinner, snack)
+- Or leave labels empty
+    ↓
 [Generate random plan]
 - Pick random meals from referenceMeals + custom meals
 - Ensure no repeats within the week
 - Save to: households/{householdId}/plans/{date}
+  - meals[] with status: 'planned' for all entries
+  - Labels: as chosen by user (or empty)
 - Update UI (all members see it)
 ```
 
@@ -439,7 +461,10 @@ This document maps out all user journeys in FoodGen to:
 - `households/{householdId}/members/{uid}` - Check role permissions
 
 **Write** (admin/editor only):
-- `households/{householdId}/plans/{date}` - Save plan
+- `households/{householdId}/plans/{date}` - Create/modify meals
+
+**Write** (all roles):
+- `households/{householdId}/plans/{date}` - Update meal statuses only
 
 ---
 
@@ -455,23 +480,37 @@ This document maps out all user journeys in FoodGen to:
 [Week Page Loads]
     ↓
 [Check: User role?]
-    ├── admin/editor → [Show full controls]
-    └── viewer → [Show read-only view]
+    ├── admin/editor → [Show generation controls]
+    └── viewer → [Show read-only + status update]
     ↓
 [Show week picker]
 - Date input showing week start date
+- Week start day from household settings
     ↓
 [Load week plans]
 - Query: households/{householdId}/plans/ (by weekOfYear)
     ↓
 {Week has plans?}
     ├── YES → [Show collapsible day rows]
+    │         - Each day shows meals[] with status indicators
+    │         - All members: tap meal to update status
     │         - Admin/Editor: each day has [↻] regenerate
     │         - Show action button: "Generate This Week"
     │
     └── NO → [Show Empty State]
               - "No weekly plan yet"
               - Admin/Editor: "Generate Weekly Plan" button
+    ↓
+{Admin/Editor taps Generate}
+    ↓
+[Show prompt: "How many meals per day this week?"]
+- Select: 1 / 2 / 3 / 4 (same count applied to all 7 days)
+- Optional: add labels or leave empty
+    ↓
+[Generate week plan]
+- Same count applied to each day
+- Save meals[] with status 'planned'
+- Labels as chosen
 ```
 
 ---
@@ -499,13 +538,12 @@ Custom meals are **still per-user**. They are:
 
 ### Features
 
-1. **Meals Per Day** (unchanged)
-   - 1 🍽️ / 2 🍽️🍽️ / 3 🍽️🍽️🍽️
+1. **Meals Per Day** (REMOVED — now chosen per-generation when generating meals)
 
-2. **Household Section** (NEW — replaces old household)
+2. **Household Section** (NEW)
    - Show household name + address
    - Show your role (Admin/Editor/Viewer)
-   - Admin: "Manage Members" link
+   - Admin: "Manage Household" link
    - Admin: "Pending Requests" link
    - Admin: "Generate New Invite Code" button
    - Editor: "Leave Household" button
@@ -532,6 +570,9 @@ Custom meals are **still per-user**. They are:
 [Household Info]
 - Name: Smith Family
 - Address: 123 George St, Sydney, NSW 2000
+- Week Start Day: Monday
+- Timezone: Australia/Sydney
+- Description: The Smith family meal plan
 - Max Members: 5 (2 remaining)
 - Invite Code: SMITH-JUN2026 (Expires: July 20, 2026)
   [Generate New Code] button
@@ -554,7 +595,7 @@ Custom meals are **still per-user**. They are:
     ↓
 [Activity Log] (NEW)
 - Jun 20: Mishari regenerated Week 26 — 2 hours ago
-- Jun 19: John edited dinner on Jun 20 — 1 day ago
+- Jun 19: John updated meal status on Jun 20 — 1 day ago
 - Jun 18: Mishari created household — 2 days ago
 - [View All Activity]
     ↓
@@ -617,29 +658,28 @@ No changes needed — meal content is the same regardless of household.
 | Household Management | `households/{id}`, `members/`, `joinRequests/`, `inviteCodes/`, `activityLog/` | ✅ |
 | Suggest Meal Swap | `households/{id}/suggestions/` (future) | 🚧 |
 
-### What Changed
+### What Changed (Latest Version)
 
 | Old | New | Reason |
 |-----|-----|--------|
-| `users/{uid}/dayPlans/{date}` | `households/{householdId}/plans/{date}` | Plans are shared at household level |
-| Role: `member` | Role: `editor` or `viewer` | Need to distinguish between editors and viewers |
-| No join requests | `households/{id}/joinRequests/` | Need approval for joining |
-| No invite code expiry | `codeExpiresAt` field | Security feature |
-| Household: no address | Household: `address` field | Required for household info |
-| Any user can plan | Only admin/editor can plan | Role-based access |
-| Plans per user | Plans per household | Shared view |
-| No invite history | `inviteCodes/` subcollection | Track code generations |
-| No activity tracking | `activityLog/` subcollection | Audit plan changes |
-| No viewer input | `suggestions/` subcollection (future) | Viewers can suggest swaps |
-| No member limit | `maxMembers` field | Control household size |
+| 4 fixed meal slots (breakfastId, lunchId, dinnerId, snackId) | Flexible `meals[]` array with `{mealId, label?, status}` | Allow flexible meal count + optional labels |
+| No cooking tracking | Per-meal status: planned/in_progress/completed/skipped | Track meal progress |
+| `mealsPerDay` in user preferences | Chosen per-generation | More flexible |
+| `weekStartDay` in user preferences | In household settings | Household-level decision |
+| Only admin/editor can write plans | All members can update meal status | Enable progress tracking |
 
-### Recommended Future Collections
+### Additional Changes (Carried Over)
 
-| Collection | Purpose | Priority |
-|------------|---------|----------|
-| `households/{id}/inviteCodes/` | Track all generated invite codes | High — prevents losing history |
-| `households/{id}/activityLog/` | Audit trail of plan changes | Medium — useful for admins |
-| `households/{id}/suggestions/` | Viewer meal swap suggestions | Low — future feature |
+| Change | Description |
+|--------|-------------|
+| Plans per user → Plans per household | Shared view across household |
+| admin/member roles → admin/editor/viewer | Role-based access |
+| No join requests → joinRequests collection | Approval-based joining |
+| No admin invites → invites collection | Admin can invite via email |
+| No invite code history → inviteCodes collection | Track code generations |
+| No activity tracking → activityLog collection | Audit plan changes |
+| No viewer input → suggestions collection (future) | Viewers can suggest swaps |
+| No member limit → maxMembers field | Control household size |
 
 ---
 
@@ -651,14 +691,15 @@ No changes needed — meal content is the same regardless of household.
 3. **Journey 5**: Admin Manage Requests
 4. **Journey 11**: Household Management Page
 
-### Journeys Updated
-1. **Journey 1**: Sign-Up → redirects to household setup
-2. **Journey 2**: New post sign-up flow added
-3. **Journey 6**: Login → checks household membership
-4. **Journey 7**: Day View → reads from household plans
-5. **Journey 8**: Week View → reads from household plans
-6. **Journey 9**: Add Meal → unchanged (still per-user)
-7. **Journey 10**: Settings → household management section
+### Journeys Updated (This Version)
+1. **Journey 1**: Sign-Up → removed `mealsPerDay` and `weekStartDay` from preferences
+2. **Journey 2**: Household Dashboard as gateway (checks pending invites)
+3. **Journey 3**: Create Household → added `weekStartDay` to household form
+4. **Journey 6**: Login → redirects to Household Dashboard, not Day page
+5. **Journey 7**: Day View → flexible `meals[]` array, per-meal status, generate prompt
+6. **Journey 8**: Week View → flexible `meals[]` array, generate prompt for meal count
+7. **Journey 10**: Settings → removed `mealsPerDay`, updated household section
+8. **Journey 11**: Household Management → added `weekStartDay`, activity log with `status_updated`
 
 ### Recommendations Added to Documentation
 
@@ -677,4 +718,4 @@ No changes needed — meal content is the same regardless of household.
 
 ---
 
-*Document version 4.1 — June 2026 (Added recommendations: invite codes history, activity log, suggestions, household limits)*
+*Document version 4.2 — June 2026 (Meals array with flexible labels + per-meal status)*

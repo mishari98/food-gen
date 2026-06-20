@@ -41,7 +41,7 @@ FoodGen is a meal planning app that supports:
 - **Household-first**: Meal planning is a household activity
 - **Role-based**: Different levels of access depending on role
 - **Efficient**: Reference data stored once, not duplicated per user
-- **Flexible**: Meals can be assigned to any slot (breakfast, lunch, dinner, snack)
+- **Flexible**: Meals can be assigned to any slot (breakfast, lunch, dinner, snack) — but slots are optional
 - **Offline-first**: Firestore with IndexedDB persistence
 
 ### Data Storage Strategy
@@ -55,6 +55,7 @@ FoodGen is a meal planning app that supports:
 - Meal plans stored at household level (not per-user)
 - All members see the same plan
 - Invite codes, join requests managed here
+- Week start day configured here
 
 **User Data (Private)**:
 - User profile, preferences, custom meals
@@ -76,6 +77,7 @@ FoodGen is a meal planning app that supports:
 - **Collection**: `households/{householdId}`
 - **Members**: Linked via `householdMembers` subcollection
 - **Address**: Each household has an address for reference
+- **Settings**: Week start day, description, timezone stored here
 
 ### 2.3 Household Member
 - **Purpose**: Link a user to a household with a role
@@ -111,16 +113,20 @@ FoodGen is a meal planning app that supports:
 - **Collection**: `users/{uid}/customMeals/{mealId}`
 - **Private**: Only visible to the user who created them
 
-### 2.8 Household Day Plans (NEW)
-- **Purpose**: Shared meal plans for the household
+### 2.8 Household Day Plans (REDESIGNED)
+- **Purpose**: Shared meal plans for the household with flexible meal entries
 - **Collection**: `households/{householdId}/plans/{date}`
 - **Shared**: All members see the same plan
 - **Admin/Editor**: Can create, modify
 - **Viewer**: Read-only
+- **Meals**: Flexible array — each entry has a meal ID, optional label, and status
+- **Labels**: Optional — user can label a meal as breakfast, lunch, dinner, snack, or leave empty
+- **Status**: Track cooking progress per meal (planned, in_progress, completed, skipped)
 
 ### 2.9 User Preferences
-- **Purpose**: App settings (display name, meals per day)
+- **Purpose**: App settings (display name, onboarding state)
 - **Collection**: `users/{uid}/preferences/main`
+- **Note**: `mealsPerDay` removed (now decided per-generation), `weekStartDay` moved to Household
 
 ---
 
@@ -173,7 +179,7 @@ interface UserProfile {
 
 ---
 
-### 3.3 Household
+### 3.3 Household (UPDATED)
 
 **Path**: `households/{householdId}`
 
@@ -185,6 +191,14 @@ interface Household {
   codeExpiresAt: timestamp;       // Current invite code expiry date
   maxMembers: number;             // Maximum household members (default: 0 = unlimited)
   createdBy: string;              // UID of admin who created
+  
+  // Settings moved from User Preferences
+  weekStartDay: 'monday' | 'sunday';  // When does the week start (default: monday)
+  
+  // Recommended additional fields
+  description?: string;           // "The Smith family meal plan" (optional)
+  timezone?: string;              // "Australia/Sydney" (for meal timing)
+  
   createdAt: timestamp;
   updatedAt: timestamp;
 }
@@ -214,15 +228,16 @@ interface HouseholdAddress {
   "codeExpiresAt": "2026-07-20T00:00:00Z",
   "maxMembers": 5,
   "createdBy": "abc123",
+  "weekStartDay": "monday",
+  "description": "The Smith family meal plan",
+  "timezone": "Australia/Sydney",
   "createdAt": "2026-06-20T10:00:00Z",
   "updatedAt": "2026-06-20T10:00:00Z"
 }
 ```
 
-**Recommended additional fields**:
-- `description?: string` — "The Smith family meal plan" (optional)
-- `timezone?: string` — "Australia/Sydney" (for meal timing)
-- `maxMembers`: Already added to interface above (default: 0 = unlimited)
+**Fields moved into Household**:
+- `weekStartDay` (was in User Preferences) — now set per household
 
 ---
 
@@ -383,7 +398,7 @@ interface CustomMeal {
 
 ---
 
-### 3.8 Household Day Plans (SHARED — NEW)
+### 3.8 Household Day Plans (REDESIGNED)
 
 **Path**: `households/{householdId}/plans/{date}`
 
@@ -392,15 +407,21 @@ interface HouseholdDayPlan {
   date: string;                   // "2026-06-20"
   weekOfYear: number;             // 25
   year: number;                   // 2026
-  breakfastId: number | null;     // Meal ID or null
-  lunchId: number | null;         // Meal ID or null
-  dinnerId: number | null;        // Meal ID or null
-  snackId: number | null;         // Meal ID or null
+  
+  // Flexible meals array — replaces individual breakfastId/lunchId/dinnerId/snackId
+  meals: MealEntry[];
+  
   createdBy: string;              // UID of who created/modified
   lastModifiedBy: string;         // UID of last person to edit
   isGenerated: 0 | 1;             // 1 = auto-generated, 0 = manual
   createdAt: timestamp;
   updatedAt: timestamp;
+}
+
+interface MealEntry {
+  mealId: number | null;          // Meal ID (from referenceMeals or customMeals), null = slot empty/unassigned
+  label?: string;                 // Optional: "breakfast", "lunch", "dinner", "snack", or empty
+  status: 'planned' | 'in_progress' | 'completed' | 'skipped';  // Cooking progress
 }
 ```
 
@@ -410,10 +431,12 @@ interface HouseholdDayPlan {
   "date": "2026-06-20",
   "weekOfYear": 25,
   "year": 2026,
-  "breakfastId": 1,
-  "lunchId": 5,
-  "dinnerId": 12,
-  "snackId": null,
+  "meals": [
+    { "mealId": 1, "label": "breakfast", "status": "completed" },
+    { "mealId": 5, "label": "lunch", "status": "in_progress" },
+    { "mealId": 12, "label": "dinner", "status": "planned" },
+    { "mealId": null, "label": "", "status": "planned" }
+  ],
   "createdBy": "abc123",
   "lastModifiedBy": "abc123",
   "isGenerated": 1,
@@ -422,26 +445,58 @@ interface HouseholdDayPlan {
 }
 ```
 
-**Note**: `breakfastId/lunchId/dinnerId` can reference:
-- Reference meals (IDs 1-77 from `referenceMeals/`)
-- Custom meals (IDs 100+ from `users/{uid}/customMeals/`)
+**Status Meanings**:
+| Status | Meaning |
+|--------|---------|
+| `planned` | Meal is scheduled but not started |
+| `in_progress` | Currently cooking the meal |
+| `completed` | Meal has been cooked/eaten |
+| `skipped` | Skipped this meal (not cooked) |
+
+**Label Flexibility**:
+- Label is **optional** — can be empty string if user doesn't want to categorize
+- Recommended labels: `"breakfast"`, `"lunch"`, `"dinner"`, `"snack"`
+- Users can use custom labels if desired
+
+**Key Changes from Previous Design**:
+- Removed: `breakfastId`, `lunchId`, `dinnerId`, `snackId` (4 separate fields)
+- Added: `meals: MealEntry[]` (single flexible array)
+- Added: Per-meal `status` for tracking cooking progress
+- Added: Optional `label` field (replaces rigid slot assignment)
 
 ---
 
-### 3.9 User Preferences
+### 3.9 User Preferences (SIMPLIFIED)
 
 **Path**: `users/{uid}/preferences/main`
 
 ```typescript
 interface UserPreferences {
   displayName: string;            // "John"
-  mealsPerDay: 1 | 2 | 3;         // 1 = dinner only, 2 = lunch+dinner, 3 = all
-  weekStartDay: 'monday' | 'sunday';
   onboardingComplete: boolean;    // true
   seedDataLoaded: boolean;        // true
   updatedAt: timestamp;
 }
 ```
+
+**Example**:
+```json
+{
+  "displayName": "John",
+  "onboardingComplete": true,
+  "seedDataLoaded": true,
+  "updatedAt": "2026-06-20T10:00:00Z"
+}
+```
+
+**Fields Removed**:
+- `mealsPerDay` — REMOVED. Number of meals is now decided per-generation (admin/editor chooses how many meals when generating)
+- `weekStartDay` — MOVED to Household (section 3.3). This is a household-level setting, not per-user.
+
+**Fields Remaining**:
+- `displayName` — User's display name
+- `onboardingComplete` — Whether onboarding is done
+- `seedDataLoaded` — Whether reference meals have been cached locally
 
 ---
 
@@ -485,7 +540,7 @@ interface MealSuggestion {
   suggestedBy: string;            // UID of viewer who suggested
   displayName: string;            // Viewer's name (cached)
   date: string;                   // "2026-06-20" (which date to change)
-  slot: 'breakfast' | 'lunch' | 'dinner' | 'snack'; // Which meal slot
+  mealIndex: number;              // Index in the meals[] array to replace
   currentMealId: number;          // Current meal ID
   suggestedMealId: number;        // Suggested replacement meal ID
   reason?: string;                // Optional reason for suggestion
@@ -503,7 +558,7 @@ interface MealSuggestion {
   "suggestedBy": "def456",
   "displayName": "Jane Smith",
   "date": "2026-06-20",
-  "slot": "dinner",
+  "mealIndex": 2,
   "currentMealId": 12,
   "suggestedMealId": 5,
   "reason": "I'm craving Sinigang tonight!",
@@ -514,6 +569,8 @@ interface MealSuggestion {
 
 **Purpose**: Viewers can suggest meal swaps. Admins/Editors can approve or reject. This gives viewers a voice without letting them directly modify plans.
 
+**Note**: The `mealIndex` field references the position in the `meals[]` array of the day plan document.
+
 ---
 
 ### 3.12 Plan Activity Log (FUTURE)
@@ -523,7 +580,7 @@ interface MealSuggestion {
 ```typescript
 interface ActivityLog {
   date: string;                   // "2026-06-20" (which plan date was modified)
-  action: 'created' | 'regenerated' | 'manual_edit' | 'suggestion_applied' | 'suggestion_rejected';
+  action: 'created' | 'regenerated' | 'manual_edit' | 'status_updated' | 'suggestion_applied' | 'suggestion_rejected';
   performedBy: string;            // UID of who did the action
   displayName: string;            // Name of who did the action
   details?: string;               // "Changed dinner from Chicken Adobo to Sinigang"
@@ -535,15 +592,15 @@ interface ActivityLog {
 ```json
 {
   "date": "2026-06-20",
-  "action": "regenerated",
-  "performedBy": "abc123",
-  "displayName": "Mishari",
-  "details": "Regenerated entire week plan",
+  "action": "status_updated",
+  "performedBy": "def456",
+  "displayName": "Jane Smith",
+  "details": "Marked lunch as completed",
   "createdAt": "2026-06-20T10:00:00Z"
 }
 ```
 
-**Purpose**: Track who modified what and when. This helps admins audit changes and see who generated/edited the plan.
+**Note**: Added `status_updated` action type for when users change meal statuses (planned → in_progress → completed).
 
 ---
 
@@ -567,7 +624,8 @@ interface ActivityLog {
            ▼                                    ▼
 ┌─────────────────────┐    ┌──────────────────────────────┐
 │   User Profile      │    │      Household               │
-│  (1:1 per user)     │    │  (has address, invite code)  │
+│  (1:1 per user)     │    │  (has address, invite code,  │
+│                      │    │   weekStartDay, timezone)   │
 └─────────────────────┘    └──────────┬───────────────────┘
            │                          │
            │                          ├──────────────────┐
@@ -579,12 +637,11 @@ interface ActivityLog {
            │              └────────────────┘    └───────────────────┘
            │                          │
            │                          ▼
-           │              ┌──────────────────────────────────┐
-           │              │  Household Day Plans (SHARED)     │
-           │              │  - All members see same plan      │
-           │              │  - Admin/Editor can modify         │
-           │              │  - Viewer can only read            │
-           │              └──────────────────────────────────┘
+           │              ┌─────────────────────────────────────────┐
+           │              │  Household Day Plans (SHARED)           │
+           │              │  - meals: [{mealId, label?, status}]    │
+           │              │  - Flexible array with per-meal status  │
+           │              └─────────────────────────────────────────┘
            │
            ▼
 ┌─────────────────────┐
@@ -600,6 +657,7 @@ interface ActivityLog {
 3. **Household → Day Plans**: One-to-many (household has shared plans)
 4. **User → Custom Meals**: One-to-many (a user can create custom meals)
 5. **Reference Meals → All**: Many-to-many (all users/Households query the same meals)
+6. **Day Plan → Meals[]**: One-to-many (a day plan has multiple meal entries)
 
 ---
 
@@ -614,6 +672,9 @@ interface ActivityLog {
 3. User A enters:
    - Household name (e.g., "Smith Family")
    - Address (street, city, state, postcode, country)
+   - Week start day (monday or sunday)
+   - Timezone (optional)
+   - Description (optional)
 4. System creates:
    - New document in `households/{householdId}`
    - Member document in `households/{householdId}/members/{uidA}` with role `admin`
@@ -637,7 +698,7 @@ interface ActivityLog {
     │         - Household name, address
     │         - Your role (Admin/Editor/Viewer)
     │         - Members list
-    │         - Button: "Go to Meal Plans"
+    │         - Button: "Go to Meal Plans" (Day/Week)
     │         - Button: "Household Settings"
     │
     ├── NO → [Show "No household" message]
@@ -650,6 +711,7 @@ interface ActivityLog {
         ↓
         {Pending invites found?}
             ├── YES → [Show "Pending Invitations" section]
+            │         For each invite:
             │         - Household name
             │         - Invited by: [admin name]
             │         - Role offered: Viewer/Editor
@@ -732,12 +794,15 @@ interface ActivityLog {
 2. View meals for any date
 3. If role is `editor`: can create/edit/regenerate plans
 4. If role is `viewer`: can only view
+5. **Update meal statuses** (all roles can update status: planned → in_progress → completed)
 
 **Meal plan flow:**
 1. Admin or Editor creates/generates a plan
-2. Plan is saved to `households/{householdId}/plans/{date}`
-3. All members see the SAME plan
-4. When a member views Day or Week, they query `households/{householdId}/plans/`
+2. During generation, they choose how many meals per day
+3. Plan is saved to `households/{householdId}/plans/{date}` with `meals[]` array
+4. All members see the SAME plan
+5. Any member can update meal statuses (planned → cooking → done)
+6. When a member views Day or Week, they query `households/{householdId}/plans/`
 
 ---
 
@@ -783,12 +848,15 @@ service cloud.firestore {
         allow update: if request.auth.uid == get(/databases/$(database)/documents/households/$(householdId)).data.createdBy;
       }
       
-      // Plans: Read by all members, write by admin/editor
+      // Plans: Read by all members, write by admin/editor, status update by all members
       match /plans/{date} {
         allow read: if request.auth != null && 
           exists(/databases/$(database)/documents/households/$(householdId)/members/$(request.auth.uid));
-        allow write: if request.auth != null && 
+        allow create: if request.auth != null && 
           get(/databases/$(database)/documents/households/$(householdId)/members/$(request.auth.uid)).data.role in ['admin', 'editor'];
+        allow update: if request.auth != null && 
+          exists(/databases/$(database)/documents/households/$(householdId)/members/$(request.auth.uid));
+        // Note: All members can update status, but only admin/editor can change meals
       }
     }
   }
@@ -805,19 +873,25 @@ service cloud.firestore {
 |--------|--------|-------|
 | **Meal planning requirement** | Any logged-in user | Must belong to a household |
 | **Plan storage** | `users/{uid}/dayPlans/{date}` | `households/{householdId}/plans/{date}` |
-| **Plan visibility** | Personal | Shared by all household members |
+| **Plan structure** | 4 fixed slots (breakfastId, lunchId, dinnerId, snackId) | Flexible `meals[]` array |
+| **Meal labels** | Fixed (breakfast/lunch/dinner/snack) | Optional — user can label or leave empty |
+| **Cooking status** | Not tracked | Per-meal status: planned → in_progress → completed → skipped |
 | **Roles** | None | admin, editor, viewer |
-| **Joining** | Direct (no approval) | Request → Accept/Reject |
+| **Joining** | Direct (no approval) | Request → Accept/Reject or Invite → Accept/Reject |
 | **Invite codes** | Optional | Required, with expiry |
+| **Meals per day** | Fixed from user preferences | Chosen per-generation by admin/editor |
+| **Week start day** | Per user | Per household |
 | **Address** | Per user (optional) | Per household (required) |
 
 ### Journey Updates Required
 
 1. **Sign-Up**: No change (email + password)
 2. **Post Sign-Up**: User MUST create or join a household before planning meals
-3. **Settings**: Add household management (create, join, manage members)
-4. **Days/Week**: Query `households/{householdId}/plans/{date}` instead of user-level
-5. **Role enforcement**: Viewer cannot see "Generate" or "Regenerate" buttons
+3. **Settings**: Remove `weekStartDay` and `mealsPerDay` (these are now household-level)
+4. **Days/Week**: Display `meals[]` array instead of fixed slots
+5. **Generate**: Show prompt asking "How many meals per day?" before generating
+6. **Meal status**: All members can update meal status (planned → in_progress → completed/skipped)
+7. **Labels**: Optional — user can add/remove labels on meals
 
 ---
 
@@ -891,14 +965,27 @@ households/{householdId}/
 
 ## 10. Summary of Changes
 
-### Data Structure Changes
+### Data Structure Changes (This Version)
+
+| Change | Description |
+|--------|-------------|
+| **Household** | Added `weekStartDay`, `description`, `timezone` (was in User Preferences) |
+| **Household Plans** | Replaced 4 fixed slots with flexible `meals[]` array |
+| **Meal Entry** | NEW structure: `{mealId, label?, status}` — optional label, per-meal cooking status |
+| **Meal Status** | NEW field: `planned`, `in_progress`, `completed`, `skipped` |
+| **User Preferences** | Removed `mealsPerDay` (now per-generation), removed `weekStartDay` (moved to Household) |
+| **Activity Log** | Added `status_updated` action type for meal status changes |
+| **Security Rules** | All members can update meal status; only admin/editor can modify meals |
+
+### Previous Changes (Carried Over)
 
 | Change | Description |
 |--------|-------------|
 | **Household** | Added `address`, `inviteCode`, `codeExpiresAt`, `maxMembers`, `formattedAddress` |
 | **Household Members** | Roles changed: `admin`, `editor`, `viewer` (was `admin`, `member`) |
 | **Join Requests** | NEW collection for pending/accepted/rejected requests |
-| **Household Plans** | NEW — plans moved from per-user to household level |
+| **Household Plans** | Moved from per-user to household level |
+| **Household Invites** | NEW collection for admin → user invitations |
 | **Invite Codes** | NEW subcollection for code history |
 | **Activity Log** | NEW subcollection for plan change tracking |
 | **Suggestions** | NEW subcollection for viewer meal swap suggestions (future) |
@@ -911,13 +998,14 @@ households/{householdId}/
 |---------|--------|
 | **Sign-Up** | No change |
 | **Post Sign-Up** | Must create or join household first |
-| **Login** | Check household membership, redirect if none |
-| **Day View** | Read from `households/{householdId}/plans/{date}` |
-| **Week View** | Read from `households/{householdId}/plans/` |
-| **Settings** | NEW household management section |
+| **Login** | Check household membership, redirect to Dashboard |
+| **Day View** | Display flexible `meals[]` array; generate prompt for meal count |
+| **Week View** | Display flexible `meals[]` array; generate prompt for meal count |
+| **Settings** | Removed `mealsPerDay` and `weekStartDay` (household-level now) |
 | **Meal Planning** | Only admin/editor can create/modify plans |
-| **Viewing** | All members can view (viewer=read-only) |
+| **Meal Status** | All members can update meal statuses |
+| **Viewing** | All members can view (viewer=read-only for meals, but can update status) |
 
 ---
 
-*Document version 3.1 — June 2026 (Added recommendations: invite codes history, activity log, suggestions, household limits)*
+*Document version 4.0 — June 2026 (Household-driven architecture with flexible meals array)*
