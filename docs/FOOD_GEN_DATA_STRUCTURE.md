@@ -5,25 +5,41 @@
 1. [Overview](#1-overview)
 2. [Core Entities](#2-core-entities)
 3. [Firestore Collections](#3-firestore-collections)
+   - 3.1 [Reference Meals](#31-reference-meals-shared)
+   - 3.2 [User Profile](#32-user-profile)
+   - 3.3 [Household](#33-household)
+   - 3.4 [Household Members](#34-household-members)
+   - 3.5 [Join Requests](#35-join-requests)
+   - 3.6 [Household Invites](#36-household-invites-new--admin--user)
+   - 3.7 [Custom Meals](#37-custom-meals-per-user)
+   - 3.8 [Household Day Plans](#38-household-day-plans-shared)
+   - 3.9 [User Preferences](#39-user-preferences)
+   - 3.10 [Invite Code History](#310-invite-code-history-new)
+   - 3.11 [Meal Suggestions](#311-meal-suggestions-future)
+   - 3.12 [Plan Activity Log](#312-plan-activity-log-future)
 4. [Data Relationships](#4-data-relationships)
-5. [Household Linking Flow](#5-household-linking-flow)
+5. [Household Management Flow](#5-household-management-flow)
 6. [Security Rules](#6-security-rules)
-7. [Migration from Current State](#7-migration-from-current-state)
+7. [User Journeys Impact](#7-user-journeys-impact)
+8. [Cost Comparison](#8-cost-comparison)
+9. [Recommendations & Future Features](#9-recommendations--future-features)
+10. [Summary of Changes](#10-summary-of-changes)
 
 ---
 
 ## 1. Overview
 
 FoodGen is a meal planning app that supports:
-- **Individual users** with personal preferences
-- **Household linking** — multiple users can share meal plans
+- **Users with profile** (name, email, password via Firebase Auth)
+- **Household-driven planning** — users CANNOT plan meals without being linked to a household
 - **77 Filipino dishes** as reference data (stored ONCE, shared by all users)
-- **Day/Week meal plans** with flexible slot assignment
+- **Shared meal plans** — all household members see the same plan
+- **Role-based access** — Admin (full control), Editor (can create/edit plans), Viewer (read-only)
 
 ### Design Principles
 
-- **User-centric**: Each user has their own profile and preferences
-- **Household-aware**: Users can link to a household to share meal plans
+- **Household-first**: Meal planning is a household activity
+- **Role-based**: Different levels of access depending on role
 - **Efficient**: Reference data stored once, not duplicated per user
 - **Flexible**: Meals can be assigned to any slot (breakfast, lunch, dinner, snack)
 - **Offline-first**: Firestore with IndexedDB persistence
@@ -35,8 +51,13 @@ FoodGen is a meal planning app that supports:
 - All users query this collection for meal selection
 - No duplication across users
 
+**Household Data (Shared)**:
+- Meal plans stored at household level (not per-user)
+- All members see the same plan
+- Invite codes, join requests managed here
+
 **User Data (Private)**:
-- User profiles, preferences, custom meals, day plans
+- User profile, preferences, custom meals
 - Stored in `users/{uid}/` subcollections
 - Isolated per user
 
@@ -45,7 +66,7 @@ FoodGen is a meal planning app that supports:
 ## 2. Core Entities
 
 ### 2.1 User Profile
-- **Purpose**: Store user information (name, email, address, preferences)
+- **Purpose**: Store user information (name, email)
 - **Collection**: `users/{uid}/profile/main`
 - **One-to-one**: Each Firebase Auth user has exactly one profile
 - **Note**: Passwords are NOT stored here — handled by Firebase Authentication
@@ -54,37 +75,58 @@ FoodGen is a meal planning app that supports:
 - **Purpose**: Group multiple users who share meal plans
 - **Collection**: `households/{householdId}`
 - **Members**: Linked via `householdMembers` subcollection
+- **Address**: Each household has an address for reference
 
 ### 2.3 Household Member
 - **Purpose**: Link a user to a household with a role
 - **Collection**: `households/{householdId}/members/{uid}`
-- **Roles**: `admin` (creator) or `member` (joined)
+- **Roles**: 
+  - `admin` — full control (create/edit plans, manage members, accept/reject requests)
+  - `editor` — can create and edit meal plans, regenerate
+  - `viewer` — can only view the plan, cannot create or modify
 
-### 2.4 Reference Meals
+### 2.4 Join Request (User → Household)
+- **Purpose**: User requests to join an existing household
+- **Collection**: `households/{householdId}/joinRequests/{uid}`
+- **Direction**: User → Household (user initiates)
+- **Statuses**: `pending`, `accepted`, `rejected`
+- **Accepted**: becomes a household member
+
+### 2.5 Household Invite (Admin → User)
+- **Purpose**: Admin invites a user to join the household
+- **Collection**: `households/{householdId}/invites/{inviteId}`
+- **Direction**: Household → User (admin initiates)
+- **Statuses**: `pending`, `accepted`, `rejected`
+- **Accepted**: becomes a household member
+- **Notified**: The invited user can see the invite on their dashboard
+
+### 2.6 Reference Meals
 - **Purpose**: 77 Filipino dishes available for ALL users
 - **Collection**: `referenceMeals/{mealId}`
 - **Shared**: Stored ONCE, read by all users
 - **Read-only**: Users cannot modify reference meals
 
-### 2.5 Custom Meals
+### 2.7 Custom Meals
 - **Purpose**: User-created meals (unique to each user)
 - **Collection**: `users/{uid}/customMeals/{mealId}`
 - **Private**: Only visible to the user who created them
 
-### 2.6 Day Plans
-- **Purpose**: Generated meal plans for specific dates
-- **Collection**: `users/{uid}/dayPlans/{date}`
-- **Household sharing**: If user is in a household, plan is also visible to household members
+### 2.8 Household Day Plans (NEW)
+- **Purpose**: Shared meal plans for the household
+- **Collection**: `households/{householdId}/plans/{date}`
+- **Shared**: All members see the same plan
+- **Admin/Editor**: Can create, modify
+- **Viewer**: Read-only
 
-### 2.7 User Preferences
-- **Purpose**: App settings (meals per day, week start day, display name)
+### 2.9 User Preferences
+- **Purpose**: App settings (display name, meals per day)
 - **Collection**: `users/{uid}/preferences/main`
 
 ---
 
 ## 3. Firestore Collections
 
-### 3.1 Reference Meals (NEW - Shared)
+### 3.1 Reference Meals (Shared)
 
 **Path**: `referenceMeals/{mealId}`
 
@@ -106,33 +148,6 @@ interface ReferenceMeal {
 }
 ```
 
-**Example**:
-```json
-{
-  "id": 1,
-  "name": "Chicken Adobo",
-  "suggestedFor": ["breakfast", "lunch", "dinner"],
-  "cuisine": "Filipino",
-  "dietaryTags": ["gluten-free"],
-  "prepTimeMinutes": 40,
-  "difficulty": "easy",
-  "emoji": "🍗",
-  "ingredients": [
-    { "name": "Chicken thighs", "quantity": "500g" },
-    { "name": "Soy sauce", "quantity": "1/4 cup" }
-  ],
-  "steps": [
-    "Combine chicken with soy sauce, vinegar, and garlic.",
-    "Marinate for 30 minutes."
-  ],
-  "calories": 480,
-  "isReference": true,
-  "createdAt": "2026-06-19T10:00:00Z"
-}
-```
-
-**Total**: 77 documents (one-time setup)
-
 ---
 
 ### 3.2 User Profile
@@ -144,67 +159,43 @@ interface UserProfile {
   uid: string;                    // Firebase Auth UID
   displayName: string;            // "John Doe"
   email: string;                  // "john@example.com"
-  // Note: Password is NOT stored here
-  // Passwords are handled securely by Firebase Authentication
-  phoneNumber?: string;           // "+1234567890"
-  address?: Address;              // User's address
-  householdId?: string;           // Linked household ID (if any)
-  householdRole?: 'admin' | 'member'; // Role in household
+  // Note: Password is NOT stored here — handled by Firebase Authentication
+  householdId?: string;           // Linked household ID (null if not in a household)
+  householdRole?: 'admin' | 'editor' | 'viewer'; // Role in household
   createdAt: timestamp;
   updatedAt: timestamp;
-}
-
-interface Address {
-  street: string;                 // "123 Main St"
-  city: string;                   // "Sydney"
-  state: string;                  // "NSW"
-  postcode: string;               // "2000"
-  country: string;                // "Australia"
-}
-```
-
-**Example**:
-```json
-{
-  "uid": "abc123",
-  "displayName": "Mishari",
-  "email": "mishari@example.com",
-  "phoneNumber": "+61412345678",
-  "address": {
-    "street": "123 George St",
-    "city": "Sydney",
-    "state": "NSW",
-    "postcode": "2000",
-    "country": "Australia"
-  },
-  "householdId": "household_xyz",
-  "householdRole": "admin",
-  "createdAt": "2026-06-19T10:00:00Z",
-  "updatedAt": "2026-06-19T10:00:00Z"
 }
 ```
 
 **Authentication Note**: 
 - Passwords are handled by Firebase Authentication (separate from Firestore)
-- Firebase Auth stores passwords securely (hashed, encrypted)
 - We only store the user's UID, email, and profile data in Firestore
-- When user signs in, Firebase Auth verifies credentials and returns UID
-- We use that UID to access their Firestore data
 
 ---
 
-### 3.3 Households
+### 3.3 Household
 
 **Path**: `households/{householdId}`
 
 ```typescript
 interface Household {
-  id: string;                     // Auto-generated Firestore ID
-  name: string;                   // "Smith Family"
-  createdBy: string;              // UID of admin
-  code: string;                   // "SMITH-2024" (shareable code)
+  name: string;                   // "Smith Family" (household name)
+  address: HouseholdAddress;      // Household address
+  inviteCode: string;             // Current active invite code "SMITH-JUN2026"
+  codeExpiresAt: timestamp;       // Current invite code expiry date
+  maxMembers: number;             // Maximum household members (default: 0 = unlimited)
+  createdBy: string;              // UID of admin who created
   createdAt: timestamp;
   updatedAt: timestamp;
+}
+
+interface HouseholdAddress {
+  street: string;                 // "123 Main St"
+  city: string;                   // "Sydney"
+  state: string;                  // "NSW"
+  postcode: string;               // "2000"
+  country: string;                // "Australia"
+  formattedAddress?: string;      // Full address string for display
 }
 ```
 
@@ -212,12 +203,26 @@ interface Household {
 ```json
 {
   "name": "Smith Family",
+  "address": {
+    "street": "123 George St",
+    "city": "Sydney",
+    "state": "NSW",
+    "postcode": "2000",
+    "country": "Australia"
+  },
+  "inviteCode": "SMITH-JUN2026",
+  "codeExpiresAt": "2026-07-20T00:00:00Z",
+  "maxMembers": 5,
   "createdBy": "abc123",
-  "code": "SMITH-2024",
-  "createdAt": "2026-06-19T10:00:00Z",
-  "updatedAt": "2026-06-19T10:00:00Z"
+  "createdAt": "2026-06-20T10:00:00Z",
+  "updatedAt": "2026-06-20T10:00:00Z"
 }
 ```
+
+**Recommended additional fields**:
+- `description?: string` — "The Smith family meal plan" (optional)
+- `timezone?: string` — "Australia/Sydney" (for meal timing)
+- `maxMembers`: Already added to interface above (default: 0 = unlimited)
 
 ---
 
@@ -230,31 +235,137 @@ interface HouseholdMember {
   uid: string;                    // User's Firebase UID
   displayName: string;            // Cached for quick access
   email: string;                  // Cached for quick access
-  role: 'admin' | 'member';       // admin = creator, member = joined
+  role: 'admin' | 'editor' | 'viewer'; // Access level
   joinedAt: timestamp;
+}
+```
+
+**Role Permissions**:
+
+| Action | Admin | Editor | Viewer |
+|--------|-------|--------|--------|
+| View meal plans | ✅ | ✅ | ✅ |
+| Create/edit plans | ✅ | ✅ | ❌ |
+| Regenerate meals | ✅ | ✅ | ❌ |
+| Delete plans | ✅ | ✅ | ❌ |
+| Accept/reject join requests | ✅ | ❌ | ❌ |
+| Remove members | ✅ | ❌ | ❌ |
+| Change member roles | ✅ | ❌ | ❌ |
+| Generate invite code | ✅ | ❌ | ❌ |
+| Delete household | ✅ | ❌ | ❌ |
+
+---
+
+### 3.5 Join Requests
+
+**Path**: `households/{householdId}/joinRequests/{uid}`
+
+```typescript
+interface JoinRequest {
+  uid: string;                    // User's Firebase UID requesting to join
+  displayName: string;            // User's name (cached)
+  email: string;                  // User's email (cached)
+  status: 'pending' | 'accepted' | 'rejected';
+  requestedRole?: 'editor' | 'viewer'; // Requested role (default: viewer)
+  requestedAt: timestamp;
+  respondedAt?: timestamp;        // When admin accepted/rejected
+  respondedBy?: string;           // UID of admin who responded
 }
 ```
 
 **Example**:
 ```json
 {
-  "uid": "abc123",
-  "displayName": "Mishari",
-  "email": "mishari@example.com",
-  "role": "admin",
-  "joinedAt": "2026-06-19T10:00:00Z"
+  "uid": "def456",
+  "displayName": "Jane Smith",
+  "email": "jane@example.com",
+  "status": "pending",
+  "requestedRole": "viewer",
+  "requestedAt": "2026-06-20T10:00:00Z"
+}
+```
+
+**Accepted state**:
+```json
+{
+  "uid": "def456",
+  "displayName": "Jane Smith",
+  "email": "jane@example.com",
+  "status": "accepted",
+  "requestedRole": "viewer",
+  "requestedAt": "2026-06-20T10:00:00Z",
+  "respondedAt": "2026-06-20T10:30:00Z",
+  "respondedBy": "abc123"
 }
 ```
 
 ---
 
-### 3.5 Custom Meals
+### 3.6 Household Invites (NEW — Admin → User)
+
+**Path**: `households/{householdId}/invites/{inviteId}`
+
+```typescript
+interface HouseholdInvite {
+  inviteId: string;               // Auto-generated invite ID
+  invitedEmail: string;           // Email of the invited user
+  invitedUid?: string;            // UID of invited user (populated when they accept/reject)
+  invitedDisplayName?: string;    // Name of invited user (populated after acceptance)
+  invitedBy: string;              // UID of admin who sent the invite
+  invitedByName: string;          // Name of admin who sent the invite (cached)
+  role: 'editor' | 'viewer';      // Role being offered (default: viewer)
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: timestamp;
+  respondedAt?: timestamp;        // When user accepted/rejected
+}
+```
+
+**Example - Pending**:
+```json
+{
+  "inviteId": "invite_abc123",
+  "invitedEmail": "jane@example.com",
+  "invitedUid": null,
+  "invitedDisplayName": null,
+  "invitedBy": "abc123",
+  "invitedByName": "Mishari",
+  "role": "viewer",
+  "status": "pending",
+  "createdAt": "2026-06-20T10:00:00Z"
+}
+```
+
+**Example - Accepted**:
+```json
+{
+  "inviteId": "invite_abc123",
+  "invitedEmail": "jane@example.com",
+  "invitedUid": "def456",
+  "invitedDisplayName": "Jane Smith",
+  "invitedBy": "abc123",
+  "invitedByName": "Mishari",
+  "role": "viewer",
+  "status": "accepted",
+  "createdAt": "2026-06-20T10:00:00Z",
+  "respondedAt": "2026-06-20T12:00:00Z"
+}
+```
+
+**Purpose**: Track invites sent by admin to specific users via email. The invited user can see all pending invites on their Household Dashboard and accept or reject them.
+
+**How user discovers invites**:
+- On login, app queries `households/{id}/invites/` where status is `pending` and `invitedEmail` matches the logged-in user's email
+- Displays a "Pending Invites" section on the Household Dashboard
+
+---
+
+### 3.7 Custom Meals (Per User)
 
 **Path**: `users/{uid}/customMeals/{mealId}`
 
 ```typescript
 interface CustomMeal {
-  id: number;                     // Auto-generated ID
+  id: number;                     // Auto-generated ID (100+)
   name: string;                   // "Pork Sisig"
   suggestedFor: string[];         // ["breakfast", "lunch", "dinner"]
   cuisine: string;                // "Filipino"
@@ -270,46 +381,23 @@ interface CustomMeal {
 }
 ```
 
-**Example**:
-```json
-{
-  "id": 101,
-  "name": "Pork Sisig",
-  "suggestedFor": ["lunch", "dinner"],
-  "cuisine": "Filipino",
-  "dietaryTags": [],
-  "prepTimeMinutes": 40,
-  "difficulty": "medium",
-  "emoji": "🍳",
-  "ingredients": [
-    { "name": "Ground pork", "quantity": "250g" },
-    { "name": "Onion", "quantity": "1, chopped" }
-  ],
-  "steps": [
-    "Grill pork until crispy.",
-    "Chop finely and mix with onions."
-  ],
-  "calories": 320,
-  "isCustom": 1,
-  "createdAt": "2026-06-19T10:00:00Z"
-}
-```
-
 ---
 
-### 3.6 Day Plans
+### 3.8 Household Day Plans (SHARED — NEW)
 
-**Path**: `users/{uid}/dayPlans/{date}`
+**Path**: `households/{householdId}/plans/{date}`
 
 ```typescript
-interface DayPlan {
-  date: string;                   // "2026-06-19"
+interface HouseholdDayPlan {
+  date: string;                   // "2026-06-20"
   weekOfYear: number;             // 25
   year: number;                   // 2026
   breakfastId: number | null;     // Meal ID or null
   lunchId: number | null;         // Meal ID or null
   dinnerId: number | null;        // Meal ID or null
   snackId: number | null;         // Meal ID or null
+  createdBy: string;              // UID of who created/modified
+  lastModifiedBy: string;         // UID of last person to edit
   isGenerated: 0 | 1;             // 1 = auto-generated, 0 = manual
   createdAt: timestamp;
   updatedAt: timestamp;
@@ -319,16 +407,18 @@ interface DayPlan {
 **Example**:
 ```json
 {
-  "date": "2026-06-19",
+  "date": "2026-06-20",
   "weekOfYear": 25,
   "year": 2026,
   "breakfastId": 1,
   "lunchId": 5,
   "dinnerId": 12,
   "snackId": null,
+  "createdBy": "abc123",
+  "lastModifiedBy": "abc123",
   "isGenerated": 1,
-  "createdAt": "2026-06-19T10:00:00Z",
-  "updatedAt": "2026-06-19T10:00:00Z"
+  "createdAt": "2026-06-20T10:00:00Z",
+  "updatedAt": "2026-06-20T10:00:00Z"
 }
 ```
 
@@ -338,7 +428,7 @@ interface DayPlan {
 
 ---
 
-### 3.7 User Preferences
+### 3.9 User Preferences
 
 **Path**: `users/{uid}/preferences/main`
 
@@ -348,7 +438,61 @@ interface UserPreferences {
   mealsPerDay: 1 | 2 | 3;         // 1 = dinner only, 2 = lunch+dinner, 3 = all
   weekStartDay: 'monday' | 'sunday';
   onboardingComplete: boolean;    // true
-  seedDataLoaded: boolean;        // true (indicates reference meals have been cached locally)
+  seedDataLoaded: boolean;        // true
+  updatedAt: timestamp;
+}
+```
+
+---
+
+### 3.10 Invite Code History (NEW)
+
+**Path**: `households/{householdId}/inviteCodes/{codeId}`
+
+```typescript
+interface InviteCodeRecord {
+  code: string;                   // "SMITH-JUN2026"
+  generatedBy: string;            // UID of admin who generated
+  generatedAt: timestamp;         // When generated
+  expiresAt: timestamp;           // Expiry date
+  isActive: boolean;              // true = current active, false = replaced/expired
+  usedCount: number;              // Number of times this code was used to join
+}
+```
+
+**Example**:
+```json
+{
+  "code": "SMITH-JUN2026",
+  "generatedBy": "abc123",
+  "generatedAt": "2026-06-20T10:00:00Z",
+  "expiresAt": "2026-07-20T00:00:00Z",
+  "isActive": true,
+  "usedCount": 2
+}
+```
+
+**Purpose**: Track all invite codes generated for a household. When admin regenerates a code, old code becomes inactive, but history is preserved for auditing.
+
+---
+
+### 3.11 Meal Suggestions (FUTURE)
+
+**Path**: `households/{householdId}/suggestions/{suggestionId}`
+
+```typescript
+interface MealSuggestion {
+  suggestedBy: string;            // UID of viewer who suggested
+  displayName: string;            // Viewer's name (cached)
+  date: string;                   // "2026-06-20" (which date to change)
+  slot: 'breakfast' | 'lunch' | 'dinner' | 'snack'; // Which meal slot
+  currentMealId: number;          // Current meal ID
+  suggestedMealId: number;        // Suggested replacement meal ID
+  reason?: string;                // Optional reason for suggestion
+  status: 'pending' | 'approved' | 'rejected';
+  respondedBy?: string;           // UID of admin/editor who responded
+  respondedAt?: timestamp;
+  createdAt: timestamp;
   updatedAt: timestamp;
 }
 ```
@@ -356,16 +500,50 @@ interface UserPreferences {
 **Example**:
 ```json
 {
-  "displayName": "John",
-  "mealsPerDay": 2,
-  "weekStartDay": "monday",
-  "onboardingComplete": true,
-  "seedDataLoaded": true,
-  "updatedAt": "2026-06-19T10:00:00Z"
+  "suggestedBy": "def456",
+  "displayName": "Jane Smith",
+  "date": "2026-06-20",
+  "slot": "dinner",
+  "currentMealId": 12,
+  "suggestedMealId": 5,
+  "reason": "I'm craving Sinigang tonight!",
+  "status": "pending",
+  "createdAt": "2026-06-20T10:00:00Z"
 }
 ```
 
-**Note**: `seedDataLoaded` now indicates that the 77 reference meals have been cached in IndexedDB for offline use, not that user-specific seed data was loaded.
+**Purpose**: Viewers can suggest meal swaps. Admins/Editors can approve or reject. This gives viewers a voice without letting them directly modify plans.
+
+---
+
+### 3.12 Plan Activity Log (FUTURE)
+
+**Path**: `households/{householdId}/activityLog/{logId}`
+
+```typescript
+interface ActivityLog {
+  date: string;                   // "2026-06-20" (which plan date was modified)
+  action: 'created' | 'regenerated' | 'manual_edit' | 'suggestion_applied' | 'suggestion_rejected';
+  performedBy: string;            // UID of who did the action
+  displayName: string;            // Name of who did the action
+  details?: string;               // "Changed dinner from Chicken Adobo to Sinigang"
+  createdAt: timestamp;
+}
+```
+
+**Example**:
+```json
+{
+  "date": "2026-06-20",
+  "action": "regenerated",
+  "performedBy": "abc123",
+  "displayName": "Mishari",
+  "details": "Regenerated entire week plan",
+  "createdAt": "2026-06-20T10:00:00Z"
+}
+```
+
+**Purpose**: Track who modified what and when. This helps admins audit changes and see who generated/edited the plan.
 
 ---
 
@@ -377,7 +555,6 @@ interface UserPreferences {
 ┌─────────────────────────────────────────────────────────┐
 │                    Reference Meals                        │
 │              (77 Filipino dishes - SHARED)                │
-│              referenceMeals/{mealId}                     │
 └───────────────────────┬─────────────────────────────────┘
                         │
                         │ (queried by all users)
@@ -385,110 +562,182 @@ interface UserPreferences {
 ┌───────────────────────▼─────────────────────────────────┐
 │                      Firebase Auth                        │
 │                    (uid: string)                          │
-└───────────────────────┬─────────────────────────────────┘
-                        │
-                        ├──────────────────────────────────┐
-                        │                                  │
-                ┌───────▼────────┐                ┌────────▼──────────┐
-                │  User Profile  │                │   Households       │
-                │  (1:1)         │                │   (1:many users)   │
-                └────────────────┘                └───────────────────┘
-                        │                                  │
-                        │                                  │
-                ┌───────▼──────────────────────────────────▼────────┐
-                │              Custom Meals (per user)                │
-                │  - User-created meals only (isCustom: 1)           │
-                │  - NO seed meals (those are in referenceMeals)      │
-                └────────────────────────────────────────────────────┘
-                        │
-                        ├──────────────────────────────────┐
-                        │                                  │
-                ┌───────▼────────┐                ┌────────▼──────────┐
-                │   Day Plans    │                │  Household Plans  │
-                │  (per user)    │                │  (shared view)    │
-                └────────────────┘                └───────────────────┘
-                        │                                  │
-                        │                                  │
-                ┌───────▼──────────────────────────────────▼────────┐
-                │         Household Members (shared view)            │
-                │  - All members see each other's day plans          │
-                └────────────────────────────────────────────────────┘
+└──────────┬────────────────────────────────────┬─────────┘
+           │                                    │
+           ▼                                    ▼
+┌─────────────────────┐    ┌──────────────────────────────┐
+│   User Profile      │    │      Household               │
+│  (1:1 per user)     │    │  (has address, invite code)  │
+└─────────────────────┘    └──────────┬───────────────────┘
+           │                          │
+           │                          ├──────────────────┐
+           │                          │                  │
+           │              ┌───────────▼────┐    ┌───────▼──────────┐
+           │              │  Household     │    │  Join Requests    │
+           │              │  Members       │    │  (pending/accepted│
+           │              │  (roles)       │    │   /rejected)      │
+           │              └────────────────┘    └───────────────────┘
+           │                          │
+           │                          ▼
+           │              ┌──────────────────────────────────┐
+           │              │  Household Day Plans (SHARED)     │
+           │              │  - All members see same plan      │
+           │              │  - Admin/Editor can modify         │
+           │              │  - Viewer can only read            │
+           │              └──────────────────────────────────┘
+           │
+           ▼
+┌─────────────────────┐
+│  Custom Meals       │
+│  (per user)         │
+└─────────────────────┘
 ```
 
 ### 4.2 Relationship Rules
 
-1. **Reference Meals → Users**: One-to-many (all users query the same 77 meals)
-2. **User → Profile**: One-to-one (each Firebase user has one profile)
-3. **User → Household**: Many-to-one (a user can belong to only one household)
-4. **Household → Users**: One-to-many (a household can have multiple members)
-5. **User → Custom Meals**: One-to-many (a user can create multiple custom meals)
-6. **User → Day Plans**: One-to-many (a user can have multiple day plans)
-7. **Household → Day Plans**: One-to-many (all household members can see each other's day plans)
+1. **User → Household**: Many-to-one (a user must belong to a household to plan meals)
+2. **Household → Users**: One-to-many (a household can have multiple members)
+3. **Household → Day Plans**: One-to-many (household has shared plans)
+4. **User → Custom Meals**: One-to-many (a user can create custom meals)
+5. **Reference Meals → All**: Many-to-many (all users/Households query the same meals)
 
 ---
 
-## 5. Household Linking Flow
+## 5. Household Management Flow
 
 ### 5.1 Creating a Household
 
-**Scenario**: User A wants to create a new household
+**Scenario**: User A wants to create their own household
 
-1. User A signs up / logs in
-2. User A goes to Settings → "Create Household"
-3. User A enters household name (e.g., "Smith Family")
+1. User A signs up
+2. User A is redirected to "Create Household" screen
+3. User A enters:
+   - Household name (e.g., "Smith Family")
+   - Address (street, city, state, postcode, country)
 4. System creates:
    - New document in `households/{householdId}`
    - Member document in `households/{householdId}/members/{uidA}` with role `admin`
    - Updates User A's profile: `householdId = householdId`, `householdRole = 'admin'`
-5. User A gets a **household code** (e.g., "SMITH-2024") to share with family
+5. System auto-generates an invite code:
+   - Format: `{NAME}-{MONTH}{YEAR}` (e.g., "SMITH-JUN2026")
+   - Sets expiry date (default: 30 days)
+6. User A can now create meal plans
 
-### 5.2 Joining a Household
+### 5.2 Household Dashboard (NEW — Gateway Screen)
+
+**Scenario**: User logs in and sees their household status
+
+```
+[User logs in]
+    ↓
+[Show Household Dashboard]
+    ↓
+{User has householdId?}
+    ├── YES → [Show linked household info]
+    │         - Household name, address
+    │         - Your role (Admin/Editor/Viewer)
+    │         - Members list
+    │         - Button: "Go to Meal Plans"
+    │         - Button: "Household Settings"
+    │
+    ├── NO → [Show "No household" message]
+    │         - "You are not part of any household yet."
+    │         - Button: "Create Household"
+    │         - Button: "Join Household"
+    │
+    └── [Check for pending invites]
+        [Query all households by invitedEmail]
+        ↓
+        {Pending invites found?}
+            ├── YES → [Show "Pending Invitations" section]
+            │         - Household name
+            │         - Invited by: [admin name]
+            │         - Role offered: Viewer/Editor
+            │         - [✓ Accept] [✗ Reject] buttons
+            │
+            └── NO → (no invites to show)
+```
+
+### 5.3 Joining via Invite Code
 
 **Scenario**: User B wants to join User A's household
 
-1. User B signs up / logs in
-2. User B goes to Settings → "Join Household"
-3. User B enters the household code (e.g., "SMITH-2024")
-4. System:
-   - Looks up household by code
-   - Creates member document in `households/{householdId}/members/{uidB}` with role `member`
-   - Updates User B's profile: `householdId = householdId`, `householdRole = 'member'`
-5. User B can now see User A's meal plans and vice versa
+1. User B signs up
+2. User B is redirected to the Household Dashboard
+3. User B taps "Join Household"
+4. User B enters the invite code (e.g., "SMITH-JUN2026")
+5. System looks up household by code:
+   - **Not found** → error "Invalid invite code"
+   - **Expired** → error "This code has expired (expired on [date])"
+   - **Valid** → creates a join request
+6. Join request created in `households/{householdId}/joinRequests/{uidB}`
+   - Status: `pending`
+   - User B sees: "Request sent! Waiting for admin approval."
 
-### 5.3 Household Code Implementation
+### 5.4 Admin: Direct Invite to User (NEW)
 
-**Option 1: Firestore Document ID**
-- Use the household document ID as the code
-- Example: `households/abc123xyz`
-- User shares "abc123xyz" with family
+**Scenario**: User A (admin) wants to invite User C to join the household
 
-**Option 2: Custom Code Field** ✅ **Recommended**
-- Add a `code` field to household document
-- Example: `code: "SMITH-2024"`
-- User shares "SMITH-2024" with family
-- Easier for users to share and remember
+1. User A opens Household Management → "Invite Member"
+2. User A enters:
+   - User C's email address
+   - Role to offer (Viewer or Editor)
+3. System creates invite in `households/{householdId}/invites/{inviteId}`
+   - Status: `pending`
+   - invitedEmail: User C's email
+   - invitedBy: User A's UID
+4. User A sees: "Invitation sent to user@example.com!"
+5. User C sees the pending invite on their Household Dashboard next time they log in
 
-### 5.4 Sharing Logic
+### 5.5 User: Accept/Reject Invite (NEW)
 
-**When a user generates a meal plan:**
-1. Plan is saved to `users/{uid}/dayPlans/{date}`
-2. If user is in a household:
-   - Plan is also saved to `households/{householdId}/plans/{uid}_{date}`
-   - All household members can read this document
-3. When a household member views their day:
-   - App checks if user is in a household
-   - If yes, loads plans from `households/{householdId}/plans/`
-   - Merges with user's personal plans
+**Scenario**: User C sees a pending invite and responds
 
-### 5.5 Data Visibility Rules
+1. User C logs in
+2. User C sees "Pending Invitations" on their Household Dashboard
+3. User C can:
+   - **Accept**:
+     - Creates member document in `households/{householdId}/members/{uidC}`
+     - Updates invite status to `accepted`
+     - Updates User C's profile: householdId, householdRole
+     - User C now sees the household meal plans
+   - **Reject**:
+     - Updates invite status to `rejected`
+     - User C sees invite disappear
 
-| Data | Personal | Household Members |
-|------|----------|-------------------|
-| **User Profile** | ✅ Own only | ❌ Private |
-| **Custom Meals** | ✅ Own only | ❌ Private |
-| **Reference Meals** | ✅ Shared | ✅ Shared (read-only) |
-| **Day Plans** | ✅ Own | ✅ Visible to household |
-| **Preferences** | ✅ Own | ❌ Private |
+### 5.6 Admin: Accept/Reject Join Request
+
+**Scenario**: User A (admin) sees a pending join request
+
+1. User A opens Settings → Household → "Pending Requests"
+2. System shows all pending requests:
+   - User display name + email
+   - Requested role (viewer/editor)
+   - Requested date
+3. User A can:
+   - **Accept**: 
+     - Creates member document in `households/{householdId}/members/{uidB}`
+     - Updates join request status to `accepted`
+     - User B receives notification
+   - **Reject**:
+     - Updates join request status to `rejected`
+     - User B receives notification
+   - **Accept with different role**:
+     - Admin can assign a different role than requested
+
+### 5.7 Post-Acceptance
+
+**After acceptance, User B can:**
+1. See the household shared meal plan
+2. View meals for any date
+3. If role is `editor`: can create/edit/regenerate plans
+4. If role is `viewer`: can only view
+
+**Meal plan flow:**
+1. Admin or Editor creates/generates a plan
+2. Plan is saved to `households/{householdId}/plans/{date}`
+3. All members see the SAME plan
+4. When a member views Day or Week, they query `households/{householdId}/plans/`
 
 ---
 
@@ -504,47 +753,42 @@ service cloud.firestore {
     // Reference meals: Read-only for all authenticated users
     match /referenceMeals/{mealId} {
       allow read: if request.auth != null;
-      allow write: if false; // No one can write
+      allow write: if false;
     }
     
-    // Users can only access their own profile
-    match /users/{userId}/profile/main {
+    // Users can only access their own profile and preferences
+    match /users/{userId}/{document=**} {
       allow read, write: if request.auth.uid == userId;
     }
     
-    // Users can only access their own preferences
-    match /users/{userId}/preferences/main {
-      allow read, write: if request.auth.uid == userId;
-    }
-    
-    // Users can only access their own custom meals
-    match /users/{userId}/customMeals/{mealId} {
-      allow read, write: if request.auth.uid == userId;
-    }
-    
-    // Users can only access their own day plans
-    match /users/{userId}/dayPlans/{date} {
-      allow read, write: if request.auth.uid == userId;
-    }
-    
-    // Households: Anyone can read, only admin can modify
+    // Household: Only admins can update/delete
     match /households/{householdId} {
-      allow read: if request.auth != null;
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/households/$(householdId)/members/$(request.auth.uid));
       allow create: if request.auth != null;
-      allow update, delete: if resource.data.createdBy == request.auth.uid;
+      allow update, delete: if request.auth.uid == get(/databases/$(database)/documents/households/$(householdId)).data.createdBy;
       
-      // Members subcollection
+      // Members: Read by household members, write by admin
       match /members/{uid} {
-        allow read: if request.auth != null;
-        allow create: if request.auth.uid == uid;
-        allow delete: if resource.data.role == 'member' && request.auth.uid == uid;
-      }
-      
-      // Shared plans subcollection
-      match /plans/{planId} {
         allow read: if request.auth != null && 
           exists(/databases/$(database)/documents/households/$(householdId)/members/$(request.auth.uid));
-        allow write: if request.auth != null;
+        allow create: if request.auth.uid == uid; // For join request acceptance
+        allow delete: if request.auth.uid == get(/databases/$(database)/documents/households/$(householdId)).data.createdBy;
+      }
+      
+      // Join requests: Read by admin, create by anyone, update by admin
+      match /joinRequests/{uid} {
+        allow read: if request.auth != null;
+        allow create: if request.auth.uid == uid;
+        allow update: if request.auth.uid == get(/databases/$(database)/documents/households/$(householdId)).data.createdBy;
+      }
+      
+      // Plans: Read by all members, write by admin/editor
+      match /plans/{date} {
+        allow read: if request.auth != null && 
+          exists(/databases/$(database)/documents/households/$(householdId)/members/$(request.auth.uid));
+        allow write: if request.auth != null && 
+          get(/databases/$(database)/documents/households/$(householdId)/members/$(request.auth.uid)).data.role in ['admin', 'editor'];
       }
     }
   }
@@ -553,167 +797,127 @@ service cloud.firestore {
 
 ---
 
-## 7. Migration from Current State
+## 7. User Journeys Impact
 
-### 7.1 Current Structure (Inefficient)
+### Key Changes from Previous Design
 
-```
-users/{uid}/
-  ├── customMeals/{mealId} (77 seed meals + custom meals) ❌ DUPLICATED
-  ├── dayPlans/{date}
-  └── preferences/main
-```
+| Aspect | Before | After |
+|--------|--------|-------|
+| **Meal planning requirement** | Any logged-in user | Must belong to a household |
+| **Plan storage** | `users/{uid}/dayPlans/{date}` | `households/{householdId}/plans/{date}` |
+| **Plan visibility** | Personal | Shared by all household members |
+| **Roles** | None | admin, editor, viewer |
+| **Joining** | Direct (no approval) | Request → Accept/Reject |
+| **Invite codes** | Optional | Required, with expiry |
+| **Address** | Per user (optional) | Per household (required) |
 
-**Problem**: Each user has their own copy of 77 seed meals
+### Journey Updates Required
 
-### 7.2 New Structure (Efficient)
-
-```
-referenceMeals/
-  └── {mealId} (77 Filipino dishes - ONE TIME SETUP)
-
-users/{uid}/
-  ├── profile/main (NEW)
-  ├── preferences/main (existing)
-  ├── customMeals/{mealId} (user-created meals ONLY)
-  └── dayPlans/{date} (existing)
-
-households/{householdId} (NEW)
-  ├── members/{uid} (NEW)
-  └── plans/{uid}_{date} (NEW)
-```
-
-**Benefits**:
-- 77 reference meals stored ONCE (not per user)
-- Users only store their custom meals
-- Significant cost savings on Firestore reads/writes
-
-### 7.3 Migration Steps
-
-1. **Create referenceMeals collection** with 77 Filipino dishes (one-time setup)
-2. **Update authentication** from anonymous to email/password
-3. **Update onboarding** to:
-   - Collect name, email, password
-   - Create Firebase user with email/password
-   - NOT seed 77 meals per user
-   - Cache reference meals in IndexedDB
-4. **Update meal generation** to query `referenceMeals/` + `users/{uid}/customMeals/`
-5. **Add household collections** (empty for now)
-6. **Update Settings** to add household management UI
+1. **Sign-Up**: No change (email + password)
+2. **Post Sign-Up**: User MUST create or join a household before planning meals
+3. **Settings**: Add household management (create, join, manage members)
+4. **Days/Week**: Query `households/{householdId}/plans/{date}` instead of user-level
+5. **Role enforcement**: Viewer cannot see "Generate" or "Regenerate" buttons
 
 ---
 
 ## 8. Cost Comparison
 
-### Current Approach (Per User)
+### Old Approach (Per User Plans)
 ```
-Onboarding:
-  - Write 77 meal documents to users/{uid}/customMeals/
-  - Cost: 77 writes per user
+users/{uid}/
+  ├── dayPlans/{date} (per user) ❌ Duplicated
+  └── ... (other user data)
 
-Meal Generation:
-  - Read 77 meals from users/{uid}/customMeals/
-  - Cost: 77 reads per generation
-
-1000 users:
-  - Storage: 77,000 documents
-  - Writes: 77,000 (onboarding)
-  - Reads: 77,000 per generation cycle
+1000 users in 200 households:
+  - Storage: 1000 users × 365 days = 365,000 day plan documents
 ```
 
-### New Approach (Per User)
+### New Approach (Shared Household Plans)
 ```
-Onboarding:
-  - Write 0 meal documents (reference meals already exist)
-  - Cost: 0 writes
+households/{householdId}/
+  └── plans/{date} (shared by all members)
 
-Meal Generation:
-  - Read 77 meals from referenceMeals/ (shared)
-  - Read user's custom meals from users/{uid}/customMeals/
-  - Cost: 77 reads (cached) + custom meals reads
-
-1000 users:
-  - Storage: 77 reference + custom meals only
-  - Writes: 0 (onboarding)
-  - Reads: 77 (cached) + custom meals per generation
+1000 users in 200 households:
+  - Storage: 200 households × 365 days = 73,000 day plan documents
+  - 80% reduction in plan storage
+  - No duplication across family members
 ```
-
-**Savings**: ~99% reduction in storage and write costs
 
 ---
 
-## 9. Implementation Notes
+## 9. Recommendations & Future Features
 
-### 9.1 Querying Meals for Generation
+### 9.1 Activity Log (Recommended)
+- **Type**: Implement now if admin auditing is important; future otherwise
+- **Purpose**: Track who created/modified/regenerated meal plans
+- **Collection**: `households/{householdId}/activityLog/{logId}`
+- **Benefit**: Admin can see who changed what and when
+- **Data**: Already partially covered by `createdBy` and `lastModifiedBy` fields in household plans
 
-```typescript
-// Get reference meals (cached after first load)
-const referenceMeals = await getDocs(collection(db, 'referenceMeals'));
+### 9.2 Invite Code History (Recommended)
+- **Type**: Implement now
+- **Purpose**: Preserve invite code history when regenerating
+- **Collection**: `households/{householdId}/inviteCodes/{codeId}`
+- **Benefit**: Admin can see all past codes, who generated them, and how many times they were used
+- **Anti-pattern**: Without this, regenerating a code loses all history
 
-// Get user's custom meals
-const customMeals = await getDocs(collection(db, 'users/{uid}/customMeals'));
+### 9.3 Viewer Suggestions (Future Feature)
+- **Type**: Future
+- **Purpose**: Viewers can suggest meal swaps that admins/editors can approve/reject
+- **Collection**: `households/{householdId}/suggestions/{suggestionId}`
+- **Benefit**: Gives viewers a voice without granting them edit permissions
+- **Implementation**: When viewer taps a meal, they see "Suggest Swap" option
 
-// Merge both arrays
-const allMeals = [
-  ...referenceMeals.docs.map(d => ({ id: d.data().id, ...d.data() })),
-  ...customMeals.docs.map(d => ({ id: d.data().id, ...d.data() }))
-];
+### 9.4 Household Limits (Recommended)
+- **Type**: Implement now
+- **Purpose**: Prevent households from growing too large
+- **Field**: `maxMembers` in household document (0 = unlimited)
+- **Benefit**: Admin can control household size
+- **Implementation**: Before accepting a join request, check if current members < maxMembers
+
+### 9.5 Collection Relationships (New Subcollections)
+```
+households/{householdId}/
+  ├── members/{uid}             (existing)
+  ├── joinRequests/{uid}        (existing)
+  ├── plans/{date}              (existing)
+  ├── inviteCodes/{codeId}      (NEW - recommended)
+  ├── activityLog/{logId}       (NEW - recommended)
+  └── suggestions/{id}          (NEW - future)
 ```
 
-### 9.2 Meal ID Ranges
+---
 
-To avoid ID conflicts:
-- **Reference meals**: IDs 1-77
-- **Custom meals**: IDs 100+ (auto-increment)
+## 10. Summary of Changes
 
-### 9.3 Offline Support
+### Data Structure Changes
 
-- Enable IndexedDB persistence for `referenceMeals/`
-- First load fetches all 77 meals
-- Subsequent loads use cached data
-- Works offline after first sync
+| Change | Description |
+|--------|-------------|
+| **Household** | Added `address`, `inviteCode`, `codeExpiresAt`, `maxMembers`, `formattedAddress` |
+| **Household Members** | Roles changed: `admin`, `editor`, `viewer` (was `admin`, `member`) |
+| **Join Requests** | NEW collection for pending/accepted/rejected requests |
+| **Household Plans** | NEW — plans moved from per-user to household level |
+| **Invite Codes** | NEW subcollection for code history |
+| **Activity Log** | NEW subcollection for plan change tracking |
+| **Suggestions** | NEW subcollection for viewer meal swap suggestions (future) |
+| **User Profile** | `householdRole` updated to `admin | editor | viewer` |
+| **User Day Plans** | REMOVED — no longer stored per-user |
+
+### User Journey Changes
+
+| Journey | Impact |
+|---------|--------|
+| **Sign-Up** | No change |
+| **Post Sign-Up** | Must create or join household first |
+| **Login** | Check household membership, redirect if none |
+| **Day View** | Read from `households/{householdId}/plans/{date}` |
+| **Week View** | Read from `households/{householdId}/plans/` |
+| **Settings** | NEW household management section |
+| **Meal Planning** | Only admin/editor can create/modify plans |
+| **Viewing** | All members can view (viewer=read-only) |
 
 ---
 
-## 10. Missing Entities?
-
-Let me know if you think we need:
-
-- **Favorites/Bookmarks**: User's favorite meals
-- **Meal History**: Track what users actually cooked
-- **Notifications**: Reminders for meal planning
-- **Recipes**: Extended recipe details with photos/videos
-- **Dietary Restrictions**: User preferences (vegetarian, allergies, etc.)
-- **Meal Ratings**: Rate meals after cooking
-
-**Note**: Saved Week Plans were removed to keep the data structure simple. Users can regenerate week plans as needed.
-
----
-
-## 11. Implementation Priority
-
-### Phase 1: Core Structure
-1. ✅ Create referenceMeals collection (77 dishes)
-2. ✅ Update authentication to email/password (no verification)
-3. ✅ Update onboarding to collect name, email, password
-4. ✅ Remove seed data loading from onboarding
-5. ✅ Update meal generation to use referenceMeals
-6. ✅ User profile (name, email)
-7. ✅ Household creation/joining
-8. ✅ Household member management
-9. ✅ Shared meal plan visibility
-
-### Phase 2: Enhanced Profile
-1. Address fields
-2. Phone number
-3. Profile photo (optional)
-
-### Phase 3: Advanced Features
-1. Shopping list generation
-2. Meal ratings
-3. Dietary restrictions
-4. Notifications
-
----
-
-*Document version 2.0 — June 2026 (Optimized with reference meals)*
+*Document version 3.1 — June 2026 (Added recommendations: invite codes history, activity log, suggestions, household limits)*

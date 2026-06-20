@@ -3,14 +3,20 @@
 ## Table of Contents
 
 1. [Overview](#1-overview)
-2. [Journey 1: Onboarding / Sign-Up](#2-journey-1-onboarding--sign-up)
-3. [Journey 2: Login (Returning User)](#3-journey-2-login-returning-user)
-4. [Journey 3: Landing Page - Day View](#4-journey-3-landing-page---day-view)
-5. [Journey 4: Landing Page - Week View](#5-journey-4-landing-page---week-view)
-6. [Journey 5: Add Custom Meal](#6-journey-5-add-custom-meal)
-7. [Journey 6: Settings](#7-journey-6-settings)
-8. [Journey 9: Household Management](#9-journey-9-household-management)
-10. [Data Structure Validation](#10-data-structure-validation)
+2. [Journey 1: Sign-Up](#2-journey-1-sign-up)
+3. [Journey 2: Household Dashboard (Gateway Screen)](#3-journey-2-household-dashboard-gateway-screen--redesigned)
+4. [Journey 3: Admin — Create Household](#4-journey-3-admin--create-household)
+5. [Journey 4: Join Household via Invite Code](#5-journey-4-join-household-via-invite-code)
+6. [Journey 5: Admin — Manage Join Requests](#6-journey-5-admin--manage-join-requests)
+7. [Journey 6: Login (Returning User)](#7-journey-6-login-returning-user)
+8. [Journey 7: Day View (Shared Household Plan)](#8-journey-7-day-view-shared-household-plan)
+9. [Journey 8: Week View (Shared Household Plan)](#9-journey-8-week-view-shared-household-plan)
+10. [Journey 9: Add Custom Meal](#10-journey-9-add-custom-meal)
+11. [Journey 10: Settings](#11-journey-10-settings)
+12. [Journey 11: Household Management Page](#12-journey-11-household-management-page)
+13. [Journey 12: Meal Detail Modal](#12-journey-12-meal-detail-modal)
+14. [Data Structure Validation](#14-data-structure-validation)
+15. [Summary of Changes](#15-summary-of-changes)
 
 ---
 
@@ -27,21 +33,28 @@ This document maps out all user journeys in FoodGen to:
 - 🚧 = Partially implemented
 - ❌ = Not implemented
 
+### Key Architectural Change
+
+**Meal plans are now household-level, not user-level.**
+- Users CANNOT plan meals without belonging to a household
+- All household members see the SAME shared meal plan
+- Roles determine what each member can do (admin/editor/viewer)
+
 ---
 
-## 2. Journey 1: Onboarding / Sign-Up
+## 2. Journey 1: Sign-Up
 
 **Status**: 🚧 Needs update (currently uses anonymous auth)  
 **Trigger**: First-time user opens app  
-**Goal**: Collect user info and initialize app
+**Goal**: Create account
 
 ### Flow
 
 ```
 [App Opens]
     ↓
-[Check: Is onboarding complete?]
-    ├── NO → [Show Sign-Up Screen]
+[Check: Is user logged in?]
+    ├── NO → [Show Sign-Up / Login Page]
     │         ↓
     │   [User enters:]
     │   - Name (required)
@@ -50,28 +63,22 @@ This document maps out all user journeys in FoodGen to:
     │         ↓
     │   [User taps "Sign Up"]
     │         ↓
-    │   [Create Firebase user with email/password]
-    │   - No email verification (for simplicity)
+    │   [Firebase Auth creates account]
+    │   - No email verification
     │         ↓
     │   [Save profile to Firestore]
     │   - uid, displayName, email
-    │   - householdId: null
+    │   - householdId: null (not in household yet)
     │   - householdRole: null
     │         ↓
     │   [Save preferences]
-    │   - displayName, mealsPerDay: 1, weekStartDay: 'monday'
+    │   - displayName, mealsPerDay: 2, weekStartDay: 'monday'
     │   - onboardingComplete: true
-    │   - seedDataLoaded: false
     │         ↓
-    │   [Load reference meals from Firestore]
-    │   - Query referenceMeals/ collection (77 dishes)
-    │   - Cache in IndexedDB for offline use
+    │   [Navigate to Household Setup Page]
+    │   - User must create or join a household
     │         ↓
-    │   [Set seedDataLoaded: true]
-    │         ↓
-    │   [Navigate to Day Page]
-    │         ↓
-    └── YES → [Navigate to Day Page]
+    └── YES → [Go to Journey 6: Login]
 ```
 
 ### Data Written
@@ -82,8 +89,8 @@ This document maps out all user journeys in FoodGen to:
   uid: string;
   displayName: string;
   email: string;
-  householdId: null;
-  householdRole: null;
+  householdId: null;      // NOT in a household yet
+  householdRole: null;     // NO role yet
   createdAt: timestamp;
   updatedAt: timestamp;
 }
@@ -93,7 +100,7 @@ This document maps out all user journeys in FoodGen to:
 ```typescript
 {
   displayName: string;
-  mealsPerDay: 1;
+  mealsPerDay: 2;              // Default: 2 meals
   weekStartDay: 'monday';
   onboardingComplete: true;
   seedDataLoaded: true;
@@ -101,681 +108,573 @@ This document maps out all user journeys in FoodGen to:
 }
 ```
 
-**Collection**: `referenceMeals/{mealId}` (x77)
-- **NOT written by user** - already exists in Firestore
-- Read-only reference data shared by all users
+---
 
-### Questions / Improvements Needed
+## 3. Journey 2: Household Dashboard (Gateway Screen — REDESIGNED)
 
-1. **Should we ask about household during onboarding?**
-   - Current: No household setup
-   - Option A: Skip for now, add later in Settings ✅ **Recommended**
-   - Option B: Ask "Are you setting up for a household?" during onboarding
+**Status**: ❌ Not implemented (NEW)  
+**Trigger**: User signs up or logs in  
+**Goal**: Show household status, pending invites, and options
 
-2. **Should we collect address during onboarding?**
-   - Current: No address collection
-   - Recommendation: Skip for now, add in Settings if needed
+### Flow
 
-3. **Password requirements:**
-   - Min 6 characters (Firebase default)
-   - No complexity requirements (for simplicity)
-   - No "confirm password" field (to reduce friction)
+```
+[User signs up or logs in]
+    ↓
+[Load user profile]
+    ↓
+[Load ALL households to find pending invites matching user's email]
+- Query households/{id}/invites/ where status=pending AND invitedEmail matches
+    ↓
+[Show Household Dashboard — NOT Day/Week page]
+    ↓
+{User has householdId?}
+    ├── YES → [Show linked household info]
+    │         - Household name, address
+    │         - Your role (Admin/Editor/Viewer)
+    │         - Members list
+    │         - Button: "Go to Meal Plans" (Day/Week)
+    │         - Button: "Household Settings"
+    │
+    ├── NO → [Show "No household" message]
+    │         - "You are not part of any household yet."
+    │         - Button: "Create Household" → Journey 3
+    │         - Button: "Join Household"  → Journey 4
+    │
+    └── [ALWAYS check for pending invites]
+        {Pending invites found?}
+            ├── YES → [Show "Pending Invitations" section ABOVE other content]
+            │         For each invite:
+            │         - Household name
+            │         - Invited by: [admin name]
+            │         - Role offered: Viewer/Editor
+            │         - [✓ Accept] [✗ Reject] buttons
+            │
+            └── NO → (no section shown)
+```
+
+### Important Rules
+
+1. **No household = No meal planning** — user must create or join first
+2. **Household Dashboard is the GATEWAY** — always shown after login before Day/Week
+3. **Pending invites are checked on EVERY login**
+4. User CAN only access Settings while not in a household
+5. Day/Week pages are BLOCKED until user has a linked household
 
 ---
 
-## 3. Journey 2: Login (Returning User)
+## 4. Journey 3: Admin — Create Household
 
-**Status**: 🚧 Needs update (currently uses anonymous auth)  
-**Trigger**: User opens app after onboarding  
-**Goal**: Restore user's data
+**Status**: ❌ Not implemented (NEW)  
+**Trigger**: User taps "Create my own household"  
+**Goal**: Create a household and become admin
+
+### Flow
+
+```
+[User taps "Create Household"]
+    ↓
+[Show form:]
+- Household name * (required)
+- Address *
+  - Street *
+  - City *
+  - State *
+  - Postcode *
+  - Country *
+- Timezone (optional, default: Australia/Sydney)
+- Description (optional)
+    ↓
+[User taps "Create Household"]
+    ↓
+[System generates:]
+- householdId (auto-generated Firestore ID)
+- inviteCode (e.g., "SMITH-JUN2026")
+- codeExpiresAt (30 days from now)
+    ↓
+[Write to Firestore:]
+1. households/{householdId} (with address, inviteCode, codeExpiresAt)
+2. households/{householdId}/members/{uid} (role: admin)
+3. Update user profile: householdId, householdRole: 'admin'
+    ↓
+[Show success screen:]
+- "🎉 Household created!"
+- Invite code to share: "SMITH-JUN2026"
+- Button: "Go to My Meal Plan"
+- Button: "Share Invite Code"
+    ↓
+[User can now plan meals]
+```
+
+### Data Written
+
+**Collection**: `households/{householdId}`
+```typescript
+{
+  name: "Smith Family",
+  address: {
+    street: "123 George St",
+    city: "Sydney",
+    state: "NSW",
+    postcode: "2000",
+    country: "Australia"
+  },
+  inviteCode: "SMITH-JUN2026",
+  codeExpiresAt: "2026-07-20T00:00:00Z",
+  createdBy: "abc123",
+  createdAt: timestamp,
+  updatedAt: timestamp
+}
+```
+
+**Collection**: `households/{householdId}/members/{uid}`
+```typescript
+{
+  uid: "abc123",
+  displayName: "Mishari",
+  email: "mishari@example.com",
+  role: "admin",
+  joinedAt: timestamp
+}
+```
+
+---
+
+## 5. Journey 4: Join Household via Invite Code
+
+**Status**: ❌ Not implemented (NEW)  
+**Trigger**: User taps "Join an existing household"  
+**Goal**: Send a request to join a household
+
+### Flow
+
+```
+[User taps "Join Household"]
+    ↓
+[Show form:]
+- Invite code * (e.g., "SMITH-JUN2026")
+- Requested role: (optional, default: viewer)
+  - Viewer (can only view meals)
+  - Editor (can help plan meals)
+    ↓
+[User taps "Send Request"]
+    ↓
+[System looks up household by inviteCode]
+    ↓
+{Code valid?}
+    ├── NO → [Show error: "Invalid invite code"]
+    │
+    ├── EXPIRED → [Show error: "This code expired on [date]"]
+    │
+    └── YES → [Create join request]
+              ↓
+      [Write to Firestore:]
+      1. households/{householdId}/joinRequests/{uid}
+         - status: 'pending'
+         - requestedRole: 'viewer' (or 'editor')
+         - requestedAt: now
+              ↓
+      [Show success screen:]
+      - "✅ Request sent!"
+      - "Waiting for admin approval..."
+      - Button: "Check Status"
+              ↓
+      [User waits for admin to accept/reject]
+```
+
+### Data Written
+
+**Collection**: `households/{householdId}/joinRequests/{uid}`
+```typescript
+{
+  uid: "def456",
+  displayName: "Jane Smith",
+  email: "jane@example.com",
+  status: "pending",
+  requestedRole: "viewer",
+  requestedAt: timestamp
+}
+```
+
+---
+
+## 6. Journey 5: Admin — Manage Join Requests
+
+**Status**: ❌ Not implemented (NEW)  
+**Trigger**: Admin opens Settings → Household → "Pending Requests"  
+**Goal**: Accept or reject join requests
+
+### Flow
+
+```
+[Admin opens Household Management page]
+    ↓
+[System queries households/{householdId}/joinRequests]
+    ↓
+{Any pending requests?}
+    ├── NO → [Show "No pending requests"]
+    │
+    └── YES → [Show pending requests list:]
+              ↓
+      [For each request:]
+      - Display name + email
+      - Requested role: "Viewer" or "Editor"
+      - Requested date
+      - [✓ Accept] [✗ Reject] buttons
+              ↓
+      {Admin taps Accept}
+          ↓
+      [Write to Firestore:]
+      1. households/{householdId}/members/{uid}
+         - role: admin's choice (can change)
+      2. Update joinRequest: status: 'accepted'
+      3. User's profile: householdId, householdRole: role
+              ↓
+      [Show success: "Jane Smith accepted!"]
+              ↓
+      {Admin taps Reject}
+          ↓
+      [Update joinRequest: status: 'rejected']
+              ↓
+      [Show success: "Request rejected"]
+```
+
+---
+
+## 7. Journey 6: Login (Returning User)
+
+**Status**: 🚧 Needs update  
+**Trigger**: User opens app after signing up  
+**Goal**: Restore user's data and redirect
 
 ### Flow
 
 ```
 [App Opens]
     ↓
-[Check: Is onboarding complete?]
-    ├── NO → [Show Sign-Up Screen]
-    └── YES → [Show Login Screen]
-              ↓
-      [User enters email + password]
-              ↓
-      [Sign in with Firebase email/password]
-              ↓
-      [Load user data]
+[Check: Is user logged in?]
+    ├── NO → [Show Login Screen]
+    │         ↓
+    │   [User enters email + password]
+    │         ↓
+    │   [Firebase Auth signs in]
+    │         ↓
+    └── YES → [Load user data]
               ↓
       [Load preferences from Firestore]
-      - mealsPerDay, weekStartDay, displayName
               ↓
-      [Load reference meals from Firestore]
-      - Query referenceMeals/ collection (77 dishes)
-      - Cache in IndexedDB for offline use
-              ↓
-      [Load user's custom meals]
-      - Query users/{uid}/customMeals/
-              ↓
-      [Load day plans for current week]
-      - Get all dayPlans for current week
-              ↓
-      [Enrich plans with meal data]
-      - Match breakfastId/lunchId/dinnerId to meals
-      - Merge reference meals + custom meals
-              ↓
-      [Navigate to Day Page]
+      [Check: Does user have householdId?]
+         ├── NO → [Redirect to Household Setup]
+         │         (Journey 2: Create or Join)
+         │
+         └── YES → [Load household data]
+                    ↓
+            [Load household members]
+            - Get role (admin/editor/viewer)
+                    ↓
+            [Load reference meals]
+            - Query referenceMeals/ collection
+                    ↓
+            [Load household plans]
+            - Query households/{householdId}/plans/{date}
+                    ↓
+            [Enrich plans with meal data]
+            - Match IDs to meal documents
+                    ↓
+            [Navigate to Day View]
+            - If viewer: no "Generate" button visible
 ```
-
-### Data Read
-
-**Collection**: `users/{uid}/preferences/main`
-- Read once on app load
-
-**Collection**: `referenceMeals/`
-- Read all 77 reference meals (cached after first load)
-
-**Collection**: `users/{uid}/customMeals`
-- Real-time listener for user's custom meals only
-- No seed meals (those are in referenceMeals)
-
-**Collection**: `users/{uid}/dayPlans`
-- Real-time listener for all day plans
-- Used to populate Day and Week views
-
-### Questions / Improvements Needed
-
-1. **Should we show a loading screen?**
-   - Current: Shows "Loading..." briefly
-   - Could show skeleton UI instead
-
-2. **Should we show a loading screen?**
-   - Current: Shows "Loading..." briefly
-   - Could show skeleton UI instead
 
 ---
 
-## 4. Journey 3: Landing Page - Day View
+## 8. Journey 7: Day View (Shared Household Plan)
 
-**Status**: ✅ Implemented  
-**Trigger**: User taps "Day" tab or opens app  
-**Goal**: Show today's meal plan
+**Status**: 🚧 Needs major rework (was per-user, now shared)  
+**Trigger**: User taps "Day" tab  
+**Goal**: Show the household's meal plan for a specific date
 
 ### Flow
 
 ```
 [Day Page Loads]
     ↓
+[Check: User role?]
+    ├── admin/editor → [Show full controls]
+    │   - Generate, Regenerate, Edit buttons
+    │
+    └── viewer → [Show read-only view]
+        - No generate/edit buttons
+        - Can only view meals
+    ↓
 [Show date picker]
 - Default: Today
-- Min: Today
-- Max: Today + 365 days
     ↓
-[Show meals per day picker]
-- 1 meal (dinner only)
-- 2 meals (lunch + dinner)
-- 3 meals (breakfast + lunch + dinner)
+[Load household plan for selected date]
+- Query: households/{householdId}/plans/{date}
     ↓
-[Load day plan for selected date]
-- Read from dayPlans/{date}
-    ↓
-{Day Plan Exists?}
+{Plan exists?}
     ├── YES → [Enrich with meal data]
     │         - Show meal cards with emoji, name, prep time, difficulty
     │         - Tap card → open Meal Detail Modal
-    │         ↓
-    │         [Show "Regenerate Meals" button]
-    │         - Tap → confirm dialog → generate new plan
-    │         ↓
-    │         [Generate new plan]
-    │         - Pick random meals from allMeals
-    │         - Ensure no repeats within the week
-    │         - Save to dayPlans/{date}
-    │         - Update UI
+    │         - Admin/Editor: "Regenerate" button
     │
     └── NO → [Show Empty State]
-              - "No meals for [date]"
-              - "Generate Meals" button
-              ↓
-              [User taps "Generate Meals"]
-              ↓
-              [Generate plan]
-              - Same as above
+              - "No meals planned for this date"
+              - Admin/Editor: "Generate Meals" button
+              - Viewer: "Ask the household admin to plan meals"
+    ↓
+{Admin/Editor taps Generate}
+    ↓
+[Generate random plan]
+- Pick random meals from referenceMeals + custom meals
+- Ensure no repeats within the week
+- Save to: households/{householdId}/plans/{date}
+- Update UI (all members see it)
 ```
 
 ### Data Operations
 
 **Read**:
-- `dayPlans/{selectedDate}` - Get today's plan
-- `customMeals` - Get all meals for enrichment
+- `households/{householdId}/plans/{date}` - Shared household plan
+- `households/{householdId}/members/{uid}` - Check role permissions
 
-**Write**:
-- `dayPlans/{selectedDate}` - Save generated plan
-```typescript
-{
-  date: string;
-  weekOfYear: number;
-  year: number;
-  breakfastId: number | null;
-  lunchId: number | null;
-  dinnerId: number | null;
-  snackId: number | null;
-  isGenerated: 1;
-  updatedAt: timestamp;
-}
-```
-
-### Questions / Improvements Needed
-
-1. **Should users be able to manually assign meals?**
-   - Current: Only random generation
-   - Feature: Tap a slot → pick from meal list
-   - Data impact: Same structure, just different write logic
-
-2. **Should users see household members' plans?**
-   - Current: Only own plans
-   - Feature: If in household, show "Family's Plans" toggle
-   - Data impact: Read from `households/{householdId}/plans/`
-
-3. **Should users be able to delete a day plan?**
-   - Current: No delete option
-   - Feature: Swipe to delete or "Clear" button
-   - Data impact: Delete `dayPlans/{date}` document
+**Write** (admin/editor only):
+- `households/{householdId}/plans/{date}` - Save plan
 
 ---
 
-## 5. Journey 4: Landing Page - Week View
+## 9. Journey 8: Week View (Shared Household Plan)
 
-**Status**: ✅ Implemented  
+**Status**: 🚧 Needs major rework  
 **Trigger**: User taps "Week" tab  
-**Goal**: Show full week meal plan
+**Goal**: Show the full week meal plan
 
 ### Flow
 
 ```
 [Week Page Loads]
     ↓
+[Check: User role?]
+    ├── admin/editor → [Show full controls]
+    └── viewer → [Show read-only view]
+    ↓
 [Show week picker]
 - Date input showing week start date
-- Dropdown: Mon/Sun start
-    ↓
-[Show meals per day picker]
-- Same as Day view
     ↓
 [Load week plans]
-- Get all dayPlans for selected week
-- Enrich with meal data
+- Query: households/{householdId}/plans/ (by weekOfYear)
     ↓
-{Week Has Plans?}
+{Week has plans?}
     ├── YES → [Show collapsible day rows]
-    │         - Each day shows date + meal emojis
-    │         - Tap to expand → show full meal cards
-    │         - Each day has [↻] regenerate button
-    │         ↓
-    │         [Show action buttons]
-    │         - "🔄 Generate This Week" → regenerate all 7 days
-    │         - "💾 Save This Plan" → (removed, not implemented)
-    │         - "📍 Jump to This Week" (if viewing past/future week)
+    │         - Admin/Editor: each day has [↻] regenerate
+    │         - Show action button: "Generate This Week"
     │
     └── NO → [Show Empty State]
               - "No weekly plan yet"
-              - "Generate Weekly Plan" button
-              ↓
-              [User taps "Generate Weekly Plan"]
-              ↓
-              [Generate week plan]
-              - Generate 7 days (Mon-Sun)
-              - Ensure no repeated meals across week
-              - Save each day to dayPlans/{date}
-              - Update UI
+              - Admin/Editor: "Generate Weekly Plan" button
 ```
-
-### Data Operations
-
-**Read**:
-- `dayPlans` - Query by `weekOfYear` and `year`
-- `customMeals` - Get all meals for enrichment
-
-**Write**:
-- `dayPlans/{date}` (x7) - Save generated plans
-
-### Questions / Improvements Needed
-
-1. **Should users see household members' week plans?**
-   - Same as Day view question
-
-2. **Should users be able to swap meals between days?**
-   - Current: Regenerate entire day
-   - Feature: Long-press meal → swap with another meal
-   - Data impact: Update single `breakfastId/lunchId/dinnerId`
-
-3. **Should users be able to copy a day's plan to another day?**
-   - Feature: "Copy to..." button
-   - Data impact: Read one day, write to another
 
 ---
 
-## 6. Journey 5: Add Custom Meal
+## 10. Journey 9: Add Custom Meal
 
-**Status**: ✅ Implemented  
+**Status**: ✅ Same as before (not affected by household change)  
 **Trigger**: User taps [+] button  
-**Goal**: Add user-created meal to database
+**Goal**: Add user-created meal to their personal collection
 
-### Flow
+### Note
 
-```
-[User taps + button]
-    ↓
-[Navigate to Add Meal Page]
-    ↓
-[Show form fields]
-- Meal Name * (required)
-- Suggested For * (checkboxes: Breakfast, Lunch, Dinner, Snack)
-- Cuisine (dropdown: Filipino, Italian, Japanese, etc.)
-- Prep Time (minutes) * (required)
-- Difficulty (radio: Easy, Medium, Hard)
-- Emoji (text input, default: 🍽️)
-- Photo (optional) - NOT IMPLEMENTED
-- YouTube Link (optional) - NOT IMPLEMENTED
-- Ingredients * (dynamic list, required)
-  - Name + Quantity pairs
-  - Add/remove buttons
-- Steps * (dynamic list, required)
-  - Text areas
-  - Add/remove buttons
-- Calories (optional)
-    ↓
-[User taps "Save Meal"]
-    ↓
-[Validate]
-- Name required
-- At least 1 suggested slot required
-- At least 1 ingredient required
-    ↓
-{Valid?}
-    ├── NO → [Show error message]
-    └── YES → [Save to Firestore]
-              ↓
-              [Generate new meal ID]
-              - Use next available number
-              ↓
-              [Save to users/{uid}/customMeals/{mealId}]
-              - isCustom: 1
-              ↓
-              [Show success toast]
-              - "🍽️ [Meal Name] added to your meals!"
-              ↓
-              [Navigate back to previous page]
-```
-
-### Data Written
-
-**Collection**: `users/{uid}/customMeals/{mealId}`
-```typescript
-{
-  id: number; // Auto-generated
-  name: string;
-  suggestedFor: string[];
-  cuisine: string;
-  dietaryTags: string[];
-  prepTimeMinutes: number;
-  difficulty: 'easy' | 'medium' | 'hard';
-  emoji: string;
-  ingredients: { name: string; quantity: string }[];
-  steps: string[];
-  calories?: number;
-  isCustom: 1;
-  createdAt: timestamp;
-}
-```
-
-### Questions / Improvements Needed
-
-1. **Should custom meals be visible to household members?**
-   - Current: Private to user
-   - Option A: Keep private (current)
-   - Option B: Share with household
-
-2. **Should users be able to edit/delete custom meals?**
-   - Current: Can add, but no edit/delete UI
-   - Feature: Swipe to delete, tap to edit
-   - Data impact: Update/delete document
-
-3. **Should users be able to upload photos?**
-   - Current: Not implemented
-   - Feature: Camera/gallery picker
-   - Data impact: Store in Firebase Storage, save URL in meal document
+Custom meals are **still per-user**. They are:
+- Private to the user who created them
+- Used in the household plan generation
+- Visible to household members only through generated plans
 
 ---
 
-## 7. Journey 6: Settings
+## 11. Journey 10: Settings
 
 **Status**: 🚧 Partially implemented  
 **Trigger**: User taps gear icon ⚙️  
-**Goal**: Manage app preferences and account
+**Goal**: Manage settings
 
-### Current Features
+### Features
 
-```
-[Settings Page]
-    ↓
-[Meals Per Day]
-- 1 🍽️ (Dinner only)
-- 2 🍽️🍽️ (Lunch + Dinner)
-- 3 🍽️🍽️🍽️ (Breakfast + Lunch + Dinner)
-    ↓
-[Show meal slot labels toggle]
-- ON: Show "Breakfast", "Lunch", "Dinner" headers
-- OFF: Show just meal name
-    ↓
-[About Section]
-- Version number
-- "Made with ❤️ for Filipino food 🇵🇭"
-- Data: 77 Filipino dishes
-- Framework: React Native + Expo
-```
+1. **Meals Per Day** (unchanged)
+   - 1 🍽️ / 2 🍽️🍽️ / 3 🍽️🍽️🍽️
 
-### Missing Features
+2. **Household Section** (NEW — replaces old household)
+   - Show household name + address
+   - Show your role (Admin/Editor/Viewer)
+   - Admin: "Manage Members" link
+   - Admin: "Pending Requests" link
+   - Admin: "Generate New Invite Code" button
+   - Editor: "Leave Household" button
+   - Viewer: "Leave Household" button
 
-1. **User Profile Management**
-   - Edit display name
-   - Change email/password (if implemented)
-   - Upload profile photo
-
-2. **Address Management**
-   - Add/edit address
-   - Multiple addresses? (home, work, etc.)
-
-3. **Household Management**
-   - Create household
-   - Join household (enter code)
-   - View household members
-   - Leave household
-   - Admin: Remove members
-
-4. **Account Actions**
+3. **Account Section**
+   - Display name
    - Logout
-   - Delete account
-   - Export data
-
-### Data Operations
-
-**Read**:
-- `users/{uid}/profile/main`
-- `users/{uid}/preferences/main`
-
-**Write**:
-- `users/{uid}/preferences/main` (mealsPerDay, weekStartDay)
-- `users/{uid}/profile/main` (displayName, address, etc.)
-
-### Questions / Improvements Needed
-
-1. **What settings are most important?**
-   - Profile info
-   - Household
-   - Notifications
-   - Theme (light/dark)
-
-2. **Should we add a "Help & Support" section?**
-   - FAQ
-   - Contact us
-   - Privacy policy
 
 ---
 
-## 8. Journey 7: Meal Detail Modal
+## 12. Journey 11: Household Management Page
 
-**Status**: ✅ Implemented  
+**Status**: ❌ Not implemented (NEW)  
+**Trigger**: Admin taps "Manage Household" in Settings  
+**Goal**: Full household management
+
+### Features
+
+**Admin View:**
+```
+[Household Management Page]
+    ↓
+[Household Info]
+- Name: Smith Family
+- Address: 123 George St, Sydney, NSW 2000
+- Max Members: 5 (2 remaining)
+- Invite Code: SMITH-JUN2026 (Expires: July 20, 2026)
+  [Generate New Code] button
+    ↓
+[Members] (Members: 3 / Max: 5)
+- Mishari (You) — Admin
+- Jane Smith — Viewer
+- John Smith — Editor
+  ↓
+  [Click member] → [Change Role] or [Remove Member]
+    ↓
+[Pending Requests] (2 pending — badge count)
+- Jane Smith — requested Viewer — [Accept] [Reject]
+- Mark — requested Editor — [Accept] [Reject]
+    ↓
+[Invite Code History] (NEW)
+- SMITH-JUN2026 — Active — Used 2 times — Expires Jul 20
+- SMITH-MAY2026 — Expired — Used 1 time — Generated by Mishari
+- [View All Codes]
+    ↓
+[Activity Log] (NEW)
+- Jun 20: Mishari regenerated Week 26 — 2 hours ago
+- Jun 19: John edited dinner on Jun 20 — 1 day ago
+- Jun 18: Mishari created household — 2 days ago
+- [View All Activity]
+    ↓
+[Invite Code Management]
+- Current: SMITH-JUN2026 (expires 2026-07-20)
+- [Regenerate Code] → creates new code, old one invalidated in history
+- Set expiry: [7 days] [30 days] [90 days] [Custom]
+- Max members: [5] (0 = unlimited)
+```
+
+**Editor/Viewer View:**
+```
+[Household Info]
+- Name: Smith Family
+- Your Role: Viewer
+- Admin: Mishari (mishari@example.com)
+- Members: Mishari (Admin), Jane Smith (Viewer), John Smith (Editor)
+    ↓
+[Suggest a Meal Swap] (NEW — if viewer)
+- Tap any meal → "Suggest Swap"
+- Pick replacement meal from list
+- Add reason (optional)
+- Status: Pending / Approved / Rejected
+    ↓
+[Activity Log] (NEW — read-only)
+- See recent changes to meal plans
+- Who changed what and when
+    ↓
+[Leave Household] button
+- Confirmation: "Are you sure? You'll lose access to meal plans."
+```
+
+---
+
+## 13. Journey 12: Meal Detail Modal
+
+**Status**: ✅ Unchanged  
 **Trigger**: User taps a meal card  
 **Goal**: Show full meal details
 
-### Flow
-
-```
-[User taps meal card]
-    ↓
-[Open Meal Detail Modal (bottom sheet)]
-    ↓
-[Show meal info]
-- Emoji (large)
-- Name
-- Custom badge (if isCustom: 1)
-- Suggested for tags (breakfast, lunch, dinner, snack)
-- Prep time
-- Difficulty badge
-- Calories (if available)
-- YouTube link (if available)
-    ↓
-[Show Ingredients]
-- Bullet list with name + quantity
-    ↓
-[Show Steps]
-- Numbered list
-    ↓
-[Show dietary tags] (if any)
-- "🌿 gluten-free"
-    ↓
-[User taps "Close" or overlay]
-    ↓
-[Close modal]
-```
-
-### Data Read
-
-**Collection**: `users/{uid}/customMeals/{mealId}`
-- Read meal document by ID
-
-### Questions / Improvements Needed
-
-1. **Should users be able to edit meal from here?**
-   - Current: No edit option
-   - Feature: "Edit" button for custom meals
-   - Data impact: Navigate to edit form
-
-2. **Should users be able to add to favorites?**
-   - Current: No favorites
-   - Feature: Heart icon to favorite
-   - Data impact: Add `isFavorite` field to meal or separate collection
+No changes needed — meal content is the same regardless of household.
 
 ---
 
-## 9. Journey 8: Household Management
+## 14. Data Structure Validation
 
-**Status**: ❌ Not implemented  
-**Trigger**: User goes to Settings → Household  
-**Goal**: Create/join household to share meal plans
+### Collections Used by Each Journey
 
-### Flow
+| Journey | Collections | Status |
+|---------|-------------|--------|
+| Sign-Up | `users/{uid}/profile`, `users/{uid}/preferences` | ✅ |
+| Create Household | `households/{id}`, `members/{uid}`, `inviteCodes/{codeId}`, user profile | ✅ |
+| Join (Request) | `joinRequests/{uid}` | ✅ |
+| Admin Accept/Reject | `joinRequests/{uid}`, `members/{uid}`, user profile | ✅ |
+| Login | user profile, preferences | ✅ |
+| Day View | `households/{id}/plans/{date}`, referenceMeals | ✅ |
+| Week View | `households/{id}/plans/`, referenceMeals | ✅ |
+| Add Custom Meal | `users/{uid}/customMeals` | ✅ |
+| Settings | user profile, preferences | ✅ |
+| Household Management | `households/{id}`, `members/`, `joinRequests/`, `inviteCodes/`, `activityLog/` | ✅ |
+| Suggest Meal Swap | `households/{id}/suggestions/` (future) | 🚧 |
 
-```
-[User opens Settings]
-    ↓
-[Scroll to "Household" section]
-    ↓
-{User in household?}
-    ├── NO → [Show "Create Household" and "Join Household" buttons]
-    │         ↓
-    │         [OPTION A: Create Household]
-    │         ↓
-    │         [User enters household name]
-    │         ↓
-    │         [Create household document]
-    │         - households/{householdId}
-    │         ↓
-    │         [Create member document]
-    │         - households/{householdId}/members/{uid}
-    │         - role: 'admin'
-    │         ↓
-    │         [Update user profile]
-    │         - householdId: householdId
-    │         - householdRole: 'admin'
-    │         ↓
-    │         [Show household code]
-    │         - "Share this code: SMITH-2024"
-    │         ↓
-    │         [OPTION B: Join Household]
-    │         ↓
-    │         [User enters household code]
-    │         ↓
-    │         [Look up household by code]
-    │         ↓
-    │         {Household exists?}
-    │         ├── NO → [Show error: "Invalid code"]
-    │         └── YES → [Create member document]
-    │                   - households/{householdId}/members/{uid}
-    │                   - role: 'member'
-    │                   ↓
-    │                   [Update user profile]
-    │                   - householdId: householdId
-    │                   - householdRole: 'member'
-    │                   ↓
-    │                   [Show success: "Joined household!"]
-    │
-    └── YES → [Show household info]
-              - Household name
-              - Members list
-              - Your role (Admin/Member)
-              ↓
-              [Admin actions]
-              - Remove member
-              - Generate new code
-              - Delete household
-              ↓
-              [Member actions]
-              - Leave household
-```
+### What Changed
 
-### Data Operations
+| Old | New | Reason |
+|-----|-----|--------|
+| `users/{uid}/dayPlans/{date}` | `households/{householdId}/plans/{date}` | Plans are shared at household level |
+| Role: `member` | Role: `editor` or `viewer` | Need to distinguish between editors and viewers |
+| No join requests | `households/{id}/joinRequests/` | Need approval for joining |
+| No invite code expiry | `codeExpiresAt` field | Security feature |
+| Household: no address | Household: `address` field | Required for household info |
+| Any user can plan | Only admin/editor can plan | Role-based access |
+| Plans per user | Plans per household | Shared view |
+| No invite history | `inviteCodes/` subcollection | Track code generations |
+| No activity tracking | `activityLog/` subcollection | Audit plan changes |
+| No viewer input | `suggestions/` subcollection (future) | Viewers can suggest swaps |
+| No member limit | `maxMembers` field | Control household size |
 
-**Create Household**:
-- Write `households/{householdId}`
-- Write `households/{householdId}/members/{uid}`
-- Update `users/{uid}/profile/main`
+### Recommended Future Collections
 
-**Join Household**:
-- Write `households/{householdId}/members/{uid}`
-- Update `users/{uid}/profile/main`
-
-**Leave Household**:
-- Delete `households/{householdId}/members/{uid}`
-- Update `users/{uid}/profile/main` (clear householdId)
-
-### Questions / Improvements Needed
-
-1. **How should household code work?**
-   - Option A: Auto-generated (e.g., "SMITH-2024")
-   - Option B: User chooses code
-   - Option C: Use Firestore document ID
-
-2. **Should household admin be able to remove members?**
-   - Yes, but what happens to their data?
-   - Option A: Keep their data, just remove access
-   - Option B: Delete their shared plans
-
-3. **What happens when household is deleted?**
-   - All members lose access
-   - All shared plans deleted?
-   - Or just mark as "orphaned"?
+| Collection | Purpose | Priority |
+|------------|---------|----------|
+| `households/{id}/inviteCodes/` | Track all generated invite codes | High — prevents losing history |
+| `households/{id}/activityLog/` | Audit trail of plan changes | Medium — useful for admins |
+| `households/{id}/suggestions/` | Viewer meal swap suggestions | Low — future feature |
 
 ---
 
-## 10. Data Structure Validation
+## 15. Summary of Changes
 
-### Current Data Structure
+### New Journeys Created
+1. **Journey 3**: Create Household (admin)
+2. **Journey 4**: Join via Invite Code
+3. **Journey 5**: Admin Manage Requests
+4. **Journey 11**: Household Management Page
 
-```
-users/{uid}/
-  ├── profile/main ✅
-  ├── preferences/main ✅
-  ├── customMeals/{mealId} ✅
-  └── dayPlans/{date} ✅
+### Journeys Updated
+1. **Journey 1**: Sign-Up → redirects to household setup
+2. **Journey 2**: New post sign-up flow added
+3. **Journey 6**: Login → checks household membership
+4. **Journey 7**: Day View → reads from household plans
+5. **Journey 8**: Week View → reads from household plans
+6. **Journey 9**: Add Meal → unchanged (still per-user)
+7. **Journey 10**: Settings → household management section
 
-households/{householdId} ❌
-  ├── members/{uid} ❌
-  └── plans/{uid}_{date} ❌
-```
+### Recommendations Added to Documentation
 
-### Coverage by Journey
+| Recommendation | Status | Section |
+|----------------|--------|---------|
+| Activity Log | Added to Household Management UI | Journey 11 |
+| Invite Code History | Added to Household Management UI | Journey 11 |
+| Viewer Suggestions | Added to Viewer UI | Journey 11 |
+| Household Limits | Added (`maxMembers` field) | Journey 3 |
 
-| Journey | Data Collections Used | Missing Data? |
-|---------|----------------------|---------------|
-| Onboarding | profile, preferences, customMeals | ❌ No |
-| Login | preferences, customMeals, dayPlans | ❌ No |
-| Day View | dayPlans, customMeals | ❌ No |
-| Week View | dayPlans, customMeals | ❌ No |
-| Add Custom Meal | customMeals | ❌ No |
-| Settings | preferences, profile | ❌ No |
-| Meal Detail | customMeals | ❌ No |
-| Household | households, members, profile | ✅ **YES** |
-
-### Missing Data Structures
-
-1. **Household Plans** (Optional)
-   - Path: `households/{householdId}/plans/{uid}_{date}`
-   - Purpose: Share day plans with household members
-   - **Decision needed**: Do we need this, or can we just query all members' personal plans?
-
-2. **Favorites** (Future)
-   - Path: `users/{uid}/favorites/{mealId}`
-   - Purpose: User's favorite meals
-   - **Decision needed**: Is this a priority?
-
-3. **Meal History** (Future)
-   - Path: `users/{uid}/mealHistory/{date}`
-   - Purpose: Track what users actually cooked
-   - **Decision needed**: Do we need to track cooking history?
-
-### Data Structure Gaps
-
-**Gap 1: Household Plans**
-- **Current**: No way to share plans
-- **Solution A**: Duplicate plans to `households/{id}/plans/`
-- **Solution B**: Query all household members' `dayPlans` and merge
-- **Recommendation**: Solution B (simpler, no duplication)
-
-**Gap 2: User Profile Fields**
-- **Current**: Only has basic fields
-- **Missing**: phoneNumber, address
-- **Recommendation**: Add when needed, not now
-
-**Gap 3: Meal Ratings** (Future)
-- **Current**: No rating system
-- **Missing**: Rating, review text
-- **Recommendation**: Add in Phase 3
+### Key Constraint
+**User CANNOT access meal planning features without a household.** This is checked on:
+- Every login
+- Every page navigation
+- Every "Generate" button tap
 
 ---
 
-## 11. Implementation Roadmap
-
-### Phase 1: Core Features (Current)
-- ✅ Onboarding
-- ✅ Day/Week meal planning
-- ✅ Add custom meals
-- ✅ Settings (basic)
-
-### Phase 2: Household Linking (Next)
-- ❌ Household creation/joining
-- ❌ Household member management
-- ❌ Shared meal plan visibility
-- ❌ User profile enhancement
-
-### Phase 3: Enhanced Features (Future)
-- ❌ Manual meal assignment (drag & drop)
-- ❌ Favorites/bookmarks
-- ❌ Shopping list generation
-- ❌ Meal ratings/reviews
-- ❌ Notifications
-- ❌ Dark mode
-
----
-
-## 12. Open Questions
-
-1. **Household Code**: Auto-generated or user-chosen?
-2. **Plan Sharing**: Duplicate to household or query members' plans?
-3. **Custom Meal Privacy**: Keep private or share with household?
-4. **Login Method**: Anonymous only or add email/password?
-5. **Manual Meal Assignment**: Drag-and-drop or picker?
-6. **Favorites**: Needed in Phase 1 or later?
-7. **Address Collection**: When and why?
-
----
-
-*Document version 1.0 — June 2026*
+*Document version 4.1 — June 2026 (Added recommendations: invite codes history, activity log, suggestions, household limits)*
