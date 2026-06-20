@@ -1,0 +1,1918 @@
+[
+  {
+    "name": "Tapsilog",
+    "suggestedFor": ["breakfast", "lunch"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 20,
+    "difficulty": "easy",
+    "emoji": "🍳",
+    "ingredients": [
+      { "name": "Beef tapa", "quantity": "200g" },
+      { "name": "Garlic fried rice", "quantity": "1 cup" },
+      { "name": "Egg", "quantity": "1" },
+      { "name": "Vinegar", "quantity": "2 tbsp" },
+      { "name": "Soy sauce", "quantity": "2 tbsp" }
+    ],
+    "steps": [
+      "Marinate beef tapa in soy sauce, vinegar, and garlic overnight.",
+      "Pan-fry the beef tapa until cooked through.",
+      "Make garlic fried rice by sautéing garlic and mixing with day-old rice.",
+      "Fry the egg sunny-side up.",
+      "Serve beef tapa, rice, and egg on a plate with vinegar dipping sauce."
+    ],
+    "calories": 550
+  },
+  {
+    "name": "Chicken Adobo",
+    "suggestedFor": ["breakfast", "lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": ["gluten-free"],
+    "prepTimeMinutes": 40,
+    "difficulty": "easy",
+    "emoji": "🍗",
+    "ingredients": [
+      { "name": "Chicken thighs", "quantity": "500g" },
+      { "name": "Soy sauce", "quantity": "1/4 cup" },
+      { "name": "Vinegar", "quantity": "1/4 cup" },
+      { "name": "Garlic cloves", "quantity": "5, crushed" },
+      { "name": "Bay leaves", "quantity": "2" },
+      { "name": "Black pepper", "quantity": "1 tsp" },
+      { "name": "Rice", "quantity": "1 cup, for serving" }
+    ],
+    "steps": [
+      "Combine chicken, soy sauce, vinegar, garlic, bay leaves, and pepper in a pot.",
+      "Marinate for 30 minutes (optional, for deeper flavor).",
+      "Bring to a boil, then simmer for 30-35 minutes until chicken is tender.",
+      "Optional: Pan-fry chicken to brown before serving.",
+      "Serve over steamed rice with the adobo sauce."
+    ],
+    "calories": 480
+  },
+  {
+    "name": "Sinigang na Baboy",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 60,
+    "difficulty": "medium",
+    "emoji": "🥘",
+    "ingredients": [
+      { "name": "Pork ribs", "quantity": "500g" },
+      { "name": "Tamarind soup base", "quantity": "1 packet" },
+      { "name": "Tomatoes", "quantity": "2, quartered" },
+      { "name": "Onion", "quantity": "1, quartered" },
+      { "name": "Radish", "quantity": "1, sliced" },
+      { "name": "String beans", "quantity": "1 cup, cut" },
+      { "name": "Eggplant", "quantity": "1, sliced" },
+      { "name": "Kangkong (water spinach)", "quantity": "1 bunch" }
+    ],
+    "steps": [
+      "Boil pork ribs in water for 30 minutes until tender.",
+      "Add tomatoes, onion, and tamarind soup base.",
+      "Add radish and string beans, simmer 5 minutes.",
+      "Add eggplant and kangkong, cook 2 more minutes.",
+      "Serve hot with steamed rice."
+    ],
+    "calories": 320
+  },
+  {
+    "name": "Lumpiang Shanghai",
+    "suggestedFor": ["snack", "lunch"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 30,
+    "difficulty": "medium",
+    "emoji": "🌯",
+    "ingredients": [
+      { "name": "Ground pork", "quantity": "250g" },
+      { "name": "Carrot", "quantity": "1, minced" },
+      { "name": "Onion", "quantity": "1, minced" },
+      { "name": "Garlic cloves", "quantity": "3, minced" },
+      { "name": "Lumpia wrappers", "quantity": "20 sheets" },
+      { "name": "Egg", "quantity": "1, beaten" },
+      { "name": "Oil", "quantity": "for deep frying" }
+    ],
+    "steps": [
+      "Mix ground pork, carrot, onion, and garlic in a bowl.",
+      "Place a spoonful of filling on a lumpia wrapper and roll tightly.",
+      "Seal the edge with beaten egg.",
+      "Deep fry in hot oil until golden brown and crispy.",
+      "Serve with sweet chili sauce or banana ketchup."
+    ],
+    "calories": 320
+  },
+  {
+    "name": "Pancit Canton",
+    "suggestedFor": ["breakfast", "lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 30,
+    "difficulty": "medium",
+    "emoji": "🍜",
+    "ingredients": [
+      { "name": "Egg noodles", "quantity": "200g" },
+      { "name": "Chicken", "quantity": "150g, sliced" },
+      { "name": "Cabbage", "quantity": "1 cup, shredded" },
+      { "name": "Carrot", "quantity": "1, julienned" },
+      { "name": "Bell pepper", "quantity": "1, sliced" },
+      { "name": "Soy sauce", "quantity": "3 tbsp" },
+      { "name": "Garlic", "quantity": "3 cloves, minced" },
+      { "name": "Onion", "quantity": "1, sliced" }
+    ],
+    "steps": [
+      "Soak noodles in warm water until soft.",
+      "Stir-fry garlic and onion in oil.",
+      "Add chicken and cook until done.",
+      "Add vegetables and stir-fry 2 minutes.",
+      "Add noodles and soy sauce, toss well. Serve hot."
+    ],
+    "calories": 380
+  },
+  {
+    "name": "Lechon Kawali",
+    "suggestedFor": ["breakfast", "lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 60,
+    "difficulty": "medium",
+    "emoji": "🥓",
+    "ingredients": [
+      { "name": "Pork belly", "quantity": "500g" },
+      { "name": "Salt", "quantity": "1 tbsp" },
+      { "name": "Peppercorns", "quantity": "1 tsp" },
+      { "name": "Bay leaves", "quantity": "2" },
+      { "name": "Garlic", "quantity": "4 cloves, crushed" },
+      { "name": "Water", "quantity": "for boiling" },
+      { "name": "Oil", "quantity": "for deep frying" }
+    ],
+    "steps": [
+      "Boil pork belly with salt, peppercorns, bay leaves, and garlic for 45 minutes.",
+      "Drain and let dry, then score the skin.",
+      "Deep fry until skin is golden and crispy.",
+      "Drain on paper towels.",
+      "Chop and serve with liver sauce or vinegar."
+    ],
+    "calories": 520
+  },
+  {
+    "name": "Kare-Kare",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 120,
+    "difficulty": "hard",
+    "emoji": "🥜",
+    "ingredients": [
+      { "name": "Oxtail", "quantity": "500g" },
+      { "name": "Peanut butter", "quantity": "1/2 cup" },
+      { "name": "Eggplant", "quantity": "1, sliced" },
+      { "name": "String beans", "quantity": "1 cup, cut" },
+      { "name": "Bok choy", "quantity": "1 bunch" },
+      { "name": "Garlic", "quantity": "4 cloves, minced" },
+      { "name": "Onion", "quantity": "1, chopped" },
+      { "name": "Bagoong (shrimp paste)", "quantity": "2 tbsp" }
+    ],
+    "steps": [
+      "Boil oxtail for 2 hours until tender.",
+      "Sauté garlic and onion, add peanut butter and some broth.",
+      "Add vegetables and simmer until cooked.",
+      "Season with salt and pepper.",
+      "Serve with bagoong on the side."
+    ],
+    "calories": 450
+  },
+  {
+    "name": "Halo-Halo",
+    "suggestedFor": ["snack"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 10,
+    "difficulty": "easy",
+    "emoji": "🍨",
+    "ingredients": [
+      { "name": "Shaved ice", "quantity": "1 cup" },
+      { "name": "Evaporated milk", "quantity": "1/2 cup" },
+      { "name": "Sweet beans", "quantity": "1/4 cup" },
+      { "name": "Nata de coco", "quantity": "1/4 cup" },
+      { "name": "Kaong (sugar palm)", "quantity": "1/4 cup" },
+      { "name": "Ube halaya", "quantity": "2 tbsp" },
+      { "name": "Leche flan", "quantity": "1 slice" },
+      { "name": "Ube ice cream", "quantity": "1 scoop" }
+    ],
+    "steps": [
+      "Add sweet beans, nata de coco, kaong, and ube halaya to a glass.",
+      "Top with shaved ice.",
+      "Pour evaporated milk over the ice.",
+      "Add leche flan and ube ice cream on top.",
+      "Serve immediately with a long spoon."
+    ],
+    "calories": 380
+  },
+  {
+    "name": "Chicken Arroz Caldo",
+    "suggestedFor": ["breakfast", "lunch"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 40,
+    "difficulty": "medium",
+    "emoji": "🥣",
+    "ingredients": [
+      { "name": "Chicken", "quantity": "300g, cut up" },
+      { "name": "Glutinous rice", "quantity": "1 cup" },
+      { "name": "Garlic", "quantity": "4 cloves, minced" },
+      { "name": "Onion", "quantity": "1, chopped" },
+      { "name": "Ginger", "quantity": "1 inch, julienned" },
+      { "name": "Fish sauce", "quantity": "2 tbsp" },
+      { "name": "Green onions", "quantity": "2, chopped" },
+      { "name": "Hard-boiled eggs", "quantity": "2, halved" }
+    ],
+    "steps": [
+      "Sauté garlic, onion, and ginger in oil.",
+      "Add chicken and cook until lightly browned.",
+      "Add rice and water, bring to a boil.",
+      "Simmer until rice is porridge-like, about 30 minutes.",
+      "Serve topped with green onions, hard-boiled eggs, and a squeeze of calamansi."
+    ],
+    "calories": 340
+  },
+  {
+    "name": "Pork Sisig",
+    "suggestedFor": ["breakfast", "lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 40,
+    "difficulty": "medium",
+    "emoji": "🍳",
+    "ingredients": [
+      { "name": "Pork belly", "quantity": "300g" },
+      { "name": "Onion", "quantity": "1, finely chopped" },
+      { "name": "Garlic", "quantity": "3 cloves, minced" },
+      { "name": "Chili peppers", "quantity": "2, minced" },
+      { "name": "Calamansi", "quantity": "2, juiced" },
+      { "name": "Mayonnaise", "quantity": "2 tbsp" },
+      { "name": "Eggs", "quantity": "2" }
+    ],
+    "steps": [
+      "Boil pork belly for 30 minutes until tender.",
+      "Grill or pan-fry until charred on all sides.",
+      "Chop finely and mix with onion, garlic, chili, calamansi, and mayonnaise.",
+      "Top with raw eggs.",
+      "Serve sizzling on a hot plate."
+    ],
+    "calories": 420
+  },
+  {
+    "name": "Pandesal",
+    "suggestedFor": ["breakfast", "snack"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 120,
+    "difficulty": "medium",
+    "emoji": "🥖",
+    "ingredients": [
+      { "name": "Flour", "quantity": "3 cups" },
+      { "name": "Yeast", "quantity": "1 packet" },
+      { "name": "Sugar", "quantity": "1/4 cup" },
+      { "name": "Salt", "quantity": "1 tsp" },
+      { "name": "Butter", "quantity": "1/4 cup, melted" },
+      { "name": "Milk", "quantity": "1 cup, warm" },
+      { "name": "Bread crumbs", "quantity": "for coating" }
+    ],
+    "steps": [
+      "Mix flour, yeast, sugar, and salt in a bowl.",
+      "Add melted butter and warm milk, knead until smooth.",
+      "Let rise for 1 hour until doubled.",
+      "Shape into rolls, coat with bread crumbs.",
+      "Bake at 350°F (175°C) for 15-20 minutes until golden."
+    ],
+    "calories": 180
+  },
+  {
+    "name": "Champorado",
+    "suggestedFor": ["breakfast", "snack"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 20,
+    "difficulty": "easy",
+    "emoji": "🍫",
+    "ingredients": [
+      { "name": "Glutinous rice", "quantity": "1 cup" },
+      { "name": "Cocoa powder", "quantity": "3 tbsp" },
+      { "name": "Sugar", "quantity": "1/4 cup" },
+      { "name": "Water", "quantity": "3 cups" },
+      { "name": "Evaporated milk", "quantity": "1/2 cup" },
+      { "name": "Salt", "quantity": "1 pinch" }
+    ],
+    "steps": [
+      "Rinse rice and add to pot with water.",
+      "Bring to boil, then simmer until rice is porridge-like.",
+      "Add cocoa powder, sugar, and salt. Stir well.",
+      "Add evaporated milk and simmer 2 more minutes.",
+      "Serve hot with dried fish (tuyo) on the side."
+    ],
+    "calories": 280
+  },
+  {
+    "name": "Tortang Giniling",
+    "suggestedFor": ["breakfast", "lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 20,
+    "difficulty": "easy",
+    "emoji": "🥚",
+    "ingredients": [
+      { "name": "Ground pork", "quantity": "200g" },
+      { "name": "Eggs", "quantity": "3" },
+      { "name": "Onion", "quantity": "1, finely chopped" },
+      { "name": "Garlic", "quantity": "2 cloves, minced" },
+      { "name": "Salt", "quantity": "1 tsp" },
+      { "name": "Pepper", "quantity": "1/2 tsp" },
+      { "name": "Oil", "quantity": "for frying" }
+    ],
+    "steps": [
+      "Sauté onion and garlic until soft.",
+      "Add ground pork and cook until no longer pink.",
+      "Beat eggs and mix with cooked pork.",
+      "Pour into hot oiled pan.",
+      "Fry until golden brown on both sides."
+    ],
+    "calories": 310
+  },
+  {
+    "name": "Bibingka",
+    "suggestedFor": ["breakfast", "snack"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 45,
+    "difficulty": "medium",
+    "emoji": "🍚",
+    "ingredients": [
+      { "name": "Rice flour", "quantity": "2 cups" },
+      { "name": "Coconut milk", "quantity": "1 cup" },
+      { "name": "Sugar", "quantity": "1/2 cup" },
+      { "name": "Baking powder", "quantity": "1 tsp" },
+      { "name": "Eggs", "quantity": "2" },
+      { "name": "Butter", "quantity": "2 tbsp, melted" },
+      { "name": "Cheese", "quantity": "1/2 cup, grated" }
+    ],
+    "steps": [
+      "Mix rice flour, sugar, and baking powder.",
+      "Add coconut milk, eggs, and melted butter. Stir until smooth.",
+      "Pour into banana-lined molds.",
+      "Top with grated cheese.",
+      "Bake at 350°F (175°C) for 20-25 minutes."
+    ],
+    "calories": 250
+  },
+  {
+    "name": "Puto",
+    "suggestedFor": ["breakfast", "snack"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 30,
+    "difficulty": "easy",
+    "emoji": "🍥",
+    "ingredients": [
+      { "name": "Rice flour", "quantity": "2 cups" },
+      { "name": "Sugar", "quantity": "1/2 cup" },
+      { "name": "Baking powder", "quantity": "2 tsp" },
+      { "name": "Coconut milk", "quantity": "1 cup" },
+      { "name": "Eggs", "quantity": "2" },
+      { "name": "Butter", "quantity": "2 tbsp, melted" }
+    ],
+    "steps": [
+      "Mix rice flour, sugar, and baking powder.",
+      "Add coconut milk, eggs, and melted butter. Stir until smooth.",
+      "Pour into puto molds.",
+      "Steam for 15-20 minutes.",
+      "Serve warm or at room temperature."
+    ],
+    "calories": 150
+  },
+  {
+    "name": "Turon",
+    "suggestedFor": ["snack", "breakfast"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 15,
+    "difficulty": "easy",
+    "emoji": "🍌",
+    "ingredients": [
+      { "name": "Saba bananas", "quantity": "6, ripe" },
+      { "name": "Lumpia wrappers", "quantity": "6 sheets" },
+      { "name": "Jackfruit", "quantity": "1 cup, optional" },
+      { "name": "Sugar", "quantity": "2 tbsp" },
+      { "name": "Oil", "quantity": "for frying" }
+    ],
+    "steps": [
+      "Peel bananas and slice in half lengthwise.",
+      "Place banana and jackfruit on lumpia wrapper.",
+      "Sprinkle with sugar.",
+      "Roll tightly and seal with water.",
+      "Deep fry until golden brown and crispy."
+    ],
+    "calories": 220
+  },
+  {
+    "name": "Adobong Manok sa Gata",
+    "suggestedFor": ["breakfast", "lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 45,
+    "difficulty": "medium",
+    "emoji": "🍗",
+    "ingredients": [
+      { "name": "Chicken", "quantity": "500g, cut up" },
+      { "name": "Coconut milk", "quantity": "1 cup" },
+      { "name": "Soy sauce", "quantity": "1/4 cup" },
+      { "name": "Vinegar", "quantity": "1/4 cup" },
+      { "name": "Garlic", "quantity": "4 cloves, crushed" },
+      { "name": "Bay leaves", "quantity": "2" },
+      { "name": "Chili peppers", "quantity": "2, optional" }
+    ],
+    "steps": [
+      "Combine chicken, soy sauce, vinegar, garlic, and bay leaves.",
+      "Marinate 30 minutes.",
+      "Bring to boil, then simmer 20 minutes.",
+      "Add coconut milk and chili peppers.",
+      "Simmer until sauce thickens, about 10 minutes."
+    ],
+    "calories": 420
+  },
+  {
+    "name": "Goto",
+    "suggestedFor": ["breakfast", "lunch"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 90,
+    "difficulty": "hard",
+    "emoji": "🥣",
+    "ingredients": [
+      { "name": "Beef tripe", "quantity": "300g, cleaned" },
+      { "name": "Rice", "quantity": "1 cup" },
+      { "name": "Garlic", "quantity": "4 cloves, minced" },
+      { "name": "Onion", "quantity": "1, chopped" },
+      { "name": "Ginger", "quantity": "1 inch, sliced" },
+      { "name": "Fish sauce", "quantity": "2 tbsp" },
+      { "name": "Calamansi", "quantity": "2, juiced" },
+      { "name": "Hard-boiled egg", "quantity": "1, per serving" }
+    ],
+    "steps": [
+      "Boil beef tripe for 1 hour until tender.",
+      "Sauté garlic, onion, and ginger.",
+      "Add rice and water, bring to boil.",
+      "Add tripe and simmer until porridge-like.",
+      "Serve topped with hard-boiled egg, calamansi, and fish sauce."
+    ],
+    "calories": 290
+  },
+  {
+    "name": "Biko",
+    "suggestedFor": ["breakfast", "snack"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 40,
+    "difficulty": "easy",
+    "emoji": "🍚",
+    "ingredients": [
+      { "name": "Glutinous rice", "quantity": "2 cups" },
+      { "name": "Coconut milk", "quantity": "1 cup" },
+      { "name": "Brown sugar", "quantity": "1/2 cup" },
+      { "name": "Salt", "quantity": "1 pinch" },
+      { "name": "Latik (coconut curds)", "quantity": "1/4 cup, optional" }
+    ],
+    "steps": [
+      "Cook glutinous rice with coconut milk, sugar, and salt.",
+      "Stir constantly until rice is very sticky and sweet.",
+      "Transfer to a greased pan.",
+      "Top with latik if using.",
+      "Let cool before cutting into squares."
+    ],
+    "calories": 280
+  },
+  {
+    "name": "Suman",
+    "suggestedFor": ["breakfast", "snack"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 60,
+    "difficulty": "medium",
+    "emoji": "🍃",
+    "ingredients": [
+      { "name": "Glutinous rice", "quantity": "2 cups" },
+      { "name": "Coconut milk", "quantity": "1 cup" },
+      { "name": "Sugar", "quantity": "1/4 cup" },
+      { "name": "Salt", "quantity": "1 pinch" },
+      { "name": "Banana leaves", "quantity": "6 pieces" }
+    ],
+    "steps": [
+      "Soak glutinous rice for 4 hours or overnight.",
+      "Mix with coconut milk, sugar, and salt.",
+      "Place rice in banana leaves, fold and tie.",
+      "Steam for 45 minutes.",
+      "Serve with latik or sugar."
+    ],
+    "calories": 240
+  },
+  {
+    "name": "Pancit Bihon",
+    "suggestedFor": ["breakfast", "lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 30,
+    "difficulty": "medium",
+    "emoji": "🍜",
+    "ingredients": [
+      { "name": "Rice noodles", "quantity": "200g" },
+      { "name": "Chicken", "quantity": "150g, sliced" },
+      { "name": "Cabbage", "quantity": "1 cup, shredded" },
+      { "name": "Carrot", "quantity": "1, julienned" },
+      { "name": "Bell pepper", "quantity": "1, sliced" },
+      { "name": "Soy sauce", "quantity": "3 tbsp" },
+      { "name": "Garlic", "quantity": "3 cloves, minced" },
+      { "name": "Onion", "quantity": "1, sliced" }
+    ],
+    "steps": [
+      "Soak rice noodles in warm water until soft.",
+      "Stir-fry garlic and onion in oil.",
+      "Add chicken and cook until done.",
+      "Add vegetables and stir-fry 2 minutes.",
+      "Add noodles and soy sauce, toss well. Serve hot."
+    ],
+    "calories": 360
+  },
+  {
+    "name": "Inihaw na Manok",
+    "suggestedFor": ["breakfast", "lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 60,
+    "difficulty": "medium",
+    "emoji": "🍗",
+    "ingredients": [
+      { "name": "Whole chicken", "quantity": "1, about 1.5kg" },
+      { "name": "Lemongrass", "quantity": "2 stalks" },
+      { "name": "Garlic", "quantity": "6 cloves, minced" },
+      { "name": "Soy sauce", "quantity": "1/4 cup" },
+      { "name": "Calamansi", "quantity": "4, juiced" },
+      { "name": "Sugar", "quantity": "2 tbsp" },
+      { "name": "Black pepper", "quantity": "1 tsp" }
+    ],
+    "steps": [
+      "Marinate chicken in soy sauce, calamansi, garlic, sugar, and pepper for 2 hours.",
+      "Stuff lemongrass inside the chicken.",
+      "Grill over medium heat, turning often.",
+      "Cook for 40-50 minutes until internal temperature reaches 165°F (74°C).",
+      "Let rest 5 minutes before chopping. Serve with rice and sawsawan."
+    ],
+    "calories": 380
+  },
+  {
+    "name": "Inihaw na Bangus",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 40,
+    "difficulty": "medium",
+    "emoji": "🐟",
+    "ingredients": [
+      { "name": "Milkfish (bangus)", "quantity": "1 whole, cleaned" },
+      { "name": "Tomatoes", "quantity": "2, sliced" },
+      { "name": "Onion", "quantity": "1, sliced" },
+      { "name": "Garlic", "quantity": "4 cloves, minced" },
+      { "name": "Salt", "quantity": "1 tsp" },
+      { "name": "Pepper", "quantity": "1/2 tsp" },
+      { "name": " calamansi", "quantity": "2, juiced" }
+    ],
+    "steps": [
+      "Score the milkfish on both sides.",
+      "Rub with salt, pepper, and calamansi juice.",
+      "Stuff with tomatoes, onion, and garlic.",
+      "Grill over medium heat for 20-25 minutes per side.",
+      "Serve with rice and a dipping sauce of soy sauce and calamansi."
+    ],
+    "calories": 280
+  },
+  {
+    "name": "Daing na Bangus",
+    "suggestedFor": ["breakfast", "lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 30,
+    "difficulty": "medium",
+    "emoji": "🐟",
+    "ingredients": [
+      { "name": "Milkfish (bangus)", "quantity": "1 whole, butterflied" },
+      { "name": "Vinegar", "quantity": "1/4 cup" },
+      { "name": "Garlic", "quantity": "4 cloves, crushed" },
+      { "name": "Salt", "quantity": "1 tbsp" },
+      { "name": "Pepper", "quantity": "1 tsp" },
+      { "name": "Oil", "quantity": "for frying" }
+    ],
+    "steps": [
+      "Marinate fish in vinegar, garlic, salt, and pepper for 1 hour.",
+      "Pat dry with paper towels.",
+      "Pan-fry in hot oil until golden and crispy on both sides.",
+      "Drain on paper towels.",
+      "Serve with rice and a fried egg."
+    ],
+    "calories": 260
+  },
+  {
+    "name": "Tortang Talong",
+    "suggestedFor": ["breakfast", "lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": ["vegetarian"],
+    "prepTimeMinutes": 20,
+    "difficulty": "easy",
+    "emoji": "🥚",
+    "ingredients": [
+      { "name": "Eggplant", "quantity": "2 large" },
+      { "name": "Eggs", "quantity": "2" },
+      { "name": "Salt", "quantity": "1/2 tsp" },
+      { "name": "Pepper", "quantity": "1/4 tsp" },
+      { "name": "Oil", "quantity": "for frying" }
+    ],
+    "steps": [
+      "Grill eggplants until skin is charred and flesh is soft.",
+      "Peel off the skin and mash the flesh.",
+      "Beat eggs and mix with mashed eggplant, salt, and pepper.",
+      "Pour into hot oiled pan.",
+      "Fry until golden brown on both sides."
+    ],
+    "calories": 180
+  },
+  {
+    "name": "Fried Chicken",
+    "suggestedFor": ["breakfast", "lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 35,
+    "difficulty": "easy",
+    "emoji": "🍗",
+    "ingredients": [
+      { "name": "Chicken pieces", "quantity": "1kg" },
+      { "name": "Flour", "quantity": "1 cup" },
+      { "name": "Cornstarch", "quantity": "1/4 cup" },
+      { "name": "Garlic powder", "quantity": "1 tsp" },
+      { "name": "Onion powder", "quantity": "1 tsp" },
+      { "name": "Salt", "quantity": "1 tsp" },
+      { "name": "Pepper", "quantity": "1/2 tsp" },
+      { "name": "Oil", "quantity": "for deep frying" }
+    ],
+    "steps": [
+      "Mix flour, cornstarch, garlic powder, onion powder, salt, and pepper.",
+      "Coat chicken pieces in the flour mixture.",
+      "Heat oil to 350°F (175°C).",
+      "Deep fry chicken for 12-15 minutes until golden and cooked through.",
+      "Drain on paper towels. Serve with rice and gravy."
+    ],
+    "calories": 420
+  },
+  {
+    "name": "Pork Adobo",
+    "suggestedFor": ["breakfast", "lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": ["gluten-free"],
+    "prepTimeMinutes": 45,
+    "difficulty": "easy",
+    "emoji": "🥩",
+    "ingredients": [
+      { "name": "Pork belly", "quantity": "500g, cubed" },
+      { "name": "Soy sauce", "quantity": "1/4 cup" },
+      { "name": "Vinegar", "quantity": "1/4 cup" },
+      { "name": "Garlic", "quantity": "5 cloves, crushed" },
+      { "name": "Bay leaves", "quantity": "2" },
+      { "name": "Black pepper", "quantity": "1 tsp" },
+      { "name": "Rice", "quantity": "1 cup, for serving" }
+    ],
+    "steps": [
+      "Combine pork, soy sauce, vinegar, garlic, bay leaves, and pepper.",
+      "Marinate for 30 minutes.",
+      "Bring to boil, then simmer for 40-45 minutes until pork is tender.",
+      "Optional: Pan-fry to brown before serving.",
+      "Serve over steamed rice."
+    ],
+    "calories": 510
+  },
+  {
+    "name": "Sinigang na Hipon",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 40,
+    "difficulty": "medium",
+    "emoji": "🥘",
+    "ingredients": [
+      { "name": "Shrimp", "quantity": "500g, peeled" },
+      { "name": "Tamarind soup base", "quantity": "1 packet" },
+      { "name": "Tomatoes", "quantity": "2, quartered" },
+      { "name": "Onion", "quantity": "1, quartered" },
+      { "name": "Radish", "quantity": "1, sliced" },
+      { "name": "String beans", "quantity": "1 cup, cut" },
+      { "name": "Eggplant", "quantity": "1, sliced" },
+      { "name": "Kangkong (water spinach)", "quantity": "1 bunch" }
+    ],
+    "steps": [
+      "Boil water with tomatoes, onion, and tamarind soup base.",
+      "Add radish and string beans, simmer 5 minutes.",
+      "Add shrimp and cook 3-5 minutes until pink.",
+      "Add eggplant and kangkong, cook 2 more minutes.",
+      "Serve hot with steamed rice."
+    ],
+    "calories": 220
+  },
+  {
+    "name": "Nilagang Baka",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 90,
+    "difficulty": "medium",
+    "emoji": "🥩",
+    "ingredients": [
+      { "name": "Beef shank", "quantity": "500g" },
+      { "name": "Cabbage", "quantity": "1/2, quartered" },
+      { "name": "Potatoes", "quantity": "2, quartered" },
+      { "name": "Carrot", "quantity": "1, sliced" },
+      { "name": "String beans", "quantity": "1 cup, cut" },
+      { "name": "Tomatoes", "quantity": "2, quartered" },
+      { "name": "Onion", "quantity": "1, quartered" },
+      { "name": "Fish sauce", "quantity": "2 tbsp" }
+    ],
+    "steps": [
+      "Boil beef shank for 1.5 hours until tender.",
+      "Add tomatoes, onion, and fish sauce.",
+      "Add potatoes and carrots, simmer 10 minutes.",
+      "Add cabbage and string beans, cook 5 more minutes.",
+      "Serve hot with rice."
+    ],
+    "calories": 350
+  },
+  {
+    "name": "Bulalo",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 120,
+    "difficulty": "hard",
+    "emoji": "🦴",
+    "ingredients": [
+      { "name": "Beef shank with bone marrow", "quantity": "1kg" },
+      { "name": "Cabbage", "quantity": "1/2, quartered" },
+      { "name": "Corn on the cob", "quantity": "2, cut into thirds" },
+      { "name": "Potatoes", "quantity": "2, quartered" },
+      { "name": "Carrot", "quantity": "1, sliced" },
+      { "name": "Onion", "quantity": "1, quartered" },
+      { "name": "Fish sauce", "quantity": "2 tbsp" },
+      { "name": "Peppercorns", "quantity": "1 tsp" }
+    ],
+    "steps": [
+      "Boil beef shank with onion and peppercorns for 2 hours.",
+      "Skim off any scum that rises to the top.",
+      "Add corn and potatoes, simmer 15 minutes.",
+      "Add cabbage and carrots, cook 10 more minutes.",
+      "Season with fish sauce. Serve with rice."
+    ],
+    "calories": 400
+  },
+  {
+    "name": "Tinola",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 40,
+    "difficulty": "easy",
+    "emoji": "🍲",
+    "ingredients": [
+      { "name": "Chicken", "quantity": "500g, cut up" },
+      { "name": "Green papaya", "quantity": "1 cup, sliced" },
+      { "name": "Spinach", "quantity": "1 cup" },
+      { "name": "Ginger", "quantity": "1 inch, sliced" },
+      { "name": "Garlic", "quantity": "3 cloves, minced" },
+      { "name": "Onion", "quantity": "1, chopped" },
+      { "name": "Fish sauce", "quantity": "2 tbsp" }
+    ],
+    "steps": [
+      "Sauté garlic, onion, and ginger in oil.",
+      "Add chicken and cook until lightly browned.",
+      "Add water and bring to boil.",
+      "Add green papaya and simmer 15 minutes.",
+      "Add spinach and fish sauce. Serve hot."
+    ],
+    "calories": 240
+  },
+  {
+    "name": "Paksiw na Lechon",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 45,
+    "difficulty": "medium",
+    "emoji": "🥘",
+    "ingredients": [
+      { "name": "Leftover lechon (roast pork)", "quantity": "300g" },
+      { "name": "Vinegar", "quantity": "1/2 cup" },
+      { "name": "Soy sauce", "quantity": "1/4 cup" },
+      { "name": "Garlic", "quantity": "4 cloves, crushed" },
+      { "name": "Bay leaves", "quantity": "2" },
+      { "name": "Black peppercorns", "quantity": "1 tsp" },
+      { "name": "Sugar", "quantity": "1 tbsp" }
+    ],
+    "steps": [
+      "Place lechon in a pot.",
+      "Add vinegar, soy sauce, garlic, bay leaves, peppercorns, and sugar.",
+      "Bring to boil without stirring.",
+      "Simmer for 30 minutes until sauce thickens.",
+      "Serve with rice."
+    ],
+    "calories": 380
+  },
+  {
+    "name": "Paksiw na Isda",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 25,
+    "difficulty": "easy",
+    "emoji": "🐟",
+    "ingredients": [
+      { "name": "Fish (milkfish or tilapia)", "quantity": "1 whole" },
+      { "name": "Vinegar", "quantity": "1/2 cup" },
+      { "name": "Soy sauce", "quantity": "1/4 cup" },
+      { "name": "Garlic", "quantity": "4 cloves, crushed" },
+      { "name": "Bay leaves", "quantity": "2" },
+      { "name": "Black peppercorns", "quantity": "1 tsp" },
+      { "name": "Green chilies", "quantity": "2, optional" }
+    ],
+    "steps": [
+      "Place fish in a pot.",
+      "Add vinegar, soy sauce, garlic, bay leaves, and peppercorns.",
+      "Bring to boil without stirring.",
+      "Simmer for 15-20 minutes until fish is cooked.",
+      "Serve with rice."
+    ],
+    "calories": 220
+  },
+  {
+    "name": "Bicol Express",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": ["spicy"],
+    "prepTimeMinutes": 40,
+    "difficulty": "medium",
+    "emoji": "🌶️",
+    "ingredients": [
+      { "name": "Pork belly", "quantity": "300g, sliced" },
+      { "name": "Coconut milk", "quantity": "1 cup" },
+      { "name": "Chili peppers", "quantity": "6, chopped" },
+      { "name": "Garlic", "quantity": "4 cloves, minced" },
+      { "name": "Onion", "quantity": "1, chopped" },
+      { "name": "Ginger", "quantity": "1 inch, sliced" },
+      { "name": "Bagoong (shrimp paste)", "quantity": "2 tbsp" }
+    ],
+    "steps": [
+      "Sauté garlic, onion, and ginger in oil.",
+      "Add pork and cook until lightly browned.",
+      "Add coconut milk and bagoong, simmer 20 minutes.",
+      "Add chili peppers, cook 5 more minutes.",
+      "Serve hot with rice."
+    ],
+    "calories": 400
+  },
+  {
+    "name": "Laing",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": ["spicy"],
+    "prepTimeMinutes": 45,
+    "difficulty": "medium",
+    "emoji": "🍃",
+    "ingredients": [
+      { "name": "Taro leaves", "quantity": "2 cups, dried" },
+      { "name": "Pork belly", "quantity": "200g, sliced" },
+      { "name": "Coconut milk", "quantity": "2 cups" },
+      { "name": "Chili peppers", "quantity": "4, chopped" },
+      { "name": "Garlic", "quantity": "4 cloves, minced" },
+      { "name": "Onion", "quantity": "1, chopped" },
+      { "name": "Bagoong (shrimp paste)", "quantity": "2 tbsp" }
+    ],
+    "steps": [
+      "Sauté garlic, onion, and pork in oil.",
+      "Add coconut milk and bagoong, bring to simmer.",
+      "Add taro leaves and chili peppers.",
+      "Simmer for 30 minutes until leaves are tender.",
+      "Serve with rice."
+    ],
+    "calories": 320
+  },
+  {
+    "name": "Caldereta",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 90,
+    "difficulty": "medium",
+    "emoji": "🥩",
+    "ingredients": [
+      { "name": "Beef chuck", "quantity": "500g, cubed" },
+      { "name": "Tomato sauce", "quantity": "1 cup" },
+      { "name": "Potatoes", "quantity": "2, cubed" },
+      { "name": "Carrot", "quantity": "1, sliced" },
+      { "name": "Bell pepper", "quantity": "1, sliced" },
+      { "name": "Garlic", "quantity": "4 cloves, minced" },
+      { "name": "Onion", "quantity": "1, chopped" },
+      { "name": "Liver spread", "quantity": "1/4 cup" },
+      { "name": "Green olives", "quantity": "1/4 cup" }
+    ],
+    "steps": [
+      "Boil beef for 1 hour until tender.",
+      "Sauté garlic and onion, add tomato sauce.",
+      "Add beef, potatoes, and carrots. Simmer 15 minutes.",
+      "Add bell pepper, liver spread, and olives.",
+      "Simmer 5 more minutes. Serve with rice."
+    ],
+    "calories": 420
+  },
+  {
+    "name": "Mechado",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 90,
+    "difficulty": "medium",
+    "emoji": "🥩",
+    "ingredients": [
+      { "name": "Beef chuck", "quantity": "500g, larded" },
+      { "name": "Tomato sauce", "quantity": "1 cup" },
+      { "name": "Potatoes", "quantity": "2, cubed" },
+      { "name": "Carrot", "quantity": "1, sliced" },
+      { "name": "Bell pepper", "quantity": "1, sliced" },
+      { "name": "Garlic", "quantity": "4 cloves, minced" },
+      { "name": "Onion", "quantity": "1, chopped" },
+      { "name": "Soy sauce", "quantity": "2 tbsp" }
+    ],
+    "steps": [
+      "Marinate beef in soy sauce for 30 minutes.",
+      "Boil beef for 1 hour until tender.",
+      "Sauté garlic and onion, add tomato sauce.",
+      "Add beef, potatoes, and carrots. Simmer 15 minutes.",
+      "Add bell pepper. Serve with rice."
+    ],
+    "calories": 410
+  },
+  {
+    "name": "Menudo",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 60,
+    "difficulty": "medium",
+    "emoji": "🥘",
+    "ingredients": [
+      { "name": "Pork", "quantity": "300g, cubed" },
+      { "name": "Pork liver", "quantity": "150g, cubed" },
+      { "name": "Tomato sauce", "quantity": "1 cup" },
+      { "name": "Potatoes", "quantity": "2, cubed" },
+      { "name": "Carrot", "quantity": "1, sliced" },
+      { "name": "Bell pepper", "quantity": "1, sliced" },
+      { "name": "Garlic", "quantity": "4 cloves, minced" },
+      { "name": "Onion", "quantity": "1, chopped" },
+      { "name": "Raisins", "quantity": "1/4 cup" }
+    ],
+    "steps": [
+      "Boil pork for 30 minutes until tender.",
+      "Sauté garlic and onion, add tomato sauce.",
+      "Add pork, liver, potatoes, and carrots. Simmer 15 minutes.",
+      "Add bell pepper and raisins.",
+      "Simmer 5 more minutes. Serve with rice."
+    ],
+    "calories": 380
+  },
+  {
+    "name": "Afritada",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 50,
+    "difficulty": "medium",
+    "emoji": "🍗",
+    "ingredients": [
+      { "name": "Chicken", "quantity": "500g, cut up" },
+      { "name": "Tomato sauce", "quantity": "1 cup" },
+      { "name": "Potatoes", "quantity": "2, cubed" },
+      { "name": "Carrot", "quantity": "1, sliced" },
+      { "name": "Bell pepper", "quantity": "1, sliced" },
+      { "name": "Garlic", "quantity": "4 cloves, minced" },
+      { "name": "Onion", "quantity": "1, chopped" },
+      { "name": "Sugar", "quantity": "1 tbsp" }
+    ],
+    "steps": [
+      "Sauté garlic and onion in oil.",
+      "Add chicken and cook until lightly browned.",
+      "Add tomato sauce, sugar, and water.",
+      "Add potatoes and carrots, simmer 20 minutes.",
+      "Add bell pepper. Serve with rice."
+    ],
+    "calories": 360
+  },
+  {
+    "name": "Pinakbet",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": ["vegetarian"],
+    "prepTimeMinutes": 30,
+    "difficulty": "easy",
+    "emoji": "🥬",
+    "ingredients": [
+      { "name": "Eggplant", "quantity": "1, sliced" },
+      { "name": "String beans", "quantity": "1 cup, cut" },
+      { "name": "Squash", "quantity": "1 cup, cubed" },
+      { "name": "Okra", "quantity": "1 cup" },
+      { "name": "Tomatoes", "quantity": "2, chopped" },
+      { "name": "Onion", "quantity": "1, chopped" },
+      { "name": "Garlic", "quantity": "3 cloves, minced" },
+      { "name": "Shrimp paste (bagoong)", "quantity": "2 tbsp" }
+    ],
+    "steps": [
+      "Sauté garlic, onion, and tomatoes.",
+      "Add shrimp paste and stir.",
+      "Add squash and a little water, simmer 5 minutes.",
+      "Add eggplant, string beans, and okra.",
+      "Simmer until vegetables are tender. Serve with rice."
+    ],
+    "calories": 180
+  },
+  {
+    "name": "Dinengdeng",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": ["vegetarian"],
+    "prepTimeMinutes": 30,
+    "difficulty": "easy",
+    "emoji": "🥬",
+    "ingredients": [
+      { "name": "String beans", "quantity": "1 cup, cut" },
+      { "name": "Eggplant", "quantity": "1, sliced" },
+      { "name": "Okra", "quantity": "1 cup" },
+      { "name": "Squash", "quantity": "1 cup, cubed" },
+      { "name": "Tomatoes", "quantity": "2, chopped" },
+      { "name": "Onion", "quantity": "1, chopped" },
+      { "name": "Garlic", "quantity": "3 cloves, minced" },
+      { "name": "Bagoong (shrimp paste)", "quantity": "2 tbsp" }
+    ],
+    "steps": [
+      "Sauté garlic, onion, and tomatoes.",
+      "Add shrimp paste and stir.",
+      "Add squash and water, simmer 5 minutes.",
+      "Add remaining vegetables.",
+      "Simmer until tender. Serve with rice."
+    ],
+    "calories": 160
+  },
+  {
+    "name": "Ginisang Monggo",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": ["vegetarian"],
+    "prepTimeMinutes": 40,
+    "difficulty": "easy",
+    "emoji": "🫘",
+    "ingredients": [
+      { "name": "Mung beans", "quantity": "1 cup" },
+      { "name": "Spinach", "quantity": "1 cup" },
+      { "name": "Tomatoes", "quantity": "2, chopped" },
+      { "name": "Onion", "quantity": "1, chopped" },
+      { "name": "Garlic", "quantity": "3 cloves, minced" },
+      { "name": "Fish sauce", "quantity": "2 tbsp" },
+      { "name": "Pork (optional)", "quantity": "100g, diced" }
+    ],
+    "steps": [
+      "Boil mung beans until soft, about 30 minutes.",
+      "Sauté garlic, onion, and tomatoes.",
+      "Add pork if using, cook until done.",
+      "Add boiled mung beans and water.",
+      "Add spinach and fish sauce. Serve with rice."
+    ],
+    "calories": 200
+  },
+  {
+    "name": "Lumpiang Sariwa",
+    "suggestedFor": ["lunch", "snack"],
+    "cuisine": "Filipino",
+    "dietaryTags": ["vegetarian"],
+    "prepTimeMinutes": 45,
+    "difficulty": "medium",
+    "emoji": "🥟",
+    "ingredients": [
+      { "name": "Lumpia wrappers", "quantity": "10 sheets" },
+      { "name": "Tofu", "quantity": "200g, cubed" },
+      { "name": "Carrot", "quantity": "1, julienned" },
+      { "name": "Cabbage", "quantity": "1 cup, shredded" },
+      { "name": "Bean sprouts", "quantity": "1 cup" },
+      { "name": "Garlic", "quantity": "3 cloves, minced" },
+      { "name": "Soy sauce", "quantity": "2 tbsp" }
+    ],
+    "steps": [
+      "Sauté garlic, then add tofu and vegetables.",
+      "Season with soy sauce, cook 5 minutes.",
+      "Place filling on lumpia wrapper, roll tightly.",
+      "Serve fresh (not fried) with peanut sauce.",
+      "Garnish with lettuce and carrots."
+    ],
+    "calories": 220
+  },
+  {
+    "name": "Pancit Malabon",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 45,
+    "difficulty": "hard",
+    "emoji": "🍜",
+    "ingredients": [
+      { "name": "Thick rice noodles", "quantity": "200g" },
+      { "name": "Shrimp", "quantity": "200g, peeled" },
+      { "name": "Squid", "quantity": "100g, sliced" },
+      { "name": "Pork", "quantity": "100g, sliced" },
+      { "name": "Achuete oil", "quantity": "2 tbsp" },
+      { "name": "Coconut milk", "quantity": "1/2 cup" },
+      { "name": "Shrimp paste", "quantity": "1 tbsp" },
+      { "name": "Hard-boiled eggs", "quantity": "2, sliced" }
+    ],
+    "steps": [
+      "Soak noodles in warm water until soft.",
+      "Sauté garlic, onion, pork, shrimp, and squid.",
+      "Add achuete oil, coconut milk, and shrimp paste.",
+      "Add noodles and toss well.",
+      "Top with sliced hard-boiled eggs and chicharon."
+    ],
+    "calories": 420
+  },
+  {
+    "name": "Adobong Puti",
+    "suggestedFor": ["breakfast", "lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": ["gluten-free"],
+    "prepTimeMinutes": 40,
+    "difficulty": "easy",
+    "emoji": "🥩",
+    "ingredients": [
+      { "name": "Pork belly", "quantity": "500g, cubed" },
+      { "name": "Vinegar", "quantity": "1/2 cup" },
+      { "name": "Garlic", "quantity": "5 cloves, crushed" },
+      { "name": "Bay leaves", "quantity": "2" },
+      { "name": "Black peppercorns", "quantity": "1 tsp" },
+      { "name": "Water", "quantity": "1 cup" },
+      { "name": "Rice", "quantity": "1 cup, for serving" }
+    ],
+    "steps": [
+      "Combine pork, vinegar, garlic, bay leaves, peppercorns, and water.",
+      "Bring to boil, then simmer 40 minutes until pork is tender.",
+      "Optional: Pan-fry to brown before serving.",
+      "Serve over steamed rice."
+    ],
+    "calories": 490
+  },
+  {
+    "name": "Adobong Pusit",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 30,
+    "difficulty": "medium",
+    "emoji": "🦑",
+    "ingredients": [
+      { "name": "Squid", "quantity": "500g, cleaned" },
+      { "name": "Soy sauce", "quantity": "1/4 cup" },
+      { "name": "Vinegar", "quantity": "1/4 cup" },
+      { "name": "Garlic", "quantity": "4 cloves, crushed" },
+      { "name": "Onion", "quantity": "1, sliced" },
+      { "name": "Bay leaves", "quantity": "2" },
+      { "name": "Black peppercorns", "quantity": "1 tsp" }
+    ],
+    "steps": [
+      "Combine squid, soy sauce, vinegar, garlic, onion, bay leaves, and peppercorns.",
+      "Marinate 15 minutes.",
+      "Bring to boil, then simmer 10 minutes.",
+      "Do not overcook or squid will be tough.",
+      "Serve with rice."
+    ],
+    "calories": 240
+  },
+  {
+    "name": "Crispy Pata",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 120,
+    "difficulty": "hard",
+    "emoji": "🦵",
+    "ingredients": [
+      { "name": "Pork leg (pata)", "quantity": "1 whole" },
+      { "name": "Salt", "quantity": "2 tbsp" },
+      { "name": "Garlic", "quantity": "6 cloves, crushed" },
+      { "name": "Bay leaves", "quantity": "3" },
+      { "name": "Black peppercorns", "quantity": "1 tsp" },
+      { "name": "Water", "quantity": "for boiling" },
+      { "name": "Oil", "quantity": "for deep frying" }
+    ],
+    "steps": [
+      "Boil pork leg with salt, garlic, bay leaves, and peppercorns for 1.5 hours.",
+      "Drain and let dry completely.",
+      "Score the skin in a crisscross pattern.",
+      "Deep fry until skin is golden and crispy.",
+      "Drain and chop. Serve with liver sauce or vinegar."
+    ],
+    "calories": 580
+  },
+  {
+    "name": "Chicharon Bulaklak",
+    "suggestedFor": ["snack", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 45,
+    "difficulty": "medium",
+    "emoji": "🥓",
+    "ingredients": [
+      { "name": "Pork ruffles (bulaklak)", "quantity": "300g" },
+      { "name": "Vinegar", "quantity": "1/2 cup" },
+      { "name": "Garlic", "quantity": "3 cloves, crushed" },
+      { "name": "Salt", "quantity": "1 tsp" },
+      { "name": "Pepper", "quantity": "1/2 tsp" },
+      { "name": "Oil", "quantity": "for deep frying" }
+    ],
+    "steps": [
+      "Clean pork ruffles thoroughly.",
+      "Boil with vinegar, garlic, salt, and pepper for 20 minutes.",
+      "Drain and let dry.",
+      "Deep fry until crispy and puffed.",
+      "Serve with spicy vinegar dipping sauce."
+    ],
+    "calories": 450
+  },
+  {
+    "name": "Relyenong Bangus",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 90,
+    "difficulty": "hard",
+    "emoji": "🐟",
+    "ingredients": [
+      { "name": "Milkfish (bangus)", "quantity": "1 whole, large" },
+      { "name": "Pork", "quantity": "200g, ground" },
+      { "name": "Carrot", "quantity": "1, minced" },
+      { "name": "Onion", "quantity": "1, minced" },
+      { "name": "Garlic", "quantity": "3 cloves, minced" },
+      { "name": "Egg", "quantity": "1, beaten" },
+      { "name": "Salt", "quantity": "1 tsp" },
+      { "name": "Pepper", "quantity": "1/2 tsp" }
+    ],
+    "steps": [
+      "Boil milkfish for 10 minutes, then carefully debone.",
+      "Sauté garlic, onion, carrot, and ground pork.",
+      "Mix in egg, salt, and pepper.",
+      "Stuff the fish with the mixture.",
+      "Steam for 20 minutes, then slice and serve."
+    ],
+    "calories": 380
+  },
+  {
+    "name": "Embutido",
+    "suggestedFor": ["breakfast", "lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 60,
+    "difficulty": "medium",
+    "emoji": "🥩",
+    "ingredients": [
+      { "name": "Ground pork", "quantity": "500g" },
+      { "name": "Bread crumbs", "quantity": "1 cup" },
+      { "name": "Eggs", "quantity": "2" },
+      { "name": "Carrot", "quantity": "1, grated" },
+      { "name": "Onion", "quantity": "1, minced" },
+      { "name": "Garlic", "quantity": "3 cloves, minced" },
+      { "name": "Salt", "quantity": "1 tsp" },
+      { "name": "Pepper", "quantity": "1/2 tsp" },
+      { "name": "Raisins", "quantity": "1/4 cup" },
+      { "name": "Sweet pickle relish", "quantity": "1/4 cup" }
+    ],
+    "steps": [
+      "Mix ground pork, bread crumbs, eggs, carrot, onion, garlic, salt, and pepper.",
+      "Add raisins and pickle relish.",
+      "Shape into a log on aluminum foil.",
+      "Steam for 45 minutes.",
+      "Let cool before slicing. Serve with rice."
+    ],
+    "calories": 340
+  },
+  {
+    "name": "Morcon",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 90,
+    "difficulty": "hard",
+    "emoji": "🥩",
+    "ingredients": [
+      { "name": "Beef flank steak", "quantity": "500g, pounded thin" },
+      { "name": "Hotdogs", "quantity": "4, sliced lengthwise" },
+      { "name": "Pickles", "quantity": "1/2 cup, sliced" },
+      { "name": "Carrot", "quantity": "1, julienned" },
+      { "name": "Bell pepper", "quantity": "1, julienned" },
+      { "name": "Raisins", "quantity": "1/4 cup" },
+      { "name": "Eggs", "quantity": "2, hard-boiled, sliced" },
+      { "name": "Tomato sauce", "quantity": "1 cup" }
+    ],
+    "steps": [
+      "Lay beef flat, layer with hotdogs, pickles, carrot, bell pepper, raisins, and egg slices.",
+      "Roll tightly and tie with kitchen string.",
+      "Sear in oil until browned on all sides.",
+      "Add tomato sauce and water, simmer 1 hour.",
+      "Slice and serve with rice."
+    ],
+    "calories": 420
+  },
+  {
+    "name": "Fish Kinilaw",
+    "suggestedFor": ["lunch", "snack"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 20,
+    "difficulty": "easy",
+    "emoji": "🐟",
+    "ingredients": [
+      { "name": "Fresh tuna or tanigue", "quantity": "300g, cubed" },
+      { "name": "Calamansi", "quantity": "6, juiced" },
+      { "name": "Cucumber", "quantity": "1, sliced" },
+      { "name": "Onion", "quantity": "1, thinly sliced" },
+      { "name": "Ginger", "quantity": "1 inch, julienned" },
+      { "name": "Chili peppers", "quantity": "2, sliced" },
+      { "name": "Salt", "quantity": "1 tsp" }
+    ],
+    "steps": [
+      "Combine fish with calamansi juice, marinate 10 minutes.",
+      "Add cucumber, onion, ginger, and chili.",
+      "Season with salt.",
+      "Toss gently.",
+      "Serve immediately as an appetizer or pulutan."
+    ],
+    "calories": 180
+  },
+  {
+    "name": "Dinuguan",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 50,
+    "difficulty": "medium",
+    "emoji": "🥘",
+    "ingredients": [
+      { "name": "Pork", "quantity": "400g, cubed" },
+      { "name": "Pork blood", "quantity": "1 cup" },
+      { "name": "Vinegar", "quantity": "1/4 cup" },
+      { "name": "Garlic", "quantity": "4 cloves, minced" },
+      { "name": "Onion", "quantity": "1, chopped" },
+      { "name": "Chili peppers", "quantity": "2, optional" },
+      { "name": "Sugar", "quantity": "1 tsp" }
+    ],
+    "steps": [
+      "Sauté garlic and onion.",
+      "Add pork and cook until browned.",
+      "Add vinegar and simmer 10 minutes.",
+      "Add pork blood and stir continuously.",
+      "Add chili and sugar. Simmer 20 minutes. Serve with rice."
+    ],
+    "calories": 340
+  },
+  {
+    "name": "Batchoy",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 45,
+    "difficulty": "medium",
+    "emoji": "🍜",
+    "ingredients": [
+      { "name": "Pork bones", "quantity": "500g" },
+      { "name": "Pork liver", "quantity": "150g, sliced" },
+      { "name": "Noodles", "quantity": "200g" },
+      { "name": "Pork intestines", "quantity": "100g, cleaned" },
+      { "name": "Garlic", "quantity": "4 cloves, minced" },
+      { "name": "Onion", "quantity": "1, chopped" },
+      { "name": "Fish sauce", "quantity": "2 tbsp" },
+      { "name": "Hard-boiled egg", "quantity": "1, per serving" }
+    ],
+    "steps": [
+      "Boil pork bones for 1 hour to make broth.",
+      "Sauté garlic and onion, add pork liver and intestines.",
+      "Add broth and bring to boil.",
+      "Add noodles and cook 3 minutes.",
+      "Serve topped with hard-boiled egg and crushed chicharon."
+    ],
+    "calories": 380
+  },
+  {
+    "name": "Pares",
+    "suggestedFor": ["breakfast", "lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 90,
+    "difficulty": "medium",
+    "emoji": "🥩",
+    "ingredients": [
+      { "name": "Beef brisket", "quantity": "500g, cubed" },
+      { "name": "Rice", "quantity": "1 cup" },
+      { "name": "Garlic", "quantity": "4 cloves, minced" },
+      { "name": "Onion", "quantity": "1, chopped" },
+      { "name": "Soy sauce", "quantity": "1/4 cup" },
+      { "name": "Sugar", "quantity": "2 tbsp" },
+      { "name": "Cornstarch", "quantity": "1 tsp" },
+      { "name": "Beef broth", "quantity": "2 cups" }
+    ],
+    "steps": [
+      "Boil beef for 1 hour until tender.",
+      "Sauté garlic and onion, add soy sauce and sugar.",
+      "Add beef and cornstarch slurry.",
+      "Simmer until sauce thickens.",
+      "Serve with rice and a side of beef broth soup."
+    ],
+    "calories": 420
+  },
+  {
+    "name": "Beef Kansi",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 120,
+    "difficulty": "hard",
+    "emoji": "🥩",
+    "ingredients": [
+      { "name": "Beef shank", "quantity": "500g" },
+      { "name": "Bone marrow", "quantity": "200g" },
+      { "name": "Calamansi", "quantity": "4, juiced" },
+      { "name": "Onion", "quantity": "1, quartered" },
+      { "name": "Garlic", "quantity": "4 cloves, crushed" },
+      { "name": "Peppercorns", "quantity": "1 tsp" },
+      { "name": "Fish sauce", "quantity": "2 tbsp" },
+      { "name": "Rice", "quantity": "1 cup, for serving" }
+    ],
+    "steps": [
+      "Boil beef shank and bone marrow for 2 hours.",
+      "Add onion, garlic, and peppercorns.",
+      "Season with fish sauce and calamansi juice.",
+      "Simmer until broth is rich and flavorful.",
+      "Serve with rice and extra calamansi on the side."
+    ],
+    "calories": 380
+  },
+  {
+    "name": "Maruya",
+    "suggestedFor": ["snack", "breakfast"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 15,
+    "difficulty": "easy",
+    "emoji": "🍌",
+    "ingredients": [
+      { "name": "Saba bananas", "quantity": "4, ripe" },
+      { "name": "Flour", "quantity": "1/2 cup" },
+      { "name": "Sugar", "quantity": "2 tbsp" },
+      { "name": "Milk", "quantity": "1/4 cup" },
+      { "name": "Egg", "quantity": "1" },
+      { "name": "Oil", "quantity": "for frying" }
+    ],
+    "steps": [
+      "Mash bananas in a bowl.",
+      "Mix in flour, sugar, milk, and egg.",
+      "Drop spoonfuls into hot oil.",
+      "Fry until golden brown on both sides.",
+      "Drain on paper towels. Serve with sugar sprinkled on top."
+    ],
+    "calories": 200
+  },
+  {
+    "name": "Camote Q",
+    "suggestedFor": ["snack"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 15,
+    "difficulty": "easy",
+    "emoji": "🍠",
+    "ingredients": [
+      { "name": "Sweet potato (camote)", "quantity": "2 medium" },
+      { "name": "Brown sugar", "quantity": "1/2 cup" },
+      { "name": "Water", "quantity": "1/2 cup" },
+      { "name": "Oil", "quantity": "for frying" }
+    ],
+    "steps": [
+      "Peel and slice sweet potatoes into 1-inch pieces.",
+      "Boil in water with brown sugar until syrupy.",
+      "Drain and let cool slightly.",
+      "Skewer on bamboo sticks.",
+      "Serve warm or at room temperature."
+    ],
+    "calories": 180
+  },
+  {
+    "name": "Banana Cue",
+    "suggestedFor": ["snack"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 15,
+    "difficulty": "easy",
+    "emoji": "🍌",
+    "ingredients": [
+      { "name": "Saba bananas", "quantity": "6, ripe" },
+      { "name": "Brown sugar", "quantity": "1 cup" },
+      { "name": "Oil", "quantity": "for deep frying" },
+      { "name": "Bamboo skewers", "quantity": "6" }
+    ],
+    "steps": [
+      "Peel bananas and skewer on bamboo sticks.",
+      "Heat oil in a pan.",
+      "Roll bananas in brown sugar.",
+      "Deep fry until sugar caramelizes and bananas are golden.",
+      "Drain on paper towels. Serve warm."
+    ],
+    "calories": 220
+  },
+  {
+    "name": "Ginataang Bilo-Bilo",
+    "suggestedFor": ["snack", "breakfast"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 30,
+    "difficulty": "easy",
+    "emoji": "🥥",
+    "ingredients": [
+      { "name": "Glutinous rice balls", "quantity": "1 cup" },
+      { "name": "Coconut milk", "quantity": "2 cups" },
+      { "name": "Sugar", "quantity": "1/2 cup" },
+      { "name": "Taro (gabi)", "quantity": "1 cup, cubed" },
+      { "name": "Sweet potato", "quantity": "1 cup, cubed" },
+      { "name": "Saba banana", "quantity": "2, sliced" },
+      { "name": "Tapioca pearls", "quantity": "1/2 cup" }
+    ],
+    "steps": [
+      "Cook glutinous rice balls in boiling water until they float.",
+      "Add coconut milk, sugar, taro, and sweet potato.",
+      "Simmer until vegetables are tender.",
+      "Add saba banana and tapioca pearls.",
+      "Serve warm or chilled."
+    ],
+    "calories": 320
+  },
+  {
+    "name": "Ginataang Halo-Halo",
+    "suggestedFor": ["snack"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 20,
+    "difficulty": "easy",
+    "emoji": "🥥",
+    "ingredients": [
+      { "name": "Coconut milk", "quantity": "2 cups" },
+      { "name": "Sugar", "quantity": "1/2 cup" },
+      { "name": "Sweet beans", "quantity": "1/4 cup" },
+      { "name": "Nata de coco", "quantity": "1/4 cup" },
+      { "name": "Kaong (sugar palm)", "quantity": "1/4 cup" },
+      { "name": "Saba banana", "quantity": "1, sliced" },
+      { "name": "Taro (gabi)", "quantity": "1/2 cup, cubed" },
+      { "name": "Tapioca pearls", "quantity": "1/4 cup" }
+    ],
+    "steps": [
+      "Combine coconut milk and sugar in a pot.",
+      "Add sweet beans, nata de coco, and kaong.",
+      "Add saba banana, taro, and tapioca pearls.",
+      "Simmer until all ingredients are cooked.",
+      "Serve warm or chilled."
+    ],
+    "calories": 300
+  },
+  {
+    "name": "Leche Flan",
+    "suggestedFor": ["snack", "dessert"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 60,
+    "difficulty": "medium",
+    "emoji": "🍮",
+    "ingredients": [
+      { "name": "Eggs", "quantity": "4" },
+      { "name": "Egg yolks", "quantity": "2" },
+      { "name": "Sugar", "quantity": "1/2 cup" },
+      { "name": "Evaporated milk", "quantity": "1 cup" },
+      { "name": "Condensed milk", "quantity": "1 can (14 oz)" },
+      { "name": "Vanilla extract", "quantity": "1 tsp" }
+    ],
+    "steps": [
+      "Caramelize sugar in a llanera (mold) until golden.",
+      "Beat eggs, egg yolks, evaporated milk, condensed milk, and vanilla.",
+      "Strain the mixture into the caramelized mold.",
+      "Steam for 30-35 minutes until set.",
+      "Let cool, then refrigerate. Serve chilled."
+    ],
+    "calories": 280
+  },
+  {
+    "name": "Ube Halaya",
+    "suggestedFor": ["snack", "breakfast"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 45,
+    "difficulty": "medium",
+    "emoji": "🟣",
+    "ingredients": [
+      { "name": "Ube (purple yam)", "quantity": "500g, boiled and mashed" },
+      { "name": "Condensed milk", "quantity": "1 can (14 oz)" },
+      { "name": "Evaporated milk", "quantity": "1/2 cup" },
+      { "name": "Butter", "quantity": "1/4 cup" },
+      { "name": "Sugar", "quantity": "1/4 cup" },
+      { "name": "Coconut milk", "quantity": "1/4 cup" }
+    ],
+    "steps": [
+      "Boil ube until soft, then mash thoroughly.",
+      "Combine ube with condensed milk, evaporated milk, butter, sugar, and coconut milk.",
+      "Cook over low heat, stirring constantly.",
+      "Cook for 30 minutes until thick and smooth.",
+      "Serve warm or chilled. Top with latik if desired."
+    ],
+    "calories": 260
+  },
+  {
+    "name": "Puto Bumbong",
+    "suggestedFor": ["snack", "breakfast"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 60,
+    "difficulty": "hard",
+    "emoji": "🟣",
+    "ingredients": [
+      { "name": "Purple rice ( Malagkit)", "quantity": "2 cups" },
+      { "name": "Coconut milk", "quantity": "1 cup" },
+      { "name": "Sugar", "quantity": "1/4 cup" },
+      { "name": "Salt", "quantity": "1 pinch" },
+      { "name": "Butter", "quantity": "2 tbsp, melted" },
+      { "name": "Grated coconut", "quantity": "1/2 cup" },
+      { "name": "Brown sugar", "quantity": "2 tbsp" }
+    ],
+    "steps": [
+      "Soak purple rice for 4 hours or overnight.",
+      "Mix with coconut milk, sugar, and salt.",
+      "Place in bamboo tubes (bumbong).",
+      "Steam for 45 minutes.",
+      "Serve topped with grated coconut and brown sugar."
+    ],
+    "calories": 240
+  },
+  {
+    "name": "Sapin-Sapin",
+    "suggestedFor": ["snack", "breakfast"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 50,
+    "difficulty": "medium",
+    "emoji": "🟣",
+    "ingredients": [
+      { "name": "Glutinous rice flour", "quantity": "2 cups" },
+      { "name": "Coconut milk", "quantity": "1 cup" },
+      { "name": "Sugar", "quantity": "1/2 cup" },
+      { "name": "Ube halaya", "quantity": "1/2 cup" },
+      { "name": "Latik (coconut curds)", "quantity": "1/4 cup" },
+      { "name": "Butter", "quantity": "2 tbsp, melted" }
+    ],
+    "steps": [
+      "Mix glutinous rice flour, coconut milk, sugar, and butter.",
+      "Divide into two portions. Mix one portion with ube halaya.",
+      "Layer white and purple mixtures in a greased pan.",
+      "Steam for 30 minutes.",
+      "Top with latik before serving."
+    ],
+    "calories": 270
+  },
+  {
+    "name": "Tosilog",
+    "suggestedFor": ["breakfast", "lunch"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 20,
+    "difficulty": "easy",
+    "emoji": "🥓",
+    "ingredients": [
+      { "name": "Tocino (cured pork)", "quantity": "200g" },
+      { "name": "Garlic fried rice", "quantity": "1 cup" },
+      { "name": "Egg", "quantity": "1" },
+      { "name": "Vinegar", "quantity": "2 tbsp" }
+    ],
+    "steps": [
+      "Fry tocino until caramelized and cooked.",
+      "Make garlic fried rice by sautéing garlic with day-old rice.",
+      "Fry the egg sunny-side up.",
+      "Serve tocino, rice, and egg together.",
+      "Add vinegar on the side for dipping."
+    ],
+    "calories": 520
+  },
+  {
+    "name": "Longsilog",
+    "suggestedFor": ["breakfast", "lunch"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 20,
+    "difficulty": "easy",
+    "emoji": "🌭",
+    "ingredients": [
+      { "name": "Longganisa (Filipino sausage)", "quantity": "200g" },
+      { "name": "Garlic fried rice", "quantity": "1 cup" },
+      { "name": "Egg", "quantity": "1" },
+      { "name": "Vinegar", "quantity": "2 tbsp" }
+    ],
+    "steps": [
+      "Fry longganisa until cooked through and slightly crispy.",
+      "Make garlic fried rice by sautéing garlic with day-old rice.",
+      "Fry the egg sunny-side up.",
+      "Serve longganisa, rice, and egg together.",
+      "Add vinegar on the side for dipping."
+    ],
+    "calories": 530
+  },
+  {
+    "name": "Dangsilog",
+    "suggestedFor": ["breakfast", "lunch"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 25,
+    "difficulty": "medium",
+    "emoji": "🐟",
+    "ingredients": [
+      { "name": "Daing na bangus (marinated milkfish)", "quantity": "1 piece" },
+      { "name": "Garlic fried rice", "quantity": "1 cup" },
+      { "name": "Egg", "quantity": "1" },
+      { "name": "Vinegar", "quantity": "2 tbsp" }
+    ],
+    "steps": [
+      "Fry daing na bangus until crispy.",
+      "Make garlic fried rice by sautéing garlic with day-old rice.",
+      "Fry the egg sunny-side up.",
+      "Serve bangus, rice, and egg together.",
+      "Add vinegar on the side for dipping."
+    ],
+    "calories": 450
+  },
+  {
+    "name": "Spamsilog",
+    "suggestedFor": ["breakfast", "lunch"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 15,
+    "difficulty": "easy",
+    "emoji": "🥫",
+    "ingredients": [
+      { "name": "Spam", "quantity": "1 can, sliced" },
+      { "name": "Garlic fried rice", "quantity": "1 cup" },
+      { "name": "Egg", "quantity": "1" },
+      { "name": "Vinegar", "quantity": "2 tbsp" }
+    ],
+    "steps": [
+      "Fry Spam slices until golden and crispy.",
+      "Make garlic fried rice by sautéing garlic with day-old rice.",
+      "Fry the egg sunny-side up.",
+      "Serve Spam, rice, and egg together.",
+      "Add vinegar on the side for dipping."
+    ],
+    "calories": 500
+  },
+  {
+    "name": "Cornedsilog",
+    "suggestedFor": ["breakfast", "lunch"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 15,
+    "difficulty": "easy",
+    "emoji": "🥩",
+    "ingredients": [
+      { "name": "Corned beef", "quantity": "1 can" },
+      { "name": "Garlic fried rice", "quantity": "1 cup" },
+      { "name": "Egg", "quantity": "1" },
+      { "name": "Vinegar", "quantity": "2 tbsp" }
+    ],
+    "steps": [
+      "Sauté corned beef with garlic until heated through.",
+      "Make garlic fried rice by sautéing garlic with day-old rice.",
+      "Fry the egg sunny-side up.",
+      "Serve corned beef, rice, and egg together.",
+      "Add vinegar on the side for dipping."
+    ],
+    "calories": 480
+  },
+  {
+    "name": "Pan de Coco",
+    "suggestedFor": ["breakfast", "snack"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 120,
+    "difficulty": "medium",
+    "emoji": "🥥",
+    "ingredients": [
+      { "name": "Flour", "quantity": "3 cups" },
+      { "name": "Yeast", "quantity": "1 packet" },
+      { "name": "Sugar", "quantity": "1/4 cup" },
+      { "name": "Salt", "quantity": "1 tsp" },
+      { "name": "Coconut milk", "quantity": "1/2 cup" },
+      { "name": "Butter", "quantity": "1/4 cup, melted" },
+      { "name": "Coconut filling", "quantity": "1/2 cup" }
+    ],
+    "steps": [
+      "Mix flour, yeast, sugar, and salt.",
+      "Add coconut milk and melted butter, knead until smooth.",
+      "Let rise for 1 hour.",
+      "Shape into rolls with coconut filling inside.",
+      "Bake at 350°F (175°C) for 15-20 minutes."
+    ],
+    "calories": 200
+  },
+  {
+    "name": "Ensaymada",
+    "suggestedFor": ["breakfast", "snack"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 120,
+    "difficulty": "medium",
+    "emoji": "🧈",
+    "ingredients": [
+      { "name": "Flour", "quantity": "3 cups" },
+      { "name": "Yeast", "quantity": "1 packet" },
+      { "name": "Sugar", "quantity": "1/4 cup" },
+      { "name": "Salt", "quantity": "1 tsp" },
+      { "name": "Butter", "quantity": "1/2 cup, softened" },
+      { "name": "Eggs", "quantity": "2" },
+      { "name": "Milk", "quantity": "1/2 cup, warm" },
+      { "name": "Grated cheese", "quantity": "1/2 cup" },
+      { "name": "Sugar (topping)", "quantity": "1/4 cup" }
+    ],
+    "steps": [
+      "Mix flour, yeast, sugar, and salt.",
+      "Add butter, eggs, and milk, knead until smooth.",
+      "Let rise for 1 hour.",
+      "Shape into rolls, brush with butter.",
+      "Top with grated cheese and sugar. Bake at 350°F (175°C) for 15 minutes."
+    ],
+    "calories": 220
+  },
+  {
+    "name": "Sinigang na Bangus",
+    "suggestedFor": ["lunch", "dinner"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 45,
+    "difficulty": "medium",
+    "emoji": "🥘",
+    "ingredients": [
+      { "name": "Milkfish (bangus)", "quantity": "1 whole" },
+      { "name": "Tamarind soup base", "quantity": "1 packet" },
+      { "name": "Tomatoes", "quantity": "2, quartered" },
+      { "name": "Onion", "quantity": "1, quartered" },
+      { "name": "Radish", "quantity": "1, sliced" },
+      { "name": "String beans", "quantity": "1 cup, cut" },
+      { "name": "Eggplant", "quantity": "1, sliced" },
+      { "name": "Kangkong (water spinach)", "quantity": "1 bunch" }
+    ],
+    "steps": [
+      "Boil water with tomatoes, onion, and tamarind soup base.",
+      "Add radish and string beans, simmer 5 minutes.",
+      "Add milkfish and cook 10 minutes.",
+      "Add eggplant and kangkong, cook 2 more minutes.",
+      "Serve hot with steamed rice."
+    ],
+    "calories": 260
+  },
+  {
+    "name": "Kinilaw na Tanigue",
+    "suggestedFor": ["lunch", "snack"],
+    "cuisine": "Filipino",
+    "dietaryTags": [],
+    "prepTimeMinutes": 20,
+    "difficulty": "easy",
+    "emoji": "🐟",
+    "ingredients": [
+      { "name": "Tanigue (Spanish mackerel)", "quantity": "300g, cubed" },
+      { "name": "Calamansi", "quantity": "6, juiced" },
+      { "name": "Cucumber", "quantity": "1, sliced" },
+      { "name": "Onion", "quantity": "1, thinly sliced" },
+      { "name": "Ginger", "quantity": "1 inch, julienned" },
+      { "name": "Chili peppers", "quantity": "2, sliced" },
+      { "name": "Salt", "quantity": "1 tsp" }
+    ],
+    "steps": [
+      "Combine fish with calamansi juice, marinate 10 minutes.",
+      "Add cucumber, onion, ginger, and chili.",
+      "Season with salt.",
+      "Toss gently.",
+      "Serve immediately as an appetizer or pulutan."
+    ],
+    "calories": 170
+  }
+]
