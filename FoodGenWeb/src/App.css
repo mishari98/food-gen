@@ -731,6 +731,17 @@ body {
   cursor: not-allowed;
 }
 
+.onboarding-link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
 /* === Tab Bar === */
 .tab-bar {
   display: flex;
@@ -925,4 +936,189 @@ body {
 textarea.form-input {
   resize: vertical;
   min-height: 60px;
+}
+
+/* === Loading Spinner === */
+.loading-spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+}
+
+.loading-spinner {
+  border: 3px solid #E0E0E0;
+  border-top-color: #FF6B35;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-spinner-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* === Household Dashboard === */
+.household-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dashboard-header {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+.dashboard-header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.household-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 4px 0;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: #FFF5F0;
+  color: var(--primary);
+  margin-top: 8px;
+}
+
+.pending-invites {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+
+.pending-invites h2 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.invite-card {
+  background: #FFF5F0;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+  border: 1px solid #FFE0D0;
+}
+
+.invite-card p {
+  font-size: 14px;
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.accept-button {
+  flex: 1;
+  padding: 10px;
+  background: var(--secondary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reject-button {
+  flex: 1;
+  padding: 10px;
+  background: var(--danger);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.household-info {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+
+.household-info h2 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.household-info p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.dashboard-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.dashboard-actions button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.dashboard-actions .primary-button {
+  background: var(--primary);
+  color: white;
+}
+
+.dashboard-actions .secondary-button {
+  background: var(--secondary);
+  color: white;
+}
+
+.dashboard-actions .danger-button {
+  background: var(--danger);
+  color: white;
+}
+
+.error-message {
+  background: #FFEBEE;
+  color: var(--danger);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  border: 1px solid #FFCDD2;
 }

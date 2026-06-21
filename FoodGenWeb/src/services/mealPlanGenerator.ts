@@ -1,6 +1,4 @@
-import type { Meal, DayPlan } from '../types/meal';
-import { getMealsPerDay } from './preferenceManager';
-import { getSlotsForMealsPerDay } from '../utils/constants';
+import type { Meal, MealEntry, HouseholdDayPlan } from '../types/meal';
 import { getWeekNumber, formatDateString } from '../utils/dateHelpers';
 
 function shuffleArray<T>(array: T[]): T[] {
@@ -12,131 +10,137 @@ function shuffleArray<T>(array: T[]): T[] {
   return arr;
 }
 
-export async function generateTodayPlan(allMeals: Meal[] = []): Promise<Omit<DayPlan, 'id'> | null> {
-  const mealsPerDay = await getMealsPerDay();
-  const activeSlots = getSlotsForMealsPerDay(mealsPerDay);
-
+/**
+ * Generate a day plan with flexible meal count
+ * @param allMeals - Pool of meals to choose from (reference + custom)
+ * @param mealCount - Number of meals to generate (1-4)
+ * @param date - Date string (YYYY-MM-DD), defaults to today
+ * @param usedMealIds - Meal IDs already used this week (to avoid repeats)
+ */
+export function generateDayPlan(
+  allMeals: Meal[] = [],
+  mealCount: number = 1,
+  date?: string,
+  usedMealIds: Set<number> = new Set()
+): Omit<HouseholdDayPlan, 'createdBy' | 'lastModifiedBy' | 'isGenerated' | 'createdAt' | 'updatedAt'> | null {
   if (allMeals.length === 0) return null;
 
-  const shuffled = shuffleArray(allMeals);
-  const today = new Date();
-  const dateStr = formatDateString(today);
-  const weekOfYear = getWeekNumber(today);
-  const year = today.getFullYear();
+  // Filter out already-used meals
+  const availableMeals = allMeals.filter(m => !usedMealIds.has(m.id));
+  const pool = availableMeals.length >= mealCount ? availableMeals : allMeals;
 
-  const slotToMeal: Record<string, number | null> = {
-    breakfast: null,
-    lunch: null,
-    dinner: null,
-    snack: null,
-  };
+  // Shuffle and pick
+  const shuffled = shuffleArray(pool);
+  const selected = shuffled.slice(0, mealCount);
 
-  let mealIndex = 0;
-  for (const slot of activeSlots) {
-    if (mealIndex < shuffled.length) {
-      slotToMeal[slot] = shuffled[mealIndex].id;
-      mealIndex++;
-    }
-  }
+  // Create MealEntry array with default 'planned' status
+  const meals: MealEntry[] = selected.map(meal => ({
+    mealId: meal.id,
+    label: '', // Optional label (user can add later)
+    status: 'planned' as const,
+  }));
+
+  const targetDate = date || formatDateString(new Date());
+  const dateObj = new Date(targetDate + 'T00:00:00');
+  const weekOfYear = getWeekNumber(dateObj);
+  const year = dateObj.getFullYear();
 
   return {
-    date: dateStr,
+    date: targetDate,
     weekOfYear,
     year,
-    breakfastId: slotToMeal.breakfast,
-    lunchId: slotToMeal.lunch,
-    dinnerId: slotToMeal.dinner,
-    snackId: slotToMeal.snack,
-    isGenerated: 1,
+    meals,
   };
 }
 
-export async function generateWeeklyPlan(allMeals: Meal[] = []): Promise<Omit<DayPlan, 'id'>[]> {
-  const mealsPerDay = await getMealsPerDay();
-  const activeSlots = getSlotsForMealsPerDay(mealsPerDay);
-
+/**
+ * Generate a full week plan (7 days)
+ * @param allMeals - Pool of meals to choose from
+ * @param mealCount - Number of meals per day (1-4)
+ * @param startDate - Starting date (defaults to today)
+ */
+export function generateWeekPlan(
+  allMeals: Meal[] = [],
+  mealCount: number = 1,
+  startDate?: Date
+): Omit<HouseholdDayPlan, 'createdBy' | 'lastModifiedBy' | 'isGenerated' | 'createdAt' | 'updatedAt'>[] {
   if (allMeals.length === 0) return [];
 
-  const shuffled = shuffleArray(allMeals);
-  const today = new Date();
-  const weekOfYear = getWeekNumber(today);
-  const year = today.getFullYear();
-
-  const plans: Omit<DayPlan, 'id'>[] = [];
-  let mealIndex = 0;
+  const today = startDate || new Date();
+  const plans: Omit<HouseholdDayPlan, 'createdBy' | 'lastModifiedBy' | 'isGenerated' | 'createdAt' | 'updatedAt'>[] = [];
+  const usedMealIds = new Set<number>();
 
   for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
     const date = new Date(today);
     date.setDate(today.getDate() + dayOffset);
     const dateStr = formatDateString(date);
 
-    const slotToMeal: Record<string, number | null> = {
-      breakfast: null,
-      lunch: null,
-      dinner: null,
-      snack: null,
-    };
-
-    for (const slot of activeSlots) {
-      if (mealIndex < shuffled.length) {
-        slotToMeal[slot] = shuffled[mealIndex].id;
-        mealIndex++;
-      } else {
-        const reshuffled = shuffleArray(allMeals);
-        slotToMeal[slot] = reshuffled[0].id;
-        mealIndex++;
-      }
+    const plan = generateDayPlan(allMeals, mealCount, dateStr, usedMealIds);
+    if (plan) {
+      // Track used meals to avoid repeats
+      plan.meals.forEach(m => {
+        if (m.mealId) usedMealIds.add(m.mealId);
+      });
+      plans.push(plan);
     }
-
-    plans.push({
-      date: dateStr,
-      weekOfYear,
-      year,
-      breakfastId: slotToMeal.breakfast,
-      lunchId: slotToMeal.lunch,
-      dinnerId: slotToMeal.dinner,
-      snackId: slotToMeal.snack,
-      isGenerated: 1,
-    });
   }
 
   return plans;
 }
 
-export async function regenerateDay(dateStr: string, allMeals: Meal[] = []): Promise<Omit<DayPlan, 'id'> | null> {
-  const mealsPerDay = await getMealsPerDay();
-  const activeSlots = getSlotsForMealsPerDay(mealsPerDay);
+/**
+ * Regenerate a single day (replace all meals)
+ */
+export function regenerateDay(
+  allMeals: Meal[] = [],
+  mealCount: number = 1,
+  dateStr: string,
+  existingMeals: MealEntry[] = []
+): Omit<HouseholdDayPlan, 'createdBy' | 'lastModifiedBy' | 'isGenerated' | 'createdAt' | 'updatedAt'> | null {
+  // Collect used meal IDs from existing plan (excluding current day's meals if we want variety)
+  const usedMealIds = new Set<number>();
+  existingMeals.forEach(m => {
+    if (m.mealId) usedMealIds.add(m.mealId);
+  });
 
-  if (allMeals.length === 0) return null;
+  return generateDayPlan(allMeals, mealCount, dateStr, usedMealIds);
+}
 
-  const shuffled = shuffleArray(allMeals);
-  const date = new Date(dateStr + 'T00:00:00');
-  const weekOfYear = getWeekNumber(date);
-  const year = date.getFullYear();
+/**
+ * Add a single meal to an existing day plan
+ */
+export function addMealToDay(
+  existingPlan: HouseholdDayPlan | null,
+  meal: Meal,
+  label?: string
+): HouseholdDayPlan | null {
+  if (!existingPlan) return null;
 
-  const slotToMeal: Record<string, number | null> = {
-    breakfast: null,
-    lunch: null,
-    dinner: null,
-    snack: null,
+  const newEntry: MealEntry = {
+    mealId: meal.id,
+    label: label || '',
+    status: 'planned',
   };
 
-  let mealIndex = 0;
-  for (const slot of activeSlots) {
-    if (mealIndex < shuffled.length) {
-      slotToMeal[slot] = shuffled[mealIndex].id;
-      mealIndex++;
-    }
-  }
+  return {
+    ...existingPlan,
+    meals: [...existingPlan.meals, newEntry],
+  };
+}
+
+/**
+ * Remove a meal from an existing day plan by index
+ */
+export function removeMealFromDay(
+  existingPlan: HouseholdDayPlan | null,
+  mealIndex: number
+): HouseholdDayPlan | null {
+  if (!existingPlan) return null;
+
+  const updatedMeals = existingPlan.meals.filter((_, idx) => idx !== mealIndex);
 
   return {
-    date: dateStr,
-    weekOfYear,
-    year,
-    breakfastId: slotToMeal.breakfast,
-    lunchId: slotToMeal.lunch,
-    dinnerId: slotToMeal.dinner,
-    snackId: slotToMeal.snack,
-    isGenerated: 1,
+    ...existingPlan,
+    meals: updatedMeals,
   };
 }

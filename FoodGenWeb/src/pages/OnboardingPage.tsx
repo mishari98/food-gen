@@ -1,129 +1,146 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { setDisplayName, setOnboardingComplete, getFirebaseUid, setFirebaseUid, getDisplayName, getMealsPerDay, getWeekStartDay } from '../services/preferenceManager';
-import { loginAnonymously, getCurrentUser } from '../firebase/auth';
-import { savePreferencesToFirestore } from '../firebase/firestore';
+import { useMealPlan } from '../context/MealPlanContext';
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const { signup, login, isLoading, error, user } = useMealPlan();
+  const [isLogin, setIsLogin] = useState(false);
+  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [localError, setLocalError] = useState('');
 
-  const handleStart = async () => {
-    const trimmedName = name.trim();
-    if (!trimmedName) {
-      setError('Please enter your name to continue.');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLocalError('');
+
+    if (!isLogin && password !== confirmPassword) {
+      setLocalError('Passwords do not match');
       return;
     }
-    if (trimmedName.length < 2) {
-      setError('Name must be at least 2 characters.');
+
+    if (password.length < 6) {
+      setLocalError('Password must be at least 6 characters');
       return;
     }
-
-    setIsLoading(true);
-    setError('');
 
     try {
-      // Save name locally
-      await setDisplayName(trimmedName);
-
-      // Try anonymous Firebase login
-      try {
-        const existingUid = await getFirebaseUid();
-        if (existingUid) {
-          // We already have a UID, just try to sign in again
-          try {
-            await loginAnonymously();
-          } catch {
-            // If it fails, that's okay - we'll work offline
-            console.warn('Anonymous login failed, continuing offline');
-          }
-        } else {
-          try {
-            const user = await loginAnonymously();
-            await setFirebaseUid(user.uid);
-          } catch {
-            // If it fails, that's okay - we'll work offline
-            console.warn('Anonymous login failed, continuing offline');
-          }
+      if (isLogin) {
+        await login(email, password);
+      } else {
+        if (!displayName.trim()) {
+          setLocalError('Please enter your name');
+          return;
         }
-      } catch {
-        console.warn('Firebase not available, continuing offline');
+        await signup(displayName, email, password);
       }
-
-      // Mark onboarding complete
-      await setOnboardingComplete();
-      
-      // Sync preferences to Firebase
-      const uid = await getFirebaseUid();
-      if (uid) {
-        const mpd = await getMealsPerDay();
-        const wsd = await getWeekStartDay();
-        await savePreferencesToFirestore(uid, {
-          displayName: trimmedName,
-          mealsPerDay: mpd,
-          weekStartDay: wsd,
-        });
-      }
-      
-      // Notify App to re-check onboarding status
-      window.dispatchEvent(new Event('onboarding-complete'));
-
-      // Navigate to main app
-      navigate('/', { replace: true });
-    } catch (e) {
-      console.error('Onboarding error:', e);
-      setError('Something went wrong. Please try again.');
-    } finally {
-      setIsLoading(false);
+      // Redirect to dashboard after successful auth
+      navigate('/dashboard');
+    } catch (err: any) {
+      setLocalError(err.message || 'Authentication failed');
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleStart();
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
     }
-  };
+  }, [user, navigate]);
 
   return (
     <div className="onboarding-container">
       <div className="onboarding-card">
         <div className="onboarding-icon">🍽️</div>
-        <h1 className="onboarding-title">Welcome to FoodGen</h1>
-        <p className="onboarding-subtitle">
-          Plan your meals, your way.
-        </p>
-        <p className="onboarding-description">
-          Generate daily and weekly meal plans. Your data syncs across all your devices automatically.
-        </p>
+        <h1 className="onboarding-title">FoodGen</h1>
+        <p className="onboarding-subtitle">Filipino Meal Planning for Your Household</p>
 
-        <div className="onboarding-form">
-          <label className="onboarding-label">What should we call you?</label>
-          <input
-            className="onboarding-input"
-            type="text"
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value);
-              setError('');
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Enter your name..."
-            autoFocus
-            maxLength={30}
-            disabled={isLoading}
-          />
-          {error && <p className="onboarding-error">{error}</p>}
+        <form onSubmit={handleSubmit} className="onboarding-form">
+          {!isLogin && (
+            <div className="form-group">
+              <label className="onboarding-label" htmlFor="displayName">Your Name</label>
+              <input
+                id="displayName"
+                className="onboarding-input"
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Juan Dela Cruz"
+                required={!isLogin}
+              />
+            </div>
+          )}
+
+          <div className="form-group">
+            <label className="onboarding-label" htmlFor="email">Email</label>
+            <input
+              id="email"
+              className="onboarding-input"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="juan@example.com"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="onboarding-label" htmlFor="password">Password</label>
+            <input
+              id="password"
+              className="onboarding-input"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              minLength={6}
+            />
+          </div>
+
+          {!isLogin && (
+            <div className="form-group">
+              <label className="onboarding-label" htmlFor="confirmPassword">Confirm Password</label>
+              <input
+                id="confirmPassword"
+                className="onboarding-input"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                required={!isLogin}
+              />
+            </div>
+          )}
+
+          {(error || localError) && (
+            <div className="onboarding-error">{error || localError}</div>
+          )}
+
+          <button type="submit" className="onboarding-btn" disabled={isLoading}>
+            {isLoading ? 'Please wait...' : isLogin ? 'Log In' : 'Sign Up'}
+          </button>
+        </form>
+
+        <div className="onboarding-toggle">
+          {isLogin ? (
+            <p>
+              Don't have an account?{' '}
+              <button type="button" onClick={() => setIsLogin(false)} className="onboarding-link">
+                Sign Up
+              </button>
+            </p>
+          ) : (
+            <p>
+              Already have an account?{' '}
+              <button type="button" onClick={() => setIsLogin(true)} className="onboarding-link">
+                Log In
+              </button>
+            </p>
+          )}
         </div>
-
-        <button
-          className="onboarding-btn"
-          onClick={handleStart}
-          disabled={isLoading || !name.trim()}
-        >
-          {isLoading ? 'Setting up...' : '🚀 Get Started'}
-        </button>
       </div>
     </div>
   );
