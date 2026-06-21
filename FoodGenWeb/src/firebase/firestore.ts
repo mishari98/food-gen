@@ -12,10 +12,20 @@ import {
   serverTimestamp,
   enableIndexedDbPersistence,
   type DocumentData,
-  type QueryConstraint,
 } from 'firebase/firestore';
 import { db } from './config';
-import type { Meal, DayPlan, DayPlanWithMeals, SavedWeekPlan, UserPreferences } from '../types/meal';
+import type {
+  Meal,
+  HouseholdDayPlan,
+  HouseholdDayPlanWithMeals,
+  Household,
+  HouseholdMember,
+  JoinRequest,
+  HouseholdInvite,
+  UserPreferences,
+  ActivityLogEntry,
+  InviteCodeRecord,
+} from '../types/meal';
 
 // Enable offline persistence
 try {
@@ -24,21 +34,22 @@ try {
   console.warn('Firestore persistence already enabled or failed:', e);
 }
 
-// --- Meals ---
+// ── Reference Meals ──
 
-export async function getMealsFromFirestore(uid: string): Promise<Meal[]> {
-  const snapshot = await getDocs(collection(db, 'users', uid, 'customMeals'));
-  const meals = snapshot.docs.map(d => {
+export async function getReferenceMeals(): Promise<Meal[]> {
+  const snap = await getDocs(collection(db, 'referenceMeals'));
+  return snap.docs.map(d => ({ id: Number(d.id), ...d.data() } as Meal));
+}
+
+// ── Custom Meals (per-user) ──
+
+export async function getCustomMeals(uid: string): Promise<Meal[]> {
+  const snap = await getDocs(collection(db, 'users', uid, 'customMeals'));
+  return snap.docs.map(d => {
     const data = d.data();
     const id = typeof data.id === 'number' ? data.id : Number(d.id);
-    console.log('[Firestore] Meal doc ID:', d.id, 'data.id:', data.id, 'resolved id:', id);
-    return {
-      id,
-      ...data,
-    } as Meal;
+    return { id, ...data } as Meal;
   });
-  console.log('[Firestore] Total meals loaded:', meals.length, 'Sample IDs:', meals.slice(0, 5).map(m => m.id));
-  return meals;
 }
 
 export async function saveCustomMeal(uid: string, meal: Meal): Promise<string> {
@@ -49,90 +60,6 @@ export async function saveCustomMeal(uid: string, meal: Meal): Promise<string> {
 
 export async function deleteCustomMeal(uid: string, mealId: string): Promise<void> {
   await setDoc(doc(db, 'users', uid, 'customMeals', mealId), { deleted: true }, { merge: true });
-}
-
-// --- Day Plans ---
-
-export async function getDayPlanFromFirestore(uid: string, date: string): Promise<DayPlan | null> {
-  const snap = await getDoc(doc(db, 'users', uid, 'dayPlans', date));
-  if (!snap.exists()) return null;
-  const data = snap.data() as DocumentData;
-  return {
-    date: data.date,
-    weekOfYear: data.weekOfYear,
-    year: data.year,
-    breakfastId: data.breakfastId ?? null,
-    lunchId: data.lunchId ?? null,
-    dinnerId: data.dinnerId ?? null,
-    snackId: data.snackId ?? null,
-    isGenerated: data.isGenerated ?? 1,
-  };
-}
-
-export async function saveDayPlanToFirestore(uid: string, plan: DayPlan): Promise<void> {
-  await setDoc(doc(db, 'users', uid, 'dayPlans', plan.date), {
-    ...plan,
-    updatedAt: serverTimestamp(),
-  });
-}
-
-export async function getWeekPlansFromFirestore(uid: string, weekOfYear: number, year: number): Promise<DayPlan[]> {
-  const q = query(
-    collection(db, 'users', uid, 'dayPlans'),
-    where('weekOfYear', '==', weekOfYear),
-    where('year', '==', year)
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ ...d.data() } as DayPlan));
-}
-
-export async function getAllDayPlansFromFirestore(uid: string): Promise<DayPlan[]> {
-  const snap = await getDocs(collection(db, 'users', uid, 'dayPlans'));
-  return snap.docs.map(d => ({ ...d.data() } as DayPlan));
-}
-
-// --- Saved Week Plans ---
-
-export async function getSavedWeekPlans(uid: string): Promise<SavedWeekPlan[]> {
-  const snap = await getDocs(collection(db, 'users', uid, 'savedWeekPlans'));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as SavedWeekPlan));
-}
-
-export async function saveWeekPlanToFirestore(uid: string, plan: Omit<SavedWeekPlan, 'id'>): Promise<string> {
-  const ref = doc(collection(db, 'users', uid, 'savedWeekPlans'));
-  await setDoc(ref, { ...plan, createdAt: serverTimestamp() });
-  return ref.id;
-}
-
-// --- Preferences ---
-
-export async function getPreferencesFromFirestore(uid: string): Promise<UserPreferences | null> {
-  const snap = await getDoc(doc(db, 'users', uid, 'preferences', 'main'));
-  if (!snap.exists()) return null;
-  const data = snap.data() as DocumentData;
-  return {
-    displayName: data.displayName || '',
-    mealsPerDay: data.mealsPerDay ?? 1,
-    weekStartDay: data.weekStartDay || 'monday',
-  };
-}
-
-export async function savePreferencesToFirestore(uid: string, prefs: UserPreferences): Promise<void> {
-  await setDoc(doc(db, 'users', uid, 'preferences', 'main'), {
-    ...prefs,
-    updatedAt: serverTimestamp(),
-  });
-}
-
-// --- Real-time Listeners ---
-
-export function listenToDayPlans(uid: string, callback: (plans: DayPlan[]) => void): () => void {
-  const q = query(collection(db, 'users', uid, 'dayPlans'));
-  const unsub = onSnapshot(q, (snap) => {
-    const plans = snap.docs.map(d => ({ ...d.data() } as DayPlan));
-    callback(plans);
-  });
-  return unsub;
 }
 
 export function listenToCustomMeals(uid: string, callback: (meals: Meal[]) => void): () => void {
@@ -151,4 +78,410 @@ export function listenToCustomMeals(uid: string, callback: (meals: Meal[]) => vo
     callback(meals);
   });
   return unsub;
+}
+
+// ── Households ──
+
+export async function getHousehold(householdId: string): Promise<Household | null> {
+  const snap = await getDoc(doc(db, 'households', householdId));
+  if (!snap.exists()) return null;
+  return { ...snap.data() } as unknown as Household;
+}
+
+export async function createHousehold(data: {
+  name: string;
+  address: Household['address'];
+  maxMembers: number;
+  weekStartDay: 'monday' | 'sunday';
+  description?: string;
+  timezone?: string;
+  createdBy: string;
+}): Promise<string> {
+  const inviteCode = generateInviteCode();
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+  const householdRef = doc(collection(db, 'households'));
+  const householdData: Omit<Household, 'id'> = {
+    name: data.name,
+    address: data.address,
+    inviteCode,
+    codeExpiresAt: expiresAt.toISOString(),
+    maxMembers: data.maxMembers,
+    weekStartDay: data.weekStartDay,
+    description: data.description,
+    timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+    createdBy: data.createdBy,
+    createdAt: now.toISOString(),
+    updatedAt: now.toISOString(),
+  };
+
+  await setDoc(householdRef, householdData);
+
+  // Add creator as admin member
+  const memberRef = doc(collection(db, 'households', householdRef.id, 'members'), data.createdBy);
+  await setDoc(memberRef, {
+    uid: data.createdBy,
+    displayName: '', // Will be populated from user profile
+    email: '', // Will be populated from user profile
+    role: 'admin',
+    joinedAt: now.toISOString(),
+  });
+
+  return householdRef.id;
+}
+
+export async function getHouseholdMembers(householdId: string): Promise<HouseholdMember[]> {
+  const snap = await getDocs(collection(db, 'households', householdId, 'members'));
+  return snap.docs.map(d => ({ ...d.data() } as HouseholdMember));
+}
+
+export async function addMember(
+  householdId: string,
+  uid: string,
+  role: 'admin' | 'editor' | 'viewer'
+): Promise<void> {
+  const memberRef = doc(collection(db, 'households', householdId, 'members'), uid);
+  await setDoc(memberRef, {
+    uid,
+    displayName: '',
+    email: '',
+    role,
+    joinedAt: new Date().toISOString(),
+  });
+}
+
+export async function updateMemberRole(
+  householdId: string,
+  uid: string,
+  role: 'admin' | 'editor' | 'viewer'
+): Promise<void> {
+  await setDoc(
+    doc(db, 'households', householdId, 'members', uid),
+    { role },
+    { merge: true }
+  );
+}
+
+export async function removeMember(householdId: string, uid: string): Promise<void> {
+  await setDoc(
+    doc(db, 'households', householdId, 'members', uid),
+    { removed: true, removedAt: new Date().toISOString() },
+    { merge: true }
+  );
+}
+
+export function listenToMembers(householdId: string, callback: (members: HouseholdMember[]) => void): () => void {
+  const q = query(collection(db, 'households', householdId, 'members'));
+  const unsub = onSnapshot(q, (snap) => {
+    const members = snap.docs.map(d => ({ ...d.data() } as HouseholdMember));
+    callback(members);
+  });
+  return unsub;
+}
+
+// ── Join Requests ──
+
+export async function getJoinRequests(householdId: string): Promise<JoinRequest[]> {
+  const snap = await getDocs(collection(db, 'households', householdId, 'joinRequests'));
+  return snap.docs.map(d => ({ ...d.data() } as JoinRequest));
+}
+
+export async function createJoinRequest(
+  householdId: string,
+  uid: string,
+  displayName: string,
+  email: string,
+  requestedRole: 'editor' | 'viewer'
+): Promise<void> {
+  const requestRef = doc(collection(db, 'households', householdId, 'joinRequests'), uid);
+  await setDoc(requestRef, {
+    uid,
+    displayName,
+    email,
+    status: 'pending',
+    requestedRole,
+    requestedAt: new Date().toISOString(),
+  });
+}
+
+export async function respondToJoinRequest(
+  householdId: string,
+  uid: string,
+  accept: boolean
+): Promise<void> {
+  const requestRef = doc(db, 'households', householdId, 'joinRequests', uid);
+  await setDoc(
+    requestRef,
+    {
+      status: accept ? 'accepted' : 'rejected',
+      respondedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
+
+  if (accept) {
+    // Add user as member (role will be set by caller)
+    await addMember(householdId, uid, 'viewer');
+  }
+}
+
+// ── Invites ──
+
+export async function getInvitesForEmail(email: string): Promise<HouseholdInvite[]> {
+  const q = query(
+    collection(db, 'households'),
+    where('invitedEmail', '==', email),
+    where('status', '==', 'pending')
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ inviteId: d.id, ...d.data() } as HouseholdInvite));
+}
+
+export async function createInvite(
+  householdId: string,
+  email: string,
+  role: 'editor' | 'viewer',
+  invitedBy: string,
+  invitedByName: string
+): Promise<string> {
+  const inviteRef = doc(collection(db, 'households', householdId, 'invites'));
+  await setDoc(inviteRef, {
+    invitedEmail: email,
+    invitedBy,
+    invitedByName,
+    role,
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+  });
+  return inviteRef.id;
+}
+
+export async function respondToInvite(
+  householdId: string,
+  inviteId: string,
+  accept: boolean
+): Promise<void> {
+  const inviteRef = doc(db, 'households', householdId, 'invites', inviteId);
+  await setDoc(
+    inviteRef,
+    {
+      status: accept ? 'accepted' : 'rejected',
+      respondedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
+
+  if (accept) {
+    // Get invite data to find invited user
+    const snap = await getDoc(inviteRef);
+    const data = snap.data() as HouseholdInvite;
+    if (data.invitedUid) {
+      await addMember(householdId, data.invitedUid, data.role);
+    }
+  }
+}
+
+export function listenToInvites(householdId: string, callback: (invites: HouseholdInvite[]) => void): () => void {
+  const q = query(collection(db, 'households', householdId, 'invites'));
+  const unsub = onSnapshot(q, (snap) => {
+    const invites = snap.docs.map(d => ({ inviteId: d.id, ...d.data() } as HouseholdInvite));
+    callback(invites);
+  });
+  return unsub;
+}
+
+// ── Plans ──
+
+export async function getHouseholdPlan(
+  householdId: string,
+  date: string
+): Promise<HouseholdDayPlan | null> {
+  const snap = await getDoc(doc(db, 'households', householdId, 'plans', date));
+  if (!snap.exists()) return null;
+  return { ...snap.data() } as HouseholdDayPlan;
+}
+
+export async function saveHouseholdPlan(
+  householdId: string,
+  date: string,
+  plan: Omit<HouseholdDayPlan, 'date'>
+): Promise<void> {
+  await setDoc(doc(db, 'households', householdId, 'plans', date), {
+    ...plan,
+    date,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+export async function updateMealStatus(
+  householdId: string,
+  date: string,
+  mealIndex: number,
+  status: HouseholdDayPlan['meals'][0]['status']
+): Promise<void> {
+  const planRef = doc(db, 'households', householdId, 'plans', date);
+  const snap = await getDoc(planRef);
+  if (!snap.exists()) return;
+
+  const plan = snap.data() as HouseholdDayPlan;
+  const updatedMeals = [...plan.meals];
+  if (updatedMeals[mealIndex]) {
+    updatedMeals[mealIndex] = { ...updatedMeals[mealIndex], status };
+  }
+
+  await setDoc(planRef, {
+    meals: updatedMeals,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+export async function getWeekPlans(
+  householdId: string,
+  weekOfYear: number,
+  year: number
+): Promise<HouseholdDayPlan[]> {
+  const q = query(
+    collection(db, 'households', householdId, 'plans'),
+    where('weekOfYear', '==', weekOfYear),
+    where('year', '==', year)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ ...d.data() } as HouseholdDayPlan));
+}
+
+export function listenToPlans(
+  householdId: string,
+  callback: (plans: HouseholdDayPlan[]) => void
+): () => void {
+  const q = query(collection(db, 'households', householdId, 'plans'));
+  const unsub = onSnapshot(q, (snap) => {
+    const plans = snap.docs.map(d => ({ ...d.data() } as HouseholdDayPlan));
+    callback(plans);
+  });
+  return unsub;
+}
+
+// ── Invite Codes ──
+
+export async function generateNewInviteCode(householdId: string, generatedBy: string): Promise<string> {
+  const newCode = generateInviteCode();
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  // Mark old codes as inactive
+  const oldCodesSnap = await getDocs(collection(db, 'households', householdId, 'inviteCodes'));
+  for (const codeDoc of oldCodesSnap.docs) {
+    await setDoc(codeDoc.ref, { isActive: false }, { merge: true });
+  }
+
+  // Add new code
+  const codeRef = doc(collection(db, 'households', householdId, 'inviteCodes'));
+  await setDoc(codeRef, {
+    code: newCode,
+    generatedBy,
+    generatedAt: now.toISOString(),
+    expiresAt: expiresAt.toISOString(),
+    isActive: true,
+    usedCount: 0,
+  });
+
+  // Update household with new invite code
+  await setDoc(
+    doc(db, 'households', householdId),
+    {
+      inviteCode: newCode,
+      codeExpiresAt: expiresAt.toISOString(),
+      updatedAt: now.toISOString(),
+    },
+    { merge: true }
+  );
+
+  return newCode;
+}
+
+export async function getInviteCodeHistory(householdId: string): Promise<InviteCodeRecord[]> {
+  const snap = await getDocs(collection(db, 'households', householdId, 'inviteCodes'));
+  return snap.docs.map(d => ({ codeId: d.id, ...d.data() } as InviteCodeRecord & { codeId: string }));
+}
+
+// ── Activity Log ──
+
+export async function createActivityLog(
+  householdId: string,
+  logEntry: Omit<ActivityLogEntry, 'createdAt'>
+): Promise<void> {
+  const logRef = doc(collection(db, 'households', householdId, 'activityLog'));
+  await setDoc(logRef, {
+    ...logEntry,
+    createdAt: new Date().toISOString(),
+  });
+}
+
+export function listenToActivityLog(
+  householdId: string,
+  callback: (logs: ActivityLogEntry[]) => void
+): () => void {
+  const q = query(
+    collection(db, 'households', householdId, 'activityLog'),
+    orderBy('createdAt', 'desc'),
+    limit(50)
+  );
+  const unsub = onSnapshot(q, (snap) => {
+    const logs = snap.docs.map(d => ({ ...d.data() } as ActivityLogEntry));
+    callback(logs);
+  });
+  return unsub;
+}
+
+// ── User Profile & Preferences ──
+
+export async function getUserProfile(uid: string): Promise<DocumentData | null> {
+  const snap = await getDoc(doc(db, 'users', uid, 'profile', 'main'));
+  if (!snap.exists()) return null;
+  return snap.data();
+}
+
+export async function updateUserProfile(uid: string, data: Partial<DocumentData>): Promise<void> {
+  // Strip undefined values — Firestore rejects them
+  const cleanData = Object.fromEntries(
+    Object.entries(data).filter(([, v]) => v !== undefined)
+  ) as Record<string, any>;
+  
+  await setDoc(
+    doc(db, 'users', uid, 'profile', 'main'),
+    { ...cleanData, updatedAt: new Date().toISOString() },
+    { merge: true }
+  );
+}
+
+export async function getUserPreferences(uid: string): Promise<UserPreferences | null> {
+  const snap = await getDoc(doc(db, 'users', uid, 'preferences', 'main'));
+  if (!snap.exists()) return null;
+  const data = snap.data() as DocumentData;
+  return {
+    displayName: data.displayName || '',
+    onboardingComplete: data.onboardingComplete ?? false,
+    seedDataLoaded: data.seedDataLoaded ?? false,
+    updatedAt: data.updatedAt || new Date().toISOString(),
+  };
+}
+
+export async function updateUserPreferences(uid: string, prefs: Partial<UserPreferences>): Promise<void> {
+  await setDoc(
+    doc(db, 'users', uid, 'preferences', 'main'),
+    { ...prefs, updatedAt: new Date().toISOString() },
+    { merge: true }
+  );
+}
+
+// ── Helper Functions ──
+
+function generateInviteCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed confusing chars (0/O, 1/I)
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
 }
