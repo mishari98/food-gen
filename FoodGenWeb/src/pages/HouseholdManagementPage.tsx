@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMealPlan } from '../context/MealPlanContext';
+import type { ActivityLogEntry } from '../types/meal';
 
 export default function HouseholdManagementPage() {
   const navigate = useNavigate();
@@ -9,6 +10,7 @@ export default function HouseholdManagementPage() {
     householdRole,
     householdMembers,
     pendingJoinRequests,
+    activityLog,
     acceptJoinRequest,
     rejectJoinRequest,
     inviteUser,
@@ -131,6 +133,24 @@ export default function HouseholdManagementPage() {
               Send Invite
             </button>
           </form>
+        </div>
+
+        {/* Activity Log */}
+        <div className="settings-section">
+          <h3>📋 Recent Activity</h3>
+          {activityLog.length === 0 ? (
+            <p className="no-results">No activity yet.</p>
+          ) : (
+            <div className="activity-log-list">
+              {activityLog.slice(0, 20).map((log: ActivityLogEntry) => (
+                <div key={(log.createdAt?.toString() || '') + log.action} className="activity-log-entry">
+                  <span className="activity-log-action">{log.action.replace(/_/g, ' ')}</span>
+                  <span className="activity-log-details">{log.details}</span>
+                  <span className="activity-log-user">by {log.displayName}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Regenerate Code */}

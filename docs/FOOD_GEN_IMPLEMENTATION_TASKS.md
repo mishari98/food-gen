@@ -46,10 +46,10 @@
 | **JoinHouseholdPage** | ❌ Not Started | Form: invite code, role selector |
 | DayPage | ✅ Completed | Firestore-only, generate/add/remove meals |
 | WeekPage | ✅ Completed | Weekly plan with collapsible days |
-| **HistoryPage** | ❌ Not Started | Past plans with summary |
+| **HistoryPage** | ✅ Completed | Rewritten for household-driven architecture |
 | SettingsPage | ✅ Completed | Household info, manage link, sign out |
 | HouseholdManagementPage | ✅ Completed | Members, invites, join requests |
-| AddMealPage | 🟡 Partial | Needs minor Firestore structure update |
+| AddMealPage | ✅ Completed | Fixed data format (arrays instead of JSON strings) |
 | MealDetailModal | ✅ Complete | No changes needed |
 
 ### 1.7 Components (Update) 🟡 MEDIUM
@@ -146,23 +146,31 @@
 
 ---
 
-## Current Sprint Focus
+## Critical Bug Fixes (Session 2026-06-23)
 
-### 🔴 High Priority (Next Steps)
-1. **Fix DayPage/WeekPage save to Firestore** — Meals should persist in `households/{id}/plans/{date}`
-2. **Create CreateHouseholdPage** and **JoinHouseholdPage** (if inline forms in dashboard aren't enough)
-3. **Preferences Manager** — Clean up old prefs
-
-### 🟡 Medium Priority
-4. **MealsPerDayPicker** — Repurpose as generation dialog
-5. **Activity Log** — Track changes
-6. **Testing** — Role-based access, cross-device sync
-
-### 🟢 Low Priority
-7. **HistoryPage** — Past plans view
-8. **Viewer Suggestions** — Suggest swap
-9. **Password Reset** — Forgot password
+- [x] Fixed `getHousehold()` — was missing document ID (`snap.id`)
+- [x] Fixed `getReferenceMeals()` — was doing `Number(d.id)` on string meal names → NaN
+- [x] Fixed DayPage — removed localStorage fallback, now Firestore-only
+- [x] Fixed DayPage — added proper error handling and debug logging
+- [x] Fixed Firestore rules — added subcollection access for `profile`, `preferences`, `customMeals`
 
 ---
 
-*Document version 2.1 — June 2026*
+## Current Sprint Focus
+
+### � High Priority (Next Steps)
+1. **MealsPerDayPicker** — Repurpose as generation prompt
+2. **Preferences Manager** — Clean up old prefs
+3. **CreateHouseholdPage/JoinHouseholdPage** — Extract from dashboard if needed
+
+### 🟡 Medium Priority
+4. **Activity Log** — Track changes
+5. **Testing** — Role-based access, cross-device sync
+
+### 🟢 Low Priority
+6. **Viewer Suggestions** — Suggest swap
+7. **Password Reset** — Forgot password
+
+---
+
+*Document version 2.2 — June 2026*

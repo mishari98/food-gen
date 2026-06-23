@@ -5,6 +5,7 @@ import { formatDisplayDate } from '../utils/dateHelpers';
 import MealCard from '../components/MealCard';
 import MealDetailModal from '../components/MealDetailModal';
 import EmptyState from '../components/EmptyState';
+import MealsPerDayPicker from '../components/MealsPerDayPicker';
 import type { Meal, MealStatus, HouseholdDayPlanWithMeals } from '../types/meal';
 
 const STATUS_CYCLE: MealStatus[] = ['planned', 'in_progress', 'completed', 'skipped'];
@@ -213,17 +214,7 @@ export default function DayPage() {
             {generateError && (
               <div className="error-message" style={{ marginBottom: 12 }}>{generateError}</div>
             )}
-            <div className="segmented-picker" style={{ marginBottom: 16 }}>
-              {[1, 2, 3, 4].map(count => (
-                <button
-                  key={count}
-                  className={`segmented-option ${mealCount === count ? 'active' : ''}`}
-                  onClick={() => handleMealCountSelect(count)}
-                >
-                  {count} {count === 1 ? 'Meal' : 'Meals'}
-                </button>
-              ))}
-            </div>
+            <MealsPerDayPicker value={mealCount} onChange={handleMealCountSelect} max={4} />
             <div className="button-group">
               <button className="primary-btn" onClick={handleConfirmGenerate} disabled={isLoading}>
                 {isLoading ? 'Generating...' : '✅ Generate'}

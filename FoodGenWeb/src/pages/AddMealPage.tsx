@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMealPlan } from '../context/MealPlanContext';
 import { saveCustomMeal } from '../firebase/firestore';
+import type { Ingredient, Meal } from '../types/meal';
 
 interface IngredientField {
   name: string;
@@ -76,17 +77,17 @@ export default function AddMealPage() {
 
     const mealData = {
       name: name.trim(),
-      suggestedFor: JSON.stringify(suggestedFor),
+      suggestedFor: suggestedFor,
       cuisine,
-      dietaryTags: '[]',
+      dietaryTags: [],
       prepTimeMinutes: parseInt(prepTime) || 30,
       difficulty,
       emoji,
-      photoPath: null,
-      youtubeLink: null,
-      ingredients: JSON.stringify(validIngredients),
-      steps: JSON.stringify(steps.filter(s => s.trim())),
+      ingredients: validIngredients.map(i => ({ name: i.name.trim(), quantity: i.quantity.trim() })),
+      steps: steps.filter(s => s.trim()),
       calories: calories ? parseInt(calories) : null,
+      isCustom: 1,
+      isFavorite: 0,
     };
 
     try {
@@ -94,9 +95,9 @@ export default function AddMealPage() {
         alert('You must be logged in to add meals.');
         return;
       }
-      const newId = await saveCustomMeal(user.uid, { ...mealData, isCustom: 1 } as any);
+      await saveCustomMeal(user.uid, mealData as any);
       alert('🍽️ ' + name.trim() + ' added to your meals!');
-      navigate('/');
+      navigate('/day');
     } catch (e) {
       console.error('Error saving meal:', e);
       alert('Failed to save meal. Please try again. Error: ' + (e instanceof Error ? e.message : 'Unknown error'));
