@@ -88,6 +88,10 @@ cd FoodGenWeb
 npx firebase deploy --only hosting
 ```
 
+```bash
+cd FoodGenWeb && npx vite build && npx firebase deploy --only hosting 2>&1
+```
+
 This uploads the `dist/` folder to Firebase and makes it live.
 
 ---
