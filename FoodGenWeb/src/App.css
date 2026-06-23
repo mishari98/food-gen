@@ -38,6 +38,20 @@ body {
   box-shadow: 0 0 40px rgba(0,0,0,0.08);
 }
 
+/* Responsive: wider on desktop */
+@media (min-width: 481px) {
+  .app-layout {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 768px) {
+  .app-layout {
+    max-width: 720px;
+  }
+}
+
 .app-content {
   flex: 1;
   overflow-y: auto;
@@ -1121,4 +1135,45 @@ textarea.form-input {
   border-radius: 8px;
   font-size: 14px;
   border: 1px solid #FFCDD2;
+}
+
+/* === Household Management === */
+.member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.member-row:last-child {
+  border-bottom: none;
+}
+
+.member-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.request-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: #FFF5F0;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #FFE0D0;
+}
+
+.request-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.request-email {
+  font-size: 13px;
+  color: var(--text-secondary);
 }

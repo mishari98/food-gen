@@ -12,14 +12,14 @@ const STATUS_CYCLE: MealStatus[] = ['planned', 'in_progress', 'completed', 'skip
 export default function DayPage() {
   const navigate = useNavigate();
   const {
-    dayPlan,
-    weekPlans,
+    household,
     householdRole,
+    dayPlan,
     isLoading,
+    error,
     selectedDate,
     setSelectedDate,
     generateDayPlan,
-    regenerateDay,
     updateMealStatus,
     addMealToDay,
     removeMealFromDay,
@@ -32,15 +32,22 @@ export default function DayPage() {
   const [showGeneratePrompt, setShowGeneratePrompt] = useState(false);
   const [mealCount, setMealCount] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
   const maxDate = new Date(today);
   maxDate.setDate(maxDate.getDate() + 365);
   const maxDateStr = maxDate.toISOString().split('T')[0];
+  const isToday = selectedDate === todayStr;
 
   const isAdminOrEditor = householdRole === 'admin' || householdRole === 'editor';
-  const isToday = selectedDate === todayStr;
+
+  // Update selected day plan when date changes
+  useEffect(() => {
+    // The real-time listener in context handles plan updates
+    // This just ensures we re-render when date changes
+  }, [selectedDate]);
 
   const handleDateChange = (dateStr: string) => {
     setSelectedDate(dateStr);
@@ -53,17 +60,23 @@ export default function DayPage() {
       }
     }
     setShowGeneratePrompt(true);
+    setGenerateError(null);
   };
 
-  const handleConfirmGenerate = () => {
-    generateDayPlan(selectedDate, mealCount);
-    setShowGeneratePrompt(false);
+  const handleConfirmGenerate = async () => {
+    try {
+      setGenerateError(null);
+      console.log('[DayPage] Generating meals:', selectedDate, mealCount);
+      await generateDayPlan(selectedDate, mealCount);
+      setShowGeneratePrompt(false);
+    } catch (error: any) {
+      console.error('[DayPage] Generate failed:', error);
+      setGenerateError(error.message || 'Failed to generate meals. Check console for details.');
+    }
   };
 
-  const handleStatusClick = (mealIndex: number, currentStatus: MealStatus) => {
-    const currentIdx = STATUS_CYCLE.indexOf(currentStatus);
-    const nextStatus = STATUS_CYCLE[(currentIdx + 1) % STATUS_CYCLE.length];
-    updateMealStatus(selectedDate, mealIndex, nextStatus);
+  const handleMealCountSelect = (count: number) => {
+    setMealCount(count);
   };
 
   const handleAddMeal = (meal: Meal) => {
@@ -73,9 +86,14 @@ export default function DayPage() {
   };
 
   const handleRemoveMeal = (mealIndex: number) => {
-    if (window.confirm('Remove this meal from the plan?')) {
-      removeMealFromDay(selectedDate, mealIndex);
-    }
+    if (!window.confirm('Remove this meal from the plan?')) return;
+    removeMealFromDay(selectedDate, mealIndex);
+  };
+
+  const handleStatusClick = (mealIndex: number, currentStatus: MealStatus) => {
+    const currentIdx = STATUS_CYCLE.indexOf(currentStatus);
+    const nextStatus = STATUS_CYCLE[(currentIdx + 1) % STATUS_CYCLE.length];
+    updateMealStatus(selectedDate, mealIndex, nextStatus);
   };
 
   // Filter meals for picker
@@ -85,6 +103,16 @@ export default function DayPage() {
         m.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : mealPool;
+
+  // Display meals from Firestore dayPlan
+  const displayedMeals = dayPlan
+    ? dayPlan.meals
+        .filter(entry => entry.meal)
+        .map(entry => ({
+          ...entry,
+          status: (entry.status || 'planned') as MealStatus,
+        }))
+    : [];
 
   return (
     <div className="page-container">
@@ -97,6 +125,11 @@ export default function DayPage() {
         <button className="icon-btn" onClick={() => navigate('/settings')}>⚙️</button>
       </div>
 
+      {/* Error message from context */}
+      {error && (
+        <div className="global-error">{error}</div>
+      )}
+
       {/* Date Picker */}
       <div className="date-picker-row">
         <input
@@ -105,7 +138,7 @@ export default function DayPage() {
           value={selectedDate}
           min={todayStr}
           max={maxDateStr}
-          onChange={(e) => handleDateChange(e.target.value)}
+          onChange={(e) => handleDateChange((e.target as HTMLInputElement).value)}
         />
         {!isToday && (
           <button className="small-btn" onClick={() => handleDateChange(todayStr)}>
@@ -118,18 +151,31 @@ export default function DayPage() {
       <div className="content-area">
         {isLoading ? (
           <div className="loading-state">Loading your meals...</div>
-        ) : !dayPlan || dayPlan.meals.length === 0 ? (
-          <EmptyState
-            message={`No meals for ${formatDisplayDate(selectedDate)}`}
-            actionLabel={isAdminOrEditor ? 'Generate Meals' : undefined}
-            onAction={isAdminOrEditor ? handleGenerate : undefined}
-            secondaryMessage={!isAdminOrEditor ? "Ask your household admin to plan meals" : undefined}
-          />
+        ) : displayedMeals.length === 0 ? (
+          <div className="meal-list">
+            <p className="date-text">{formatDisplayDate(selectedDate)}</p>
+            <EmptyState
+              message="No meals planned yet"
+              actionLabel={isAdminOrEditor ? 'Generate Meals' : undefined}
+              onAction={isAdminOrEditor ? handleGenerate : undefined}
+              secondaryMessage={
+                !isAdminOrEditor ? "Ask your household admin to plan meals" :
+                allMeals.length === 0 ? "Please wait, loading meals..." : undefined
+              }
+            />
+            {isAdminOrEditor && (
+              <div className="day-actions" style={{ marginTop: 12 }}>
+                <button className="add-meal-btn" onClick={() => setShowMealPicker(true)}>
+                  ➕ Add Meal Manually
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="meal-list">
             <p className="date-text">{formatDisplayDate(selectedDate)}</p>
 
-            {dayPlan.meals.map((entry, index) => (
+            {displayedMeals.map((entry, index) => (
               <div key={index} className="meal-card-wrapper">
                 <MealCard
                   meal={entry.meal}
@@ -144,18 +190,16 @@ export default function DayPage() {
             ))}
 
             {/* Action buttons */}
-            <div className="day-actions">
-              {isAdminOrEditor && (
-                <>
-                  <button className="refresh-btn" onClick={handleGenerate}>
-                    🔄 {dayPlan.meals.length > 0 ? 'Regenerate' : 'Generate'} Meals
-                  </button>
-                  <button className="add-meal-btn" onClick={() => setShowMealPicker(true)}>
-                    ➕ Add Meal
-                  </button>
-                </>
-              )}
-            </div>
+            {isAdminOrEditor && (
+              <div className="day-actions">
+                <button className="refresh-btn" onClick={handleGenerate}>
+                  🔄 {displayedMeals.length > 0 ? 'Regenerate' : 'Generate'} Meals
+                </button>
+                <button className="add-meal-btn" onClick={() => setShowMealPicker(true)}>
+                  ➕ Add Meal
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -166,22 +210,25 @@ export default function DayPage() {
           <div className="modal">
             <h2>How many meals?</h2>
             <p>Choose how many meals to generate for {formatDisplayDate(selectedDate)}</p>
-            <div className="meal-count-options">
+            {generateError && (
+              <div className="error-message" style={{ marginBottom: 12 }}>{generateError}</div>
+            )}
+            <div className="segmented-picker" style={{ marginBottom: 16 }}>
               {[1, 2, 3, 4].map(count => (
                 <button
                   key={count}
-                  className={`meal-count-btn ${mealCount === count ? 'selected' : ''}`}
-                  onClick={() => setMealCount(count)}
+                  className={`segmented-option ${mealCount === count ? 'active' : ''}`}
+                  onClick={() => handleMealCountSelect(count)}
                 >
                   {count} {count === 1 ? 'Meal' : 'Meals'}
                 </button>
               ))}
             </div>
             <div className="button-group">
-              <button className="primary-button" onClick={handleConfirmGenerate}>
-                Generate
+              <button className="primary-btn" onClick={handleConfirmGenerate} disabled={isLoading}>
+                {isLoading ? 'Generating...' : '✅ Generate'}
               </button>
-              <button className="secondary-button" onClick={() => setShowGeneratePrompt(false)}>
+              <button className="secondary-btn" onClick={() => setShowGeneratePrompt(false)}>
                 Cancel
               </button>
             </div>
@@ -194,31 +241,37 @@ export default function DayPage() {
         <div className="modal-overlay">
           <div className="modal meal-picker-modal">
             <h2>Add a Meal</h2>
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Search meals..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              autoFocus
-            />
-            <div className="meal-picker-list">
-              {filteredMeals.map(meal => (
-                <button
-                  key={meal.id}
-                  className="meal-picker-item"
-                  onClick={() => handleAddMeal(meal)}
-                >
-                  <span className="meal-picker-emoji">{meal.emoji}</span>
-                  <span className="meal-picker-name">{meal.name}</span>
-                  <span className="meal-picker-time">⏱ {meal.prepTimeMinutes}min</span>
-                </button>
-              ))}
-              {filteredMeals.length === 0 && (
-                <p className="no-results">No meals found</p>
-              )}
-            </div>
-            <button className="secondary-button" onClick={() => { setShowMealPicker(false); setSearchQuery(''); }}>
+            {allMeals.length === 0 && mealPool.length === 0 ? (
+              <p className="no-results">Loading meals, please wait...</p>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  className="search-input"
+                  placeholder="Search meals..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
+                  autoFocus
+                />
+                <div className="meal-picker-list">
+                  {filteredMeals.map(meal => (
+                    <button
+                      key={meal.id}
+                      className="meal-picker-item"
+                      onClick={() => handleAddMeal(meal)}
+                    >
+                      <span className="meal-picker-emoji">{meal.emoji}</span>
+                      <span className="meal-picker-name">{meal.name}</span>
+                      <span className="meal-picker-time">⏱ {meal.prepTimeMinutes}min</span>
+                    </button>
+                  ))}
+                  {filteredMeals.length === 0 && (
+                    <p className="no-results">No meals found matching "{searchQuery}"</p>
+                  )}
+                </div>
+              </>
+            )}
+            <button className="secondary-btn" onClick={() => { setShowMealPicker(false); setSearchQuery(''); }}>
               Cancel
             </button>
           </div>

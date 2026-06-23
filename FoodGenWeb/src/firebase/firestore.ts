@@ -38,7 +38,12 @@ try {
 
 export async function getReferenceMeals(): Promise<Meal[]> {
   const snap = await getDocs(collection(db, 'referenceMeals'));
-  return snap.docs.map(d => ({ id: Number(d.id), ...d.data() } as Meal));
+  return snap.docs.map(d => {
+    const data = d.data();
+    // Use the id field from data if it exists, otherwise try to parse the doc ID
+    const id = typeof data.id === 'number' ? data.id : typeof data.id === 'string' ? parseInt(data.id, 10) : Number(d.id);
+    return { id, ...data } as Meal;
+  });
 }
 
 // ── Custom Meals (per-user) ──
@@ -85,7 +90,7 @@ export function listenToCustomMeals(uid: string, callback: (meals: Meal[]) => vo
 export async function getHousehold(householdId: string): Promise<Household | null> {
   const snap = await getDoc(doc(db, 'households', householdId));
   if (!snap.exists()) return null;
-  return { ...snap.data() } as unknown as Household;
+  return { id: snap.id, ...snap.data() } as unknown as Household;
 }
 
 export async function createHousehold(data: {

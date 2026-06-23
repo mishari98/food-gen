@@ -50,6 +50,17 @@ export default function OnboardingPage() {
     }
   }, [user, navigate]);
 
+  // Timeout for loading state (5 seconds max)
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        // If still loading after 5 seconds, something is wrong
+        console.error('Auth loading timeout - Firebase may not be initialized correctly');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading]);
+
   return (
     <div className="onboarding-container">
       <div className="onboarding-card">
@@ -119,7 +130,15 @@ export default function OnboardingPage() {
             <div className="onboarding-error">{error || localError}</div>
           )}
 
-          <button type="submit" className="onboarding-btn" disabled={isLoading}>
+          <button 
+            type="submit" 
+            className="onboarding-btn" 
+            disabled={isLoading}
+            style={{ 
+              opacity: isLoading ? 0.6 : 1,
+              cursor: isLoading ? 'not-allowed' : 'pointer'
+            }}
+          >
             {isLoading ? 'Please wait...' : isLogin ? 'Log In' : 'Sign Up'}
           </button>
         </form>

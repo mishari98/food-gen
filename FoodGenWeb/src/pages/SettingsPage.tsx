@@ -40,9 +40,9 @@ export default function SettingsPage() {
 
             {isAdmin && (
               <button
-                className="secondary-button"
+                className="secondary-btn"
                 onClick={() => navigate('/household/manage')}
-                style={{ marginTop: 12 }}
+                style={{ width: '100%', marginTop: 12 }}
               >
                 ⚙️ Manage Household
               </button>
@@ -66,14 +66,14 @@ export default function SettingsPage() {
           <p className="account-email">{user?.email}</p>
 
           <button
-            className="danger-button"
+            className="danger-btn"
             onClick={async () => {
               if (window.confirm('Are you sure you want to sign out?')) {
                 await logout();
                 navigate('/');
               }
             }}
-            style={{ marginTop: 12 }}
+            style={{ width: '100%', marginTop: 12 }}
           >
             Sign Out
           </button>

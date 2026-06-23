@@ -1,6 +1,7 @@
 import React from 'react';
 import { HashRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import { MealPlanProvider, useMealPlan } from './context/MealPlanContext';
+import LoadingSpinner from './components/LoadingSpinner';
 import OnboardingPage from './pages/OnboardingPage';
 import HouseholdDashboard from './pages/HouseholdDashboard';
 import DayPage from './pages/DayPage';
@@ -16,7 +17,13 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useMealPlan();
 
   if (isLoading) {
-    return <div className="loading-state">Loading...</div>;
+    return (
+      <div className="page-container">
+        <div className="content-area">
+          <LoadingSpinner text="Loading..." />
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
@@ -30,7 +37,13 @@ function HouseholdRoute({ children }: { children: React.ReactNode }) {
   const { user, household, isLoading } = useMealPlan();
 
   if (isLoading) {
-    return <div className="loading-state">Loading...</div>;
+    return (
+      <div className="page-container">
+        <div className="content-area">
+          <LoadingSpinner text="Loading..." />
+        </div>
+      </div>
+    );
   }
 
   if (!user) {

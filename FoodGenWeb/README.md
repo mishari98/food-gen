@@ -241,6 +241,8 @@ Uses **HashRouter** (`/#/`) for compatibility with static hosting and offline us
 
 ## 🚢 Deployment
 
+### Frontend (Static Hosting)
+
 ```bash
 # Build for production
 npm run build
@@ -250,10 +252,55 @@ npm run build
 
 | Host | Cost | Notes |
 |------|:----:|-------|
+| **Firebase Hosting** | Free | `firebase deploy --only hosting` |
 | **Vercel** | Free | `vercel --prod` or connect Git repo |
 | **Netlify** | Free | Drag dist/ to Netlify Drop |
 | **GitHub Pages** | Free | Push dist/ to gh-pages branch |
 | **Any static server** | Free | Serve dist/ with nginx, Apache, etc. |
+
+### Firebase Firestore Rules
+
+The app uses Firebase Firestore for data storage. Security rules control access to the database.
+
+**Files involved:**
+- `firestore.rules` — Security rules definition
+- `firebase.json` — Firebase project configuration (must include `"firestore"` section)
+
+**Deploy rules only:**
+
+```bash
+# Deploy just the Firestore rules
+npx firebase deploy --only firestore:rules
+
+# Deploy rules + hosting together
+npx firebase deploy --only firestore:rules,hosting
+```
+
+**Current rules overview:**
+- `referenceMeals` — Public read, authenticated write (seeded with 74 Filipino dishes)
+- `users/{userId}` — User can only access their own data
+- `users/{userId}/customMeals` — User's custom meals (read/write)
+- `households/{householdId}` — All authenticated users can read/write household data
+- `households/{householdId}/plans` — Meal plans for the household
+
+**Important:** After modifying `firestore.rules`, always deploy with:
+```bash
+npx firebase deploy --only firestore:rules
+```
+
+### Seeding Reference Meals
+
+The app requires 74 Filipino dishes in the `referenceMeals` Firestore collection. To seed:
+
+```bash
+# Run the seed script (requires firestore.rules to allow writes)
+node seed-meals.js
+
+# Check the log
+type seed-log.txt
+```
+
+**Note:** The seed script temporarily requires `firestore.rules` to allow public writes to `referenceMeals`. After seeding, restrict the rules back to `allow write: if request.auth != null;`.
 
 ---
 

@@ -9,7 +9,7 @@ import type {
   HouseholdInvite,
   HouseholdRole,
 } from '../types/meal';
-import { signup, login, logout, onAuthChange } from '../firebase/auth';
+import { signup, login, logout, onAuthChange, getCurrentAuthUser } from '../firebase/auth';
 import {
   getReferenceMeals,
   getCustomMeals,
@@ -134,26 +134,67 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
 
   // ── Initialize Auth ──
   useEffect(() => {
+    let cancelled = false;
+    
     const unsubscribe = onAuthChange(async (firebaseUser) => {
-      if (firebaseUser) {
-        const profile = await getUserProfile(firebaseUser.uid);
-        setUser({
-          uid: firebaseUser.uid,
-          displayName: profile?.displayName || firebaseUser.email?.split('@')[0] || 'User',
-          email: firebaseUser.email || '',
-        });
-      } else {
-        setUser(null);
-        setHousehold(null);
-        setHouseholdRole(null);
-        setHouseholdMembers([]);
-        setDayPlan(null);
-        setWeekPlans([]);
+      if (cancelled) return;
+      
+      try {
+        if (firebaseUser) {
+          // Try to get profile, but don't fail if it doesn't exist yet
+          let profile = null;
+          try {
+            profile = await getUserProfile(firebaseUser.uid);
+          } catch (e) {
+            console.log('User profile not found yet, using Firebase auth data');
+          }
+          
+          if (!cancelled) {
+            setUser({
+              uid: firebaseUser.uid,
+              displayName: profile?.displayName || firebaseUser.email?.split('@')[0] || 'User',
+              email: firebaseUser.email || '',
+            });
+          }
+        } else {
+          if (!cancelled) {
+            setUser(null);
+            setHousehold(null);
+            setHouseholdRole(null);
+            setHouseholdMembers([]);
+            setDayPlan(null);
+            setWeekPlans([]);
+          }
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        if (!cancelled) {
+          setUser(null);
+          setHousehold(null);
+          setHouseholdRole(null);
+          setHouseholdMembers([]);
+          setDayPlan(null);
+          setWeekPlans([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
-      setIsLoading(false);
     });
 
-    return () => unsubscribe();
+    // Safety timeout: ensure loading state resolves even if auth never fires
+    const safetyTimer = setTimeout(() => {
+      if (!cancelled) {
+        setIsLoading(false);
+      }
+    }, 3000);
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+      clearTimeout(safetyTimer);
+    };
   }, []);
 
   // ── Load household data when user changes ──
@@ -249,6 +290,17 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
     try {
       setError(null);
       await login(email, password);
+      
+      // Manually refresh auth state after login
+      const currentUser = getCurrentAuthUser();
+      if (currentUser) {
+        const profile = await getUserProfile(currentUser.uid).catch(() => null);
+        setUser({
+          uid: currentUser.uid,
+          displayName: profile?.displayName || currentUser.email?.split('@')[0] || 'User',
+          email: currentUser.email || '',
+        });
+      }
     } catch (e: any) {
       setError(e.message || 'Login failed');
       throw e;
@@ -259,6 +311,16 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
     try {
       setError(null);
       await signup(displayName, email, password);
+      
+      // Manually refresh auth state after signup
+      const currentUser = getCurrentAuthUser();
+      if (currentUser) {
+        setUser({
+          uid: currentUser.uid,
+          displayName: displayName,
+          email: currentUser.email || '',
+        });
+      }
     } catch (e: any) {
       setError(e.message || 'Sign-up failed');
       throw e;
@@ -454,12 +516,24 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
 
   // ── Plan Actions ──
   const handleGenerateDayPlan = useCallback(async (date: string, mealCount: number) => {
-    if (!household?.id || !user) return;
+    console.log('[Context] handleGenerateDayPlan called', { householdId: household?.id, userId: user?.uid, date, mealCount, allMealsLen: allMeals.length });
+    
+    if (!household?.id || !user) {
+      console.error('[Context] Cannot generate - missing household or user', { householdId: household?.id, userId: user?.uid });
+      throw new Error('You must be in a household to generate meals');
+    }
 
     try {
       setError(null);
       const mealPool = [...allMeals, ...customMeals];
+      console.log('[Context] Meal pool size:', mealPool.length);
+      
+      if (mealPool.length === 0) {
+        throw new Error('No meals available. The reference meals may not be loaded yet.');
+      }
+      
       const plan = generateDayPlan(mealPool, mealCount, date);
+      console.log('[Context] Generated plan:', plan);
 
       if (plan) {
         const now = new Date().toISOString();
@@ -474,12 +548,17 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
 
         // Refresh current day plan
         const updated = await getHouseholdPlan(household.id, date);
+        console.log('[Context] Refreshed plan after save:', updated);
         if (updated) {
           setDayPlan(enrichPlan(updated));
         }
+      } else {
+        throw new Error('Failed to generate plan - generator returned null');
       }
     } catch (e: any) {
+      console.error('[Context] Generate day plan error:', e);
       setError(e.message || 'Failed to generate day plan');
+      throw e;
     }
   }, [household, user, allMeals, customMeals, enrichPlan]);
 

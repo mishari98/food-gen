@@ -56,6 +56,13 @@ export async function login(email: string, password: string): Promise<User> {
 }
 
 /**
+ * Get current auth state (for manual refresh)
+ */
+export function getCurrentAuthUser(): User | null {
+  return auth.currentUser;
+}
+
+/**
  * Log out current user
  */
 export async function logout(): Promise<void> {

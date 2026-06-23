@@ -225,10 +225,10 @@ export default function WeekPage() {
               ))}
             </div>
             <div className="button-group">
-              <button className="primary-button" onClick={handleConfirmGenerate}>
+              <button className="primary-btn" onClick={handleConfirmGenerate}>
                 Generate Week
               </button>
-              <button className="secondary-button" onClick={() => setShowGeneratePrompt(false)}>
+              <button className="secondary-btn" onClick={() => setShowGeneratePrompt(false)}>
                 Cancel
               </button>
             </div>
@@ -265,7 +265,7 @@ export default function WeekPage() {
                 <p className="no-results">No meals found</p>
               )}
             </div>
-            <button className="secondary-button" onClick={() => { setShowMealPicker(null); setSearchQuery(''); }}>
+            <button className="secondary-btn" onClick={() => { setShowMealPicker(null); setSearchQuery(''); }}>
               Cancel
             </button>
           </div>

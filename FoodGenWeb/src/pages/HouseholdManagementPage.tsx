@@ -73,7 +73,7 @@ export default function HouseholdManagementPage() {
           <h3>Members</h3>
           {householdMembers.map(member => (
             <div key={member.uid} className="member-row">
-              <span>👤 {member.displayName || member.email}</span>
+              <span className="member-name">👤 {member.displayName || member.email}</span>
               <span className="role-badge">{member.role}</span>
             </div>
           ))}
@@ -85,8 +85,11 @@ export default function HouseholdManagementPage() {
             <h3>Pending Requests</h3>
             {pendingJoinRequests.map(request => (
               <div key={request.uid} className="request-row">
-                <span>👤 {request.displayName} ({request.email})</span>
-                <span className="role-badge">{request.requestedRole}</span>
+                <div className="request-info">
+                  <span className="member-name">👤 {request.displayName}</span>
+                  <span className="request-email">({request.email})</span>
+                  <span className="role-badge">{request.requestedRole}</span>
+                </div>
                 <div className="button-group">
                   <button onClick={() => acceptJoinRequest(request.uid)} className="accept-button">Accept</button>
                   <button onClick={() => rejectJoinRequest(request.uid)} className="reject-button">Reject</button>
@@ -101,7 +104,10 @@ export default function HouseholdManagementPage() {
           <h3>Invite Member</h3>
           <form onSubmit={handleInvite}>
             <div className="form-group">
+              <label className="form-label" htmlFor="inviteEmail">Email Address</label>
               <input
+                id="inviteEmail"
+                className="form-input"
                 type="email"
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
@@ -110,18 +116,26 @@ export default function HouseholdManagementPage() {
               />
             </div>
             <div className="form-group">
-              <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value as 'editor' | 'viewer')}>
-                <option value="viewer">Viewer</option>
-                <option value="editor">Editor</option>
+              <label className="form-label" htmlFor="inviteRole">Role</label>
+              <select
+                id="inviteRole"
+                className="form-input"
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value as 'editor' | 'viewer')}
+              >
+                <option value="viewer">Viewer (view only)</option>
+                <option value="editor">Editor (can plan meals)</option>
               </select>
             </div>
-            <button type="submit" className="primary-button">Send Invite</button>
+            <button type="submit" className="primary-btn" style={{ width: '100%' }}>
+              Send Invite
+            </button>
           </form>
         </div>
 
         {/* Regenerate Code */}
         <div className="settings-section">
-          <button onClick={regenerateInviteCode} className="secondary-button">
+          <button onClick={regenerateInviteCode} className="secondary-btn" style={{ width: '100%' }}>
             🔄 Regenerate Invite Code
           </button>
         </div>
@@ -133,7 +147,7 @@ export default function HouseholdManagementPage() {
               leaveHousehold();
               navigate('/dashboard');
             }
-          }} className="danger-button">
+          }} className="danger-btn" style={{ width: '100%' }}>
             Leave Household
           </button>
         </div>
