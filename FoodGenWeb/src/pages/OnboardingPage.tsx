@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMealPlan } from '../context/MealPlanContext';
+import { sendPasswordResetEmail } from '../firebase/auth';
 
 export default function OnboardingPage() {
   const navigate = useNavigate();
@@ -11,6 +12,10 @@ export default function OnboardingPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [localError, setLocalError] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
+  const [resetError, setResetError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,6 +54,19 @@ export default function OnboardingPage() {
       navigate('/dashboard');
     }
   }, [user, navigate]);
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetMessage('');
+    setResetError('');
+    try {
+      await sendPasswordResetEmail(resetEmail);
+      setResetMessage('Password reset email sent! Check your inbox.');
+      setResetEmail('');
+    } catch (err: any) {
+      setResetError(err.message || 'Failed to send reset email');
+    }
+  };
 
   // Timeout for loading state (5 seconds max)
   useEffect(() => {
@@ -160,6 +178,53 @@ export default function OnboardingPage() {
             </p>
           )}
         </div>
+
+        {isLogin && (
+          <div className="onboarding-toggle">
+            <button
+              type="button"
+              onClick={() => setShowForgotPassword(true)}
+              className="onboarding-link"
+            >
+              Forgot Password?
+            </button>
+          </div>
+        )}
+
+        {/* Forgot Password Modal */}
+        {showForgotPassword && (
+          <div className="modal-overlay" onClick={() => setShowForgotPassword(false)}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <h3>Reset Password</h3>
+              <p>Enter your email address and we'll send you a reset link.</p>
+              {(resetError || resetMessage) && (
+                <div className={`onboarding-error ${resetMessage ? 'success' : ''}`}>
+                  {resetMessage || resetError}
+                </div>
+              )}
+              <form onSubmit={handleForgotPassword}>
+                <div className="form-group">
+                  <label className="onboarding-label" htmlFor="resetEmail">Email</label>
+                  <input
+                    id="resetEmail"
+                    className="onboarding-input"
+                    type="email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    placeholder="juan@example.com"
+                    required
+                  />
+                </div>
+                <div className="button-group">
+                  <button type="submit" className="primary-btn">Send Reset Link</button>
+                  <button type="button" className="secondary-btn" onClick={() => setShowForgotPassword(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

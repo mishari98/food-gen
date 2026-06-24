@@ -11,6 +11,8 @@ export default function HouseholdManagementPage() {
     householdMembers,
     pendingJoinRequests,
     activityLog,
+    inviteCodeHistory,
+    activeInviteCode,
     acceptJoinRequest,
     rejectJoinRequest,
     inviteUser,
@@ -147,6 +149,28 @@ export default function HouseholdManagementPage() {
                   <span className="activity-log-action">{log.action.replace(/_/g, ' ')}</span>
                   <span className="activity-log-details">{log.details}</span>
                   <span className="activity-log-user">by {log.displayName}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Invite Code History */}
+        <div className="settings-section">
+          <h3>🔗 Invite Code History</h3>
+          {inviteCodeHistory.length === 0 ? (
+            <p className="no-results">No previous invite codes.</p>
+          ) : (
+            <div className="invite-code-history">
+              {inviteCodeHistory.map((code: any) => (
+                <div key={code.codeId} className="invite-code-row">
+                  <span className="invite-code-value">{code.code}</span>
+                  <span className={`invite-code-status ${code.isActive ? 'active' : 'inactive'}`}>
+                    {code.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                  <span className="invite-code-date">
+                    {new Date(code.generatedAt).toLocaleDateString()}
+                  </span>
                 </div>
               ))}
             </div>

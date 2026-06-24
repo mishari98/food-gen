@@ -26,14 +26,21 @@ export default function DayPage() {
     removeMealFromDay,
     allMeals,
     customMeals,
+    mealSuggestions,
+    suggestSwap,
+    approveSuggestion,
+    rejectSuggestion,
   } = useMealPlan();
 
   const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const [showMealPicker, setShowMealPicker] = useState(false);
   const [showGeneratePrompt, setShowGeneratePrompt] = useState(false);
+  const [showSwapModal, setShowSwapModal] = useState(false);
   const [mealCount, setMealCount] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [generateError, setGenerateError] = useState<string | null>(null);
+  const [swapMealIndex, setSwapMealIndex] = useState<number | null>(null);
+  const [selectedSwapMealId, setSelectedSwapMealId] = useState<number | null>(null);
 
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
@@ -47,7 +54,6 @@ export default function DayPage() {
   // Update selected day plan when date changes
   useEffect(() => {
     // The real-time listener in context handles plan updates
-    // This just ensures we re-render when date changes
   }, [selectedDate]);
 
   const handleDateChange = (dateStr: string) => {
@@ -95,6 +101,24 @@ export default function DayPage() {
     const currentIdx = STATUS_CYCLE.indexOf(currentStatus);
     const nextStatus = STATUS_CYCLE[(currentIdx + 1) % STATUS_CYCLE.length];
     updateMealStatus(selectedDate, mealIndex, nextStatus);
+  };
+
+  const openSwapModal = (mealIndex: number) => {
+    setSwapMealIndex(mealIndex);
+    setSelectedSwapMealId(null);
+    setShowSwapModal(true);
+  };
+
+  const handleSuggestSwap = async () => {
+    if (swapMealIndex === null || selectedSwapMealId === null) return;
+    try {
+      await suggestSwap(selectedDate, swapMealIndex, selectedSwapMealId);
+      setShowSwapModal(false);
+      setSwapMealIndex(null);
+      setSelectedSwapMealId(null);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   // Filter meals for picker
@@ -176,6 +200,34 @@ export default function DayPage() {
           <div className="meal-list">
             <p className="date-text">{formatDisplayDate(selectedDate)}</p>
 
+            {/* Suggestions Banner */}
+            {mealSuggestions.length > 0 && (
+              <div className="suggestions-banner">
+                <h3>📬 Pending Suggestions ({mealSuggestions.length})</h3>
+                {mealSuggestions.map((suggestion: any) => (
+                  <div key={suggestion.suggestionId} className="suggestion-item">
+                    <span>
+                      <strong>{suggestion.displayName}</strong> suggested a swap
+                    </span>
+                    <div className="button-group">
+                      <button
+                        className="accept-button"
+                        onClick={() => approveSuggestion(suggestion.suggestionId)}
+                      >
+                        ✓
+                      </button>
+                      <button
+                        className="reject-button"
+                        onClick={() => rejectSuggestion(suggestion.suggestionId)}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {displayedMeals.map((entry, index) => (
               <div key={index} className="meal-card-wrapper">
                 <MealCard
@@ -183,9 +235,11 @@ export default function DayPage() {
                   label={entry.label}
                   status={entry.status}
                   showRemove={isAdminOrEditor}
+                  showSuggestSwap={isAdminOrEditor}
                   onRemove={() => handleRemoveMeal(index)}
                   onStatusClick={() => handleStatusClick(index, entry.status)}
                   onClick={() => entry.meal && setSelectedMeal(entry.meal)}
+                  onSuggestSwap={() => openSwapModal(index)}
                 />
               </div>
             ))}
@@ -265,6 +319,38 @@ export default function DayPage() {
             <button className="secondary-btn" onClick={() => { setShowMealPicker(false); setSearchQuery(''); }}>
               Cancel
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Swap Suggestion Modal */}
+      {showSwapModal && (
+        <div className="modal-overlay" onClick={() => setShowSwapModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Suggest a Swap</h3>
+            <p>Select a meal to suggest instead:</p>
+            <div className="meal-list">
+              {allMeals.map((meal: Meal) => (
+                <div
+                  key={meal.id}
+                  className={`meal-option ${selectedSwapMealId === meal.id ? 'selected' : ''}`}
+                  onClick={() => setSelectedSwapMealId(meal.id)}
+                >
+                  <span className="meal-emoji">{meal.emoji}</span>
+                  <span className="meal-name">{meal.name}</span>
+                </div>
+              ))}
+            </div>
+            <div className="modal-actions">
+              <button className="secondary-btn" onClick={() => setShowSwapModal(false)}>Cancel</button>
+              <button
+                className="primary-btn"
+                onClick={handleSuggestSwap}
+                disabled={selectedSwapMealId === null}
+              >
+                Suggest Swap
+              </button>
+            </div>
           </div>
         </div>
       )}

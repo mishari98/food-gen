@@ -1,4 +1,4 @@
-# FoodGen — React Native + Expo App Documentation
+# FoodGen — Web App Documentation (v2.0)
 
 ## Table of Contents
 
@@ -7,7 +7,7 @@
 3. [Development & Testing Setup](#3-development--testing-setup)
 4. [Architecture](#4-architecture)
 5. [Data Model](#5-data-model)
-6. [Offline-First Approach](#6-offline-first-approach)
+6. [Real-Time Sync & Offline Support](#6-real-time-sync--offline-support)
 7. [UI / UX Design](#7-ui--ux-design)
 8. [Technology Stack & Cost Breakdown](#8-technology-stack--cost-breakdown)
 9. [Project Structure](#9-project-structure)
@@ -17,40 +17,42 @@
 
 ## 1. Concept Overview
 
-**FoodGen** is a mobile application built with **React Native + Expo** that helps users generate weekly and daily meal plans without requiring an internet connection. All food data, recipes, and user preferences are stored locally on-device using SQLite and AsyncStorage.
+**FoodGen** is a **web application** built with **React + TypeScript + Vite** that helps households generate weekly and daily meal plans with real-time cloud sync. All food data, recipes, and user preferences are stored in **Firebase Firestore** with offline support via IndexedDB.
 
 ### Cuisine Focus: Filipino 🇵🇭
 
-- **Phase 1 (MVP)** will exclusively feature **Filipino cuisine** — adobo, sinigang, kare-kare, lumpia, tapsilog, and many more.
-- All **77 seed meals** in the MVP will be Filipino dishes.
+- **Phase 1 (MVP)** exclusively features **Filipino cuisine** — adobo, sinigang, kare-kare, lumpia, tapsilog, and many more.
+- All **77 seed meals** in the MVP are Filipino dishes.
 - **Future phases** will expand to other cuisines (Italian, Asian, Mexican, etc.) with cuisine filtering and mixing options.
 - The architecture supports multiple cuisines from day one — the `cuisine` field in the data model is already in place.
 
-### Why React Native + Expo?
+### Why Web (React + Vite + Firebase)?
 
 | Reason | Detail |
 |--------|--------|
 | **Develop on Windows** | Use VS Code on your Windows machine — no Mac required |
-| **Test on iPhone for free** | Scan a QR code with the **Expo Go** app on your iPhone to instantly see changes |
-| **Publish to App Store** | Expo's cloud build service (EAS Build) compiles your app — no Mac needed |
-| **100% offline** | SQLite database and AsyncStorage keep all data on the device |
-| **All tools free** | No paid licences, no subscriptions, no cloud services needed |
+| **Test on iPhone for free** | Deploy to Firebase Hosting → access via browser on any device |
+| **Publish to App Store** | Can wrap with Capacitor/Cordova later if needed |
+| **Real-time sync** | Firestore provides instant cross-device sync |
+| **Offline support** | IndexedDB persistence + Firestore offline mode |
+| **All tools free** | No paid licences, no subscriptions, generous free tiers |
 
 ### Core Premise
 
 - The user opens the app and gets an instant meal plan — for **today** or for the **full week**.
-- No sign-up, no cloud sync, no network calls.
-- The generated plan is based on a pre-seeded local database of meals with flexible slot assignment (any dish can be assigned to any meal slot).
+- Sign-up required (email/password) — cloud sync enabled by default.
+- The generated plan is based on a pre-seeded Firestore database of meals with flexible slot assignment (any dish can be assigned to any meal slot).
+- **Household-based**: Users can create/join households for family meal planning.
 
 ### Target Platforms (Phase 1)
 
 | Platform | Supported? | How |
-|----------|-----------|-----|
-| **iPhone** (iOS 15+) | ✅ **Yes** | Primary target — test via Expo Go, publish via EAS Build |
-| **iPad** (iPadOS 15+) | ✅ Yes | Same codebase, adapts to iPad screen |
-| **Android** | ✅ Yes | Expo supports Android automatically — bonus |
-| **macOS desktop** | ❌ No (Phase 1) | Could be added later via Expo for Desktop |
-| **Web** | ❌ No (Phase 1) | Could be added later via Expo for Web |
+|----------|-----------|------|
+| **iPhone** (iOS 15+) | ✅ **Yes** | Via mobile browser (Safari) — PWA-ready |
+| **iPad** (iPadOS 15+) | ✅ Yes | Same web app, responsive design |
+| **Android** | ✅ Yes | Works in any modern mobile browser |
+| **Desktop** | ✅ Yes | Full desktop browser support |
+| **macOS** | ✅ Yes | Full desktop browser support |
 
 ---
 
@@ -62,13 +64,18 @@
 |---------|-------------|--------|
 | **Generate Today's Meals** | One tap to see meals for the current day | ✅ Implemented |
 | **Generate Weekly Plan** | Generate a full 7-day meal plan (Mon–Sun) | ✅ Implemented |
-| **Configurable Meals Per Day** | Choose **1**, **2**, or **3** meals per day (see section 2.3 below) | ✅ Implemented |
+| **Configurable Meals Per Day** | Choose **1**, **2**, **3**, or **4** meals per day | ✅ Implemented |
 | **View Meal Details** | Tap any meal card to see ingredients, prep time, difficulty, and step-by-step instructions | ✅ Implemented |
-| **Add Custom Meal** | User can manually add their own meal if it's not in the default list (see section 2.5) | ✅ Implemented |
-| **Local Data Store** | All meals, recipes, and generated plans persisted on-device using **expo-sqlite** | ✅ Implemented |
+| **Add Custom Meal** | User can manually add their own meal if it's not in the default list | ✅ Implemented |
+| **Cloud Data Store** | All meals, recipes, and generated plans synced via **Firebase Firestore** | ✅ Implemented |
 | **Random & Balanced Generation** | Algorithm ensures variety across the week — no repeated meals within the same plan | ✅ Implemented |
 | **Per-Day Customisation** | Random-generate the whole week/today, then customise individual days | ✅ Implemented |
-| **Meal Plan Saving/Loading** | Save a generated week plan and load it later | ✅ Implemented |
+| **Meal Status Tracking** | Mark meals as Planned / Cooking / Done / Skipped | ✅ Implemented |
+| **Real-time Sync** | Changes sync instantly across all household members | ✅ Implemented |
+| **Activity Logging** | Track all household actions (generation, edits, member changes) | ✅ Implemented |
+| **Invite Code History** | Track all invite codes (active/inactive) for household | ✅ Implemented |
+| **Viewer Suggestions** | Viewers can suggest meal swaps for admin/editor approval | ✅ Implemented |
+| **Email/Password Recovery** | "Forgot Password?" flow with Firebase email reset | ✅ Implemented |
 
 ### 2.2 Meals Per Day Configuration
 
@@ -77,71 +84,42 @@
 | **1 meal/day** 🍽️ | Dinner only | Default setting |
 | **2 meals/day** 🍽️🍽️ | Lunch + Dinner | Optional |
 | **3 meals/day** 🍽️🍽️🍽️ | Breakfast + Lunch + Dinner | Optional |
+| **4 meals/day** 🍽️🍽️🍽️🍽️ | Breakfast + Lunch + Dinner + Snack | Optional |
 
 **How it works:**
 
-- The setting is stored in **AsyncStorage** (`mealsPerDay` key).
+- The setting is stored in **Firestore** (`userPreferences` collection).
 - It applies to **both Today and Weekly** generation.
 - The generator picks random dishes from the **entire meal pool** (all 77 dishes) for each meal slot.
 - The generator skips meal slots that are not selected (e.g., if set to 1 meal, only Dinner is generated).
 - On the **Today** and **Week** screens, only the configured meal slots are displayed.
 
-### 2.3 Configuration UI
+### 2.3 Household System
 
-| Location | What the user sees |
-|----------|-------------------|
-| **Settings screen** (gear icon ⚙️ in top bar) | A **segmented picker** with 3 options: 1 🍽️ / 2 🍽️🍽️ / 3 🍽️🍽️🍽️, with labels "1 Meal (Dinner)", "2 Meals (Lunch + Dinner)", "3 Meals (Breakfast + Lunch + Dinner)" |
-| **Quick toggle on Today/Week screen** | Same picker, placed below the title, so the user can quickly change without going to Settings |
-| **Per-day customisation** | On the Week screen, each day can be individually regenerated to swap meals **within the configured meal count** |
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Create Household** | Admin creates a household with name, address, max members | ✅ Implemented |
+| **Join via Invite Code** | 8-character code (e.g., "ABC123XY") | ✅ Implemented |
+| **Join Request System** | Users request to join; admin approves/rejects | ✅ Implemented |
+| **Role-based Access** | Admin (full), Editor (plan meals), Viewer (view only) | ✅ Implemented |
+| **Invite Code History** | Track all generated codes with active/inactive status | ✅ Implemented |
+| **Real-time Members** | Live member list with role badges | ✅ Implemented |
 
-### 2.4 Example Scenarios
+### 2.4 Meal Suggestions (Viewer Feature)
 
-| Setting | Today Screen Shows | Week Screen Shows |
-|---------|-------------------|-------------------|
-| **1 meal** | 🍗 *Chicken Adobo* (Dinner only) | Each day shows 1 dinner |
-| **2 meals** | 🥗 *Lunch: Sinigang* + 🍗 *Dinner: Adobo* | Each day shows lunch + dinner |
-| **3 meals** | 🌅 *Breakfast: Tapsilog* + 🥗 *Lunch: Sinigang* + 🍗 *Dinner: Adobo* | Each day shows breakfast + lunch + dinner |
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Suggest Swap** | Viewers can suggest replacing a meal with another | ✅ Implemented |
+| **Approval UI** | Admin/Editor sees pending suggestions with approve/reject | ✅ Implemented |
+| **Activity Logging** | Suggestions logged in household activity feed | ✅ Implemented |
 
-### 2.5 Add Custom Meal
+### 2.5 Activity Log
 
-Users can manually add their own meals to the local database if a desired dish is not included in the default seed list.
-
-**Access points:**
-- **"+" button** in the top navigation bar (visible on Today and Week screens) — ✅ Implemented
-- **"Add Custom Meal" option** at the bottom of the meal category list in Settings — ❌ Not yet implemented
-
-**Add Meal Form fields:**
-
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| **Meal Name** | Text input | ✅ Yes | e.g., "Pork Sisig" |
-| **Suggested For** | Multi-select checkboxes | ✅ Yes | Check at least one: Breakfast / Lunch / Dinner / Snack |
-| **Cuisine** | Picker | ✅ Yes | Default: Filipino |
-| **Prep Time** | Number input | ✅ Yes | In minutes |
-| **Difficulty** | Picker | ✅ Yes | Easy / Medium / Hard |
-| **Emoji** | Emoji picker | ❌ No | Default: 🍽️ |
-| **Ingredients** | Dynamic list | ✅ Yes | Add multiple: name + quantity |
-| **Steps** | Dynamic list | ✅ Yes | Add multiple step-by-step instructions |
-| **Calories** | Number input | ❌ No | Approximate calories |
-
-**Data flow:**
-
-```
-1. User taps "+" button
-2. AddMealScreen opens with empty form
-3. User fills in fields (name, suggestedFor slots, ingredients, steps, etc.)
-4. User taps "Save Meal"
-5. Validation: Name + at least 1 suggested slot + at least 1 ingredient required
-6. Meal is inserted into SQLite meals table
-7. New meal appears in generation pool immediately
-8. Success toast: "🍽️ Sisig added to your meals!"
-```
-
-**Distinction from seed meals:**
-- Custom meals have `is_custom = 1` flag in the database ✅ Implemented
-- Custom meals are displayed with a "👤 You" badge on meal cards ✅ Implemented
-- Custom meals can be edited or deleted by the user ❌ Not yet implemented (backend functions exist, UI pending)
-- Seed meals are read-only (cannot be edited or deleted) ✅ Implemented
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Real-time Feed** | Live activity log for household | ✅ Implemented |
+| **Action Types** | created, regenerated, manual_edit, status_updated, suggestion_applied | ✅ Implemented |
+| **User Attribution** | Shows who performed each action | ✅ Implemented |
 
 ### 2.6 Future Phases (Post-MVP)
 
@@ -151,11 +129,10 @@ Users can manually add their own meals to the local database if a desired dish i
 | Cuisine preferences | Italian, Asian, Mexican, etc. |
 | Favorites / Saved Plans | Bookmark a generated week to reuse later |
 | Shopping List | Auto-generate a consolidated grocery list from the weekly plan |
-| Manual swap | Replace a meal with another from the same category |
 | Calorie & macro tracking | Approximate nutrition info per meal |
-| iCloud / Google Drive sync | Optional backup/restore of saved plans |
-| Widgets | iOS home screen widget (via Expo Widgets or native module) |
-| Apple Watch companion | Future expansion |
+| PWA Install | Add to home screen on mobile devices |
+| Push Notifications | Daily meal reminders |
+| Export Plans | PDF/image export of meal plans |
 
 ---
 
@@ -168,30 +145,31 @@ Users can manually add their own meals to the local database if a desired dish i
 | **Operating System** | Windows 10/11 ✅ |
 | **Code Editor** | VS Code (free) |
 | **Node.js** | v18+ (free) |
-| **Expo CLI** | Installed via npm (free) |
-| **Expo Go app** | Install on your iPhone from the App Store (free) |
-| **Physical iPhone** | Your own iPhone for live testing |
-| **Mac** | **Not required** ❌ — Expo's cloud build handles iOS compilation |
+| **Firebase Project** | Created by user (free tier) |
+| **Browser** | Chrome/Firefox/Edge for testing |
+| **Physical iPhone** | Your own iPhone for mobile testing (optional) |
+| **Mac** | **Not required** ❌ |
 
 ### 3.2 Testing Flow (Windows → iPhone)
 
 ```
 1. Write code in VS Code on Windows
-2. Run: npx expo start
-3. A QR code appears in the terminal
-4. Open Expo Go app on iPhone
-5. Scan QR code with iPhone camera
-6. App loads instantly on iPhone 🔥
-7. Every save → auto-reloads on iPhone
+2. Run: npm run dev
+3. Local dev server starts on localhost:5173
+4. Access from iPhone via local network IP (e.g., http://192.168.1.100:5173)
+5. OR deploy to Firebase Hosting: npm run deploy
+6. Access via https://foodgen-85dbb.web.app on any device
+7. Every save → hot reload in browser
 ```
 
-### 3.3 Publishing to App Store (No Mac Required)
+### 3.3 Deployment
 
-```
-1. Run: npx eas build --platform ios --auto-submit
-2. Expo's cloud servers compile the iOS app
-3. App is submitted to Apple App Store
-4. Done — no Mac ever touched
+```bash
+# Build for production
+npm run build
+
+# Deploy to Firebase Hosting
+npm run deploy
 ```
 
 ### 3.4 Cost Summary for Setup
@@ -201,11 +179,11 @@ Users can manually add their own meals to the local database if a desired dish i
 | Windows PC | ✅ Already own it |
 | VS Code | **Free** |
 | Node.js | **Free** |
-| Expo CLI | **Free** |
-| Expo Go (iPhone) | **Free** |
-| EAS Build (cloud compilation) | **Free tier** — 30 builds/month |
-| Apple Developer Program | **$99/year** — only when publishing to App Store |
-| **Total to build & test on iPhone** | **$0** |
+| Firebase (Spark Plan) | **Free** (generous limits for MVP) |
+| Firebase Hosting | **Free** (10 GB storage, 10 GB/month transfer) |
+| Firebase Auth | **Free** (unlimited email/password) |
+| Firebase Firestore | **Free** (1 GB storage, 50K reads/day) |
+| **Total to build & test** | **$0** |
 
 ---
 
@@ -216,22 +194,23 @@ Users can manually add their own meals to the local database if a desired dish i
 ```
 ┌──────────────────────────────────────────────────────┐
 │                    UI Layer                           │
-│  React Native Components (View, Text, FlatList, etc) │
+│  React Components (Vite + TypeScript)                │
 └──────────────────────┬───────────────────────────────┘
                        │
 ┌──────────────────────▼───────────────────────────────┐
 │               State Management Layer                  │
-│  React Context + useReducer   or   Zustand (simple)  │
+│  React Context + useReducer (MealPlanContext)         │
 └──────────────────────┬───────────────────────────────┘
                        │
 ┌──────────────────────▼───────────────────────────────┐
 │                Service / Logic Layer                  │
-│  MealPlanGenerator, SeedDataService, PreferenceManager│
+│  MealPlanGenerator, ActivityLogger, PreferenceManager│
 └──────────────────────┬───────────────────────────────┘
                        │
 ┌──────────────────────▼───────────────────────────────┐
-│               Persistence Layer                       │
-│  expo-sqlite (local .db file) + AsyncStorage          │
+│               Firebase Layer                          │
+│  Firestore (cloud DB) + Auth + Hosting               │
+│  + IndexedDB (offline cache)                         │
 └──────────────────────────────────────────────────────┘
 ```
 
@@ -240,25 +219,24 @@ Users can manually add their own meals to the local database if a desired dish i
 | Pattern | Usage |
 |---------|-------|
 | **Component-Based Architecture** | Each screen is a reusable component tree |
-| **Custom Hooks** | Encapsulate logic (e.g., `useMealPlan`, `useDatabase`) |
-| **Repository Pattern** | `mealRepository.ts` abstracts all SQLite queries |
-| **Strategy Pattern** | Generator can be swapped (simple random → balanced → ML-based) |
+| **Context API** | `MealPlanContext` provides global state |
+| **Custom Hooks** | Encapsulate logic (e.g., `useMealPlan`) |
+| **Repository Pattern** | Firestore service abstracts all DB queries |
+| **Real-time Listeners** | `onSnapshot` for live data sync |
 
 ### 4.3 Data Flow (Generate Weekly Plan)
 
 ```
-1. User reads mealsPerDay setting from AsyncStorage (e.g., 2 meals)
-2. User taps "Generate Weekly Plan"
-3. Component calls custom hook: useGenerateWeeklyPlan()
-4. Hook calls MealPlanGenerator.generateWeeklyPlan(mealsPerDay)
-5. Generator fetches ALL meals from mealRepository (no category filter)
-6. Generator picks random meals for each enabled slot:
+1. User taps "Generate Week" on Week tab
+2. Component calls context: generateWeekPlan(weekOfYear, year, mealCount)
+3. Context fetches all meals from Firestore (reference + custom)
+4. Generator picks random meals for each enabled slot:
    - If 2 meals: picks 1 meal for Lunch + 1 meal for Dinner per day
    - If 3 meals: picks 1 meal for Breakfast + Lunch + Dinner per day
-7. Generator ensures no repeated meals within the week
-8. Generator returns DayPlan[] (7 items)
-9. Hook persists DayPlan[] to SQLite
-10. State updates → React re-renders the UI
+5. Generator ensures no repeated meals within the week
+6. Context saves DayPlan[] to Firestore (one doc per day)
+7. Real-time listener updates UI instantly
+8. Activity log entry created
 ```
 
 ---
@@ -278,101 +256,100 @@ Filipino dishes are not rigidly tied to a single meal slot. For example:
 - **All 77 dishes are available** for any meal slot
 - The `suggestedFor` field is informational only — it's shown in the meal detail view
 
-### 5.2 Entity-Relationship Diagram (Conceptual)
+### 5.2 Firestore Collections
 
 ```
-MealSlot (lookup table for time-of-day)
-  ├── id: number (primary key)
-  ├── name: string ("Breakfast", "Lunch", "Dinner", "Snack")
-  └── emoji: string? ("🌅", "☀️", "🌙", "🍿")
+users/{uid}/
+  ├── profile/main (UserProfile)
+  ├── preferences/main (UserPreferences)
+  └── customMeals/{mealId} (Meal)
 
-Meal (dish — no rigid category binding)
-  ├── id: number (primary key)
-  ├── name: string
-  ├── suggestedFor: string (JSON array, e.g. '["breakfast","lunch","dinner"]')
-  ├── cuisine: string? ("Filipino", "Italian", etc.)
-  ├── dietaryTags: string (JSON array stored as text)
-  ├── prepTimeMinutes: number
-  ├── difficulty: string ("easy" | "medium" | "hard")
-  ├── emoji: string? (meal illustration emoji)
-  ├── ingredients: string (JSON array stored as text)
-  ├── steps: string (JSON array stored as text)
-  ├── calories: number?
-  ├── isFavorite: boolean (0 or 1)
-  └── isCustom: boolean (0 or 1)
+households/{householdId}/
+  ├── info (Household)
+  ├── members/{uid} (HouseholdMember)
+  ├── joinRequests/{uid} (JoinRequest)
+  ├── invites/{inviteId} (HouseholdInvite)
+  ├── inviteCodes/{codeId} (InviteCodeRecord)
+  ├── plans/{date} (HouseholdDayPlan)
+  ├── suggestions/{suggestionId} (MealSuggestion)
+  └── activityLog/{logId} (ActivityLogEntry)
 
-DayPlan
-  ├── id: number (primary key)
-  ├── date: string (ISO date "2026-06-15")
-  ├── weekOfYear: number
-  ├── year: number
-  ├── breakfastId: number (FK -> Meal.id, nullable)
-  ├── lunchId: number (FK -> Meal.id, nullable)
-  ├── dinnerId: number (FK -> Meal.id, nullable)
-  ├── snackId: number? (FK -> Meal.id, nullable)
-  └── isGenerated: boolean
-
-SavedWeekPlan
-  ├── id: number (primary key)
-  ├── name: string? (user-given name)
-  ├── createdAt: string (ISO datetime)
-  ├── weekOfYear: number
-  └── days: relationship (queried by weekOfYear)
+referenceMeals/{mealId} (Meal) — shared across all users
 ```
 
-### 5.3 SQLite Table Creation (SQL)
+### 5.3 Key Types
 
-```sql
-CREATE TABLE IF NOT EXISTS meal_slots (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL UNIQUE,
-  emoji TEXT
-);
+```typescript
+interface Meal {
+  id: number;
+  name: string;
+  suggestedFor: string[]; // ["breakfast","lunch","dinner"]
+  cuisine: string;
+  dietaryTags: string[];
+  prepTimeMinutes: number;
+  difficulty: "easy" | "medium" | "hard";
+  emoji: string;
+  ingredients: { name: string; quantity: string }[];
+  steps: string[];
+  calories?: number;
+  isCustom?: 0 | 1;
+}
 
-CREATE TABLE IF NOT EXISTS meals (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  suggested_for TEXT NOT NULL DEFAULT '["breakfast","lunch","dinner"]',
-  cuisine TEXT NOT NULL DEFAULT 'Filipino',
-  dietary_tags TEXT DEFAULT '[]',
-  prep_time_minutes INTEGER NOT NULL,
-  difficulty TEXT NOT NULL DEFAULT 'easy',
-  emoji TEXT DEFAULT '🍽️',
-  ingredients TEXT NOT NULL DEFAULT '[]',
-  steps TEXT NOT NULL DEFAULT '[]',
-  calories INTEGER,
-  is_favorite INTEGER DEFAULT 0,
-  is_custom INTEGER DEFAULT 0
-);
+interface HouseholdDayPlan {
+  date: string; // ISO date "2026-06-15"
+  weekOfYear: number;
+  year: number;
+  meals: {
+    mealId: number;
+    label?: string;
+    status: "planned" | "in_progress" | "completed" | "skipped";
+  }[];
+  isGenerated: 0 | 1;
+  createdBy: string;
+  lastModifiedBy: string;
+}
 
-CREATE TABLE IF NOT EXISTS day_plans (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  date TEXT NOT NULL UNIQUE,
-  week_of_year INTEGER NOT NULL,
-  year INTEGER NOT NULL,
-  breakfast_id INTEGER,
-  lunch_id INTEGER,
-  dinner_id INTEGER,
-  snack_id INTEGER,
-  is_generated INTEGER DEFAULT 0,
-  FOREIGN KEY (breakfast_id) REFERENCES meals(id),
-  FOREIGN KEY (lunch_id) REFERENCES meals(id),
-  FOREIGN KEY (dinner_id) REFERENCES meals(id),
-  FOREIGN KEY (snack_id) REFERENCES meals(id)
-);
+interface Household {
+  id: string;
+  name: string;
+  address: { city: string; state: string };
+  inviteCode: string;
+  codeExpiresAt: string;
+  maxMembers: number;
+  weekStartDay: "monday" | "sunday";
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
-CREATE TABLE IF NOT EXISTS saved_week_plans (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  week_of_year INTEGER NOT NULL,
-  year INTEGER NOT NULL
-);
+interface ActivityLogEntry {
+  date: string;
+  action: "created" | "regenerated" | "manual_edit" | "status_updated" | "suggestion_applied" | "suggestion_rejected";
+  performedBy: string;
+  displayName: string;
+  details?: string;
+  createdAt: Timestamp;
+}
+
+interface MealSuggestion {
+  date: string;
+  mealIndex: number;
+  currentMealId: number;
+  suggestedMealId: number;
+  suggestedBy: string;
+  displayName: string;
+  reason?: string;
+  status: "pending" | "approved" | "rejected";
+  respondedBy?: string;
+  respondedAt?: Timestamp;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
 ```
 
 ### 5.4 Seed Data
 
-The app ships with a pre-seeded local database containing **77 Filipino dishes**:
+The app ships with a pre-seeded Firestore collection containing **77 Filipino dishes**:
 
 | Category | Count | Examples |
 |----------|:-----:|---------|
@@ -382,68 +359,56 @@ The app ships with a pre-seeded local database containing **77 Filipino dishes**
 | **Total** | **77** | See Appendix E for full list |
 
 Each meal includes:
-- Name, `suggestedFor` tags (JSON), cuisine
+- Name, `suggestedFor` tags (JSON array), cuisine
 - Prep time, difficulty
 - 3–8 ingredients with quantities
 - 3–6 step-by-step instructions
 - Approximate calories (optional)
 
-Seed data is loaded on first app launch via a bundled JSON file, then inserted into SQLite.
-
 ---
 
-## 6. Offline-First Approach
+## 6. Real-Time Sync & Offline Support
 
-### 6.1 Why Offline-First?
-
-- **No internet dependency** — works in airplane mode, remote areas, or without mobile data.
-- **Instant response** — no loading spinners waiting for API calls.
-- **Privacy** — all data stays on-device.
-- **No server costs** — no backend to maintain, no cloud bills.
-
-### 6.2 How It Works
+### 6.1 How It Works
 
 | Component | Strategy |
 |-----------|----------|
-| **Meal Data** | Bundled as `meals.json` in the app. Imported into SQLite on first launch. |
-| **Generated Plans** | Stored in SQLite locally. Persist across app restarts. |
-| **User Preferences** | Stored in `AsyncStorage` (simple key-value) or SQLite (complex settings). |
-| **Images** | Emoji-based (no image assets needed). Uses system emoji rendered in Text components. |
-| **Backup / Sync** | Optional future feature — could add file export/import. Core functionality never requires it. |
+| **Meal Data** | Stored in Firestore `referenceMeals` collection. Cached locally. |
+| **Generated Plans** | Stored in Firestore `households/{id}/plans/{date}`. Real-time sync. |
+| **User Preferences** | Stored in Firestore `users/{uid}/preferences/main`. |
+| **Custom Meals** | Stored in Firestore `users/{uid}/customMeals/{mealId}`. |
+| **Offline Support** | Firestore SDK + IndexedDB persistence. Works offline, syncs when online. |
+| **Real-time Updates** | `onSnapshot` listeners for instant cross-device sync. |
 
-### 6.3 First Launch Flow
+### 6.2 Offline Flow
 
 ```
-App Launch → Check AsyncStorage flag "seed_data_loaded"
-  ├── false → Load meals.json → Parse JSON → Insert into SQLite → Set flag = true
-  └── true  → Proceed to main screen
+1. App loads → Firestore checks IndexedDB cache
+2. If offline → serves from cache immediately
+3. If online → fetches latest from cloud, updates cache
+4. User makes changes → saved to IndexedDB immediately
+5. When online → Firestore syncs changes to cloud
+6. Other devices receive updates via real-time listeners
 ```
-
-### 6.4 App Size
-
-- JSON meal data: ~50–100 KB (77 meals with full recipes)
-- No images — emoji-only rendering
-- Target app size: **< 5 MB** (extremely lightweight)
 
 ---
 
-## 7. UI / UX Design (Final — As Implemented)
+## 7. UI / UX Design
 
 ### 7.1 App Theme
 
 | Element | Design |
 |---------|--------|
 | **Name** | FoodGen |
-| **Icon** | 🍽️ (emoji-based for MVP, custom design later) |
-| **Primary Color** | #FF6B35 (warm orange — appetising, used for buttons/active states) |
-| **Secondary Color** | #2EC4B6 (teal — fresh/healthy, used for Save button) |
-| **Background** | #FAFAFA (light) / #1C1C1E (dark mode support ready) |
+| **Icon** | 🍽️ (emoji-based) |
+| **Primary Color** | #FF6B35 (warm orange — appetising) |
+| **Secondary Color** | #2EC4B6 (teal — fresh/healthy) |
+| **Background** | #FAFAFA (light) |
 | **Error/Delete** | #F44336 (red) |
-| **Success** | #4CAF50 (green, used for easy difficulty) |
-| **Warning** | #FF9800 (orange, used for medium difficulty) |
+| **Success** | #4CAF50 (green) |
 | **Typography** | System font (San Francisco on iOS, Roboto on Android) |
 
-### 7.2 Navigation Flow (Final)
+### 7.2 Navigation Flow
 
 ```
                     ┌─────────────┐
@@ -451,266 +416,101 @@ App Launch → Check AsyncStorage flag "seed_data_loaded"
                     └──────┬──────┘
                            │
                     ┌──────▼──────┐
-                    │ Today Screen│ ← Auto-generates on first launch
-                    │  (Tab 1)    │
-                    └──┬───┬───┬──┘
-                       │   │   │
-            ┌──────────┘   │   └──────────┐
-            ▼              ▼              ▼
-     ┌──────────┐  ┌──────────┐  ┌──────────────┐
-     │Week Tab  │  │Meal Detail│  │Add Custom    │
-     │(Tab 2)   │  │(tap card) │  │Meal (tap +)  │
-     └──────────┘  └──────────┘  └──────────────┘
+                    │ Onboarding  │ ← Login / Sign Up / Forgot Password
+                    │  (Auth)     │
+                    └──────┬──────┘
                            │
-                           ▼
-                    ┌──────────────┐
-                    │Settings (⚙️) │
-                    └──────────────┘
+                    ┌──────▼──────┐
+                    │  Dashboard  │ ← Create/Join Household
+                    └──────┬──────┘
+                           │
+            ┌──────────────┼──────────────┐
+            ▼              ▼              ▼
+     ┌──────────┐  ┌──────────┐  ┌──────────┐
+     │   Day    │  │   Week   │  │  History │
+     │   Tab    │  │   Tab    │  │   Tab    │
+     └──────────┘  └──────────┘  └──────────┘
+            │              │              │
+            ▼              ▼              ▼
+     ┌──────────┐  ┌──────────┐  ┌──────────┐
+     │Settings  │  │Household │  │Debug     │
+     │  Page    │  │ Manage   │  │ Page     │
+     └──────────┘  └──────────┘  └──────────┘
 ```
 
-### 7.3 Today Screen (Final)
+### 7.3 Day Screen
 
 ```
 ┌──────────────────────────────────────────┐
-│  ⚙️           🍽️ FoodGen              [+] │ ← Header row
+│  🏠           🍽️ FoodGen              ⚙️ │ ← Header
 ├──────────────────────────────────────────┤
-│  📅 Mon, Jun 15                           │ ← Current date
-├──────────────────────────────────────────┤
-│  [ 1 🍽️ │ 2 🍽️🍽️ │ 3 🍽️🍽️🍽️ ]  [🏷️ ON]│ ← Meals per day picker + label toggle
+│  📅 [Date Picker]  [📍 Today]           │
 ├──────────────────────────────────────────┤
 │  ┌──────────────────────────────────┐    │
-│  │  🍳 BREAKFAST (if labels ON)     │    │
+│  │  🍳 BREAKFAST                    │    │
 │  │  Tapsilog                        │    │
 │  │  ⏱ 20 min  🔥 easy              │    │
+│  │  [🔄 Swap] [✕ Remove]           │    │
 │  └──────────────────────────────────┘    │
 │  ┌──────────────────────────────────┐    │
-│  │  ☀️ LUNCH (if labels ON)         │    │
+│  │  ☀️ LUNCH                        │    │
 │  │  Sinigang na Baboy               │    │
 │  │  ⏱ 60 min  🔥 medium            │    │
+│  │  [🔄 Swap] [✕ Remove]           │    │
 │  └──────────────────────────────────┘    │
 │  ┌──────────────────────────────────┐    │
-│  │  🌙 DINNER (if labels ON)         │    │
+│  │  🌙 DINNER                       │    │
 │  │  Chicken Adobo                   │    │
 │  │  ⏱ 40 min  🔥 easy  👤 You      │    │
+│  │  [🔄 Swap] [✕ Remove]           │    │
 │  └──────────────────────────────────┘    │
 │                                           │
-│       ↓ Pull down to regenerate          │
+│  [ 📬 Pending Suggestions (2) ]         │ ← If any
+│                                           │
+│  [ 🔄 Regenerate ]  [ ➕ Add Meal ]      │
 ├──────────────────────────────────────────┤
-│    📅 Today     │     📆 Week            │ ← Tab bar
+│    📅 Day     │     📆 Week │ 📋 History│ ← Tab bar
 └──────────────────────────────────────────┘
 ```
 
-**Implemented behaviours:**
-- Auto-generates today's meals on first launch (seeds 77 Filipino dishes into SQLite)
-- Tap any meal card → opens **MealDetailModal** (bottom sheet)
-- ⚙️ gear icon → navigates to Settings screen
-- [+] button → navigates to Add Custom Meal screen
-- Meals Per Day picker: segmented control with 3 options
-- 🏷️ ON/OFF toggle: hides/shows "BREAKFAST", "LUNCH", "DINNER" labels
-- When labels OFF: cards show just meal name + meta without slot title
-- Pull down → regenerates today's meals with fresh random selection
-- Users can see "👤 You" badge on custom-added meals
-
-### 7.4 Week Screen (Final)
+### 7.4 Household Management Screen
 
 ```
 ┌──────────────────────────────────────────┐
-│  ⚙️        📆 Week 25                  [+]│
-│        Jun 15 – Jun 21, 2026             │ ← Week number + date range
+│  ← Back           ⚙️ Manage Household   │
 ├──────────────────────────────────────────┤
-│  [ 1 🍽️ │ 2 🍽️🍽️ │ 3 🍽️🍽️🍽️ ]  [🏷️ ON]│
+│  🏠 Household Name                       │
+│  📍 City, State                          │
+│  👥 3 / 5 members                        │
+│  📅 Week starts on monday                │
+│  🔗 Invite Code: ABC123XY                │
 ├──────────────────────────────────────────┤
-│  ┌─── Mon 15 ──────────── [↻] ──────┐   │
-│  │  🌅 Tapsilog                      │   │ ← Tap to expand
-│  │  🌙 Chicken Adobo                 │   │
-│  └───────────────────────────────────┘   │
-│  ┌─── Tue 16 ──────────── [↻] ──────┐   │
-│  │  (collapsed — tap to show meals)  │   │
-│  └───────────────────────────────────┘   │
-│  ┌─── Wed 17 ──────────── [↻] ──────┐   │
-│  │  (collapsed)                       │   │
-│  └───────────────────────────────────┘   │
-│  ...through Sunday                       │
-│                                           │
-│  [ 🔄 GENERATE NEW WEEK ]               │ ← Orange button
-│  [ 💾 Save This Plan ]                   │ ← Teal button
+│  Members                                 │
+│  👤 Juan Dela Cruz [admin]               │
+│  👤 Maria Santos [editor]                │
+│  👤 Jose Rizal [viewer]                  │
 ├──────────────────────────────────────────┤
-│    📅 Today     │     📆 Week            │
+│  Pending Requests (if admin)             │
+│  👤 Pedro Penduko [editor] [Accept][Reject]│
+├──────────────────────────────────────────┤
+│  Invite Member                           │
+│  Email: [member@example.com]             │
+│  Role: [Viewer (view only) ▼]            │
+│  [ Send Invite ]                         │
+├──────────────────────────────────────────┤
+│  📋 Recent Activity                      │
+│  • Juan generated 3 meals for 2026-06-15 │
+│  • Maria suggested a swap for 2026-06-15 │
+│  • Jose joined the household             │
+├──────────────────────────────────────────┤
+│  🔗 Invite Code History                  │
+│  ABC123XY [Active] Generated: 6/15/2026  │
+│  XYZ789AB [Inactive] Generated: 6/8/2026 │
+├──────────────────────────────────────────┤
+│  [ 🔄 Regenerate Invite Code ]           │
+│  [ 🚪 Leave Household ]                  │
 └──────────────────────────────────────────┘
 ```
-
-**Implemented behaviours:**
-- Header shows "Week 25" (ISO week number) + date range
-- Mon–Sun displayed as collapsible day cards
-- Tap a day → expands to show all meals for that day
-- Each day card has a [↻] button to regenerate just that day
-- "Generate New Week" button → confirmation dialog → regenerates all 7 days
-- "Save This Plan" button → persists the current plan
-- Same Meals Per Day picker + label toggle as Today tab
-
-### 7.5 Meal Detail Modal (Final)
-
-```
-┌──────────────────────────────────────────┐
-│  ─── (drag handle)                        │
-├──────────────────────────────────────────┤
-│           🍗 (64px emoji)                 │
-│                                           │
-│      Chicken Adobo                        │
-│      [👤 You] (only if custom)           │
-│                                           │
-│  🌅 breakfast  🌙 dinner  ☀️ lunch      │ ← suggestedFor tags
-│                                           │
-│  ⏱ 40 min   🔥 Easy   🔥 ~480 cal       │
-│                                           │
-│  [▶️ Watch Recipe on YouTube]             │ ← Red button, only if youtubeLink exists
-│                                           │
-│  ──── Ingredients ────                   │ ← Orange section header
-│  • Chicken thighs — 500g                  │
-│  • Soy sauce — 1/4 cup                    │
-│  • Vinegar — 1/4 cup                      │
-│  • Garlic cloves — 5, crushed             │
-│  • Bay leaves — 2                         │
-│  • Black pepper — 1 tsp                   │
-│  • Rice — 1 cup, for serving              │
-│                                           │
-│  ──── Steps ────                          │
-│  ① Combine chicken with soy sauce,        │
-│     vinegar, garlic, bay leaves,          │
-│     and pepper.                           │
-│  ② Marinate 30 minutes.                   │
-│  ③ Bring to a boil then simmer            │
-│     30 minutes.                           │
-│  ④ Optional: pan-fry to brown.            │
-│  ⑤ Serve over rice.                       │
-│                                           │
-│  [ 🌿 gluten-free ] (if has dietary tags)│
-│                                           │
-│  [ Close ]                                │
-└──────────────────────────────────────────┘
-```
-
-**Implemented behaviours:**
-- Slides up from bottom as a modal sheet
-- User-uploaded photo displayed if `photoPath` exists
-- YouTube button opens link via `Linking.openURL()` (free, no API needed)
-- Ingredients displayed as bullet list
-- Steps shown with numbered orange circle badges
-- Suggested for shown as pill tags
-- Difficulty color-coded: Easy=green, Medium=orange, Hard=red
-
-### 7.6 Add Custom Meal Screen (Final — ✅ Implemented)
-
-```
-┌──────────────────────────────────────────┐
-│  ← Cancel     ➕ Add Meal      💾 Save   │
-├──────────────────────────────────────────┤
-│                                           │
-│  Meal Name *                              │
-│  ┌──────────────────────────────────┐    │
-│  │ e.g. Pork Sisig                  │    │
-│  └──────────────────────────────────┘    │
-│                                           │
-│  Suggested For * (check all that apply)   │
-│  ☑ 🌅 Breakfast  ☑ ☀️ Lunch            │
-│  ☑ 🌙 Dinner     ☐ 🍿 Snack            │
-│                                           │
-│  Cuisine                                  │
-│  ┌──────────────────────────────────┐    │
-│  │ Filipino                    ▼    │    │
-│  └──────────────────────────────────┘    │
-│                                           │
-│  Prep Time (minutes) *                    │
-│  ┌──────────────────────────────────┐    │
-│  │ 30                               │    │
-│  └──────────────────────────────────┘    │
-│                                           │
-│  Difficulty                                │
-│  ○ Easy  ● Medium  ○ Hard               │
-│                                           │
-│  Emoji  [ 🍳 ]  Tap to change             │
-│                                           │
-│  Photo (optional)                         │
-│  [ 📸 Take Photo ]  [ 🖼️ Choose from Gallery ]│
-│                                           │
-│  YouTube Link (optional)                  │
-│  ┌──────────────────────────────────┐    │
-│  │ https://youtube.com/watch?v=...  │    │
-│  └──────────────────────────────────┘    │
-│                                           │
-│  Ingredients *                             │
-│  ┌──────────────────────────────────┐    │
-│  │  Ground pork          250g [🗑️] │    │
-│  │  Egg                    1   [🗑️] │    │
-│  │  [ + Add Ingredient ]            │    │
-│  └──────────────────────────────────┘    │
-│                                           │
-│  Steps *                                   │
-│  ┌──────────────────────────────────┐    │
-│  │ 1. Mix all ingredients... [🗑️]  │    │
-│  │ 2. Form into patties...   [🗑️]  │    │
-│  │ [ + Add Step ]                   │    │
-│  └──────────────────────────────────┘    │
-│                                           │
-│  Calories (optional)                       │
-│  ┌──────────────────────────────────┐    │
-│  │ 320                             │    │
-│  └──────────────────────────────────┘    │
-│                                           │
-│  [ 🗑️ Delete this meal ] (custom only)  │
-└──────────────────────────────────────────┘
-```
-
-### 7.7 Settings Screen (Final — ✅ Implemented)
-
-```
-┌──────────────────────────────────────────┐
-│  ← Back           ⚙️ Settings            │
-├──────────────────────────────────────────┤
-│                                           │
-│  ──── Meals Per Day ────                 │
-│                                           │
-│  How many meals do you cook per day?      │
-│  [  1 🍽️  │  2 🍽️🍽️  │  3 🍽️🍽️🍽️  ]  │
-│                                           │
-│  With 1 meal: Dinner only                 │
-│  With 2 meals: Lunch + Dinner             │
-│  With 3 meals: Breakfast + Lunch +        │
-│                Dinner                     │
-│                                           │
-│  ──── Display Options ────               │
-│                                           │
-│  Show meal slot labels                    │
-│  [🌙 Dinner, ☀️ Lunch titles]            │
-│  [🟢 ON  │  🔴 OFF]                      │
-│                                           │
-│  (When OFF: cards show just meal name     │
-│   without the slot label)                 │
-│                                           │
-│  ──── About ────                          │
-│  Version 1.0.0                            │
-│  Made with ❤️ for Filipino food 🇵🇭       │
-│  Data: 77 Filipino dishes                 │
-│  Framework: React Native + Expo           │
-│                                           │
-└──────────────────────────────────────────┘
-```
-
-### 7.8 Key UX Principles (Final — Implementation Status)
-
-- ✅ **Zero-config**: Open app → see today's meals immediately (auto-generated on first launch).
-- ✅ **One-tap generation**: Generate week with a single prominent orange button.
-- ✅ **Pull to refresh**: Swipe down to regenerate today's meals.
-- ✅ **Label toggle**: Settings + quick toggle to show/hide Breakfast/Lunch/Dinner headers.
-- ✅ **Week info**: Displays current week number + date range (e.g., "Week 25 - Jun 15–21").
-- ✅ **Collapsible days**: Week days start collapsed; tap to expand and see meals.
-- ✅ **Per-day regeneration**: Each day has its own ↻ button to regenerate just that day.
-- ✅ **Confirmation dialogs**: "Generate New Week" and "Regenerate Day" show confirmations before replacing.
-- ✅ **Meal Detail**: Bottom sheet modal with ingredients, steps, optional photo, optional YouTube link.
-- ✅ **Custom meal badge**: User-added meals show "👤 You" badge in purple.
-- ❌ **Haptic feedback**: `Haptics.impactAsync()` on generation actions — `expo-haptics` installed but not yet wired up.
-- ❌ **Dark mode support**: Uses `useColorScheme()` from React Native — not yet implemented.
-- ❌ **Accessibility**: Proper `aria-label` / `accessible` props on all interactive elements — not yet implemented.
 
 ---
 
@@ -720,110 +520,93 @@ App Launch → Check AsyncStorage flag "seed_data_loaded"
 
 | Technology | Purpose | Cost | Notes |
 |------------|---------|------|-------|
-| **React Native** | Cross-platform mobile framework | **Free** | Open-source (MIT License) |
-| **Expo SDK 52+** | Build system, dev tools, QR code testing on iPhone | **Free** | Managed workflow — no native build setup needed |
+| **React 18** | UI framework | **Free** | Open-source (MIT) |
 | **TypeScript** | Type-safe JavaScript | **Free** | Open-source |
-| **expo-sqlite** | Local SQLite database (bundled in app) | **Free** | No external DB, no licence fees |
-| **AsyncStorage** | Key-value storage for preferences | **Free** | Part of Expo / React Native Community |
-| **React Navigation** | Tab navigation + screen routing | **Free** | MIT License |
-| **React Context + useReducer** | State management (no Redux needed for MVP) | **Free** | Built into React |
+| **Vite** | Build tool + dev server | **Free** | Open-source |
+| **Firebase Auth** | Email/password authentication | **Free** | Unlimited email/password on Spark plan |
+| **Firebase Firestore** | Cloud database + real-time sync | **Free** | 1 GB storage, 50K reads/day |
+| **Firebase Hosting** | Web hosting + SSL | **Free** | 10 GB storage, 10 GB/month transfer |
+| **React Router** | Client-side routing | **Free** | MIT License |
+| **React Context** | State management | **Free** | Built into React |
 | **VS Code** | Code editor | **Free** | Windows / Mac / Linux |
 | **Node.js** | JavaScript runtime | **Free** | Open-source |
-| **Expo Go** | Test app on iPhone via QR code | **Free** | Download from App Store |
-| **EAS Build** | Cloud compilation for App Store builds | **Free tier** (30 builds/month) | No Mac needed for iOS builds |
-| **Expo Application Services** | App Store submission | **Free tier** | EAS Submit included |
-| **Apple Developer Program** | App Store distribution | **$99/year** (optional) | Only needed to publish — testing on your iPhone via Expo Go is **free** |
 
 ### 8.2 Cost Comparison
 
 | Scenario | Cost |
 |----------|------|
-| Develop on Windows, test on iPhone (Expo Go) | **$0** |
+| Develop on Windows, test in browser | **$0** |
 | Use all libraries, frameworks, tools | **$0** |
-| Publish to App Store (Apple Developer Program + EAS Free) | **$99/year** |
-| Publish to Google Play Store | **$25 one-time** |
-| Rent a Mac (alternative approach) | $20–30/month ❌ |
-| Paid cloud database (alternative approach) | $10–100/month ❌ |
+| Deploy to Firebase Hosting | **$0** (within free tier) |
+| Scale to 1000 users | **$0–25/month** (still within free tier) |
+| Paid cloud database (alternative) | $10–100/month ❌ |
 
 ### 8.3 Key Questions Answered
 
 | Question | Answer |
 |----------|--------|
-| **Do I need a Mac?** | **No.** Develop on Windows. Expo's cloud builds handle iOS compilation. |
-| **Do I need a paid database?** | **No.** expo-sqlite stores a `.db` file on the device. No server, no cloud, no licence. |
-| **Do I need a paid API?** | **No.** All meal data is bundled in a JSON file. No network calls. |
-| **Do I need to pay to test on iPhone?** | **No.** The Expo Go app on your iPhone loads your app for free via QR code. |
-| **Do I need to pay to publish?** | **Only for App Store** ($99/year). Google Play is $25 one-time. |
+| **Do I need a Mac?** | **No.** Develop on Windows. Deploy to Firebase Hosting. |
+| **Do I need a paid database?** | **No.** Firestore free tier is generous for MVP. |
+| **Do I need to pay to test on iPhone?** | **No.** Access via mobile browser or deploy to Firebase Hosting. |
+| **Do I need to pay to publish?** | **No.** Firebase Hosting is free. Can add custom domain later. |
 
 ---
 
 ## 9. Project Structure
 
 ```
-FoodGen/
-├── app.json                          # Expo configuration
-├── App.tsx                           # Root component: NavigationContainer + TabNavigator
-├── babel.config.js                   # Babel preset (expo)
-├── tsconfig.json                     # TypeScript config
-├── package.json                      # Dependencies
-├── assets/
-│   └── icon.png                      # App icon
+FoodGenWeb/
+├── index.html
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+├── firebase.json
+├── .firebaserc
 │
 ├── src/
-│   ├── navigation/
-│   │   └── TabNavigator.tsx          # Bottom tab: Today | Week
-│   │
-│   ├── screens/
-│   │   ├── TodayScreen.tsx           # Today tab screen
-│   │   ├── WeeklyScreen.tsx          # Week tab screen
-│   │   ├── MealDetailModal.tsx       # Full meal detail modal
-│   │   ├── AddMealScreen.tsx         # Form to add custom meal
-│   │   └── SettingsScreen.tsx        # Settings (meals per day picker, future preferences)
+│   ├── main.tsx                    # App entry point
+│   ├── App.tsx                     # Router + route protection
+│   ├── App.css                     # Global styles
 │   │
 │   ├── components/
-│   │   ├── MealCard.tsx              # Reusable meal card (emoji, name, tags)
-│   │   ├── DayRow.tsx                # Single day row in Weekly view
-│   │   ├── MealsPerDayPicker.tsx     # Segmented picker: 1 🍽️ / 2 🍽️🍽️ / 3 🍽️🍽️🍽️
-│   │   ├── SuggestedSlotCheckboxes.tsx # Multi-select checkboxes for meal slots
-│   │   ├── DietaryTag.tsx            # Pill-shaped dietary tag chip
-│   │   ├── DifficultyBadge.tsx       # Easy / Medium / Hard badge
-│   │   ├── PrepTimeLabel.tsx         # Clock icon + minutes
-│   │   └── EmptyState.tsx            # Placeholder when no plan exists
+│   │   ├── MealCard.tsx            # Reusable meal card
+│   │   ├── MealsPerDayPicker.tsx   # Segmented picker: 1-4 meals
+│   │   ├── EmptyState.tsx          # Placeholder when no plan
+│   │   ├── LoadingSpinner.tsx      # Loading indicator
+│   │   └── MealDetailModal.tsx     # Full meal detail modal
 │   │
-│   ├── database/
-│   │   ├── database.ts               # expo-sqlite connection + init
-│   │   ├── mealRepository.ts         # CRUD: meals (no category filter)
-│   │   └── planRepository.ts         # CRUD: day_plans, saved_week_plans
-│   │
-│   ├── services/
-│   │   ├── mealPlanGenerator.ts      # Core generation algorithm (pulls from all meals)
-│   │   ├── seedDataLoader.ts         # Loads meals.json → SQLite
-│   │   └── preferenceManager.ts      # AsyncStorage wrapper
-│   │
-│   ├── hooks/
-│   │   ├── useTodayPlan.ts           # Hook: today's meals logic
-│   │   ├── useWeeklyPlan.ts          # Hook: weekly plan logic
-│   │   ├── useDatabase.ts            # Hook: database connection
-│   │   └── usePreferences.ts         # Hook: user preferences
+│   ├── pages/
+│   │   ├── OnboardingPage.tsx      # Login / Sign Up / Forgot Password
+│   │   ├── HouseholdDashboard.tsx  # Create/Join household
+│   │   ├── DayPage.tsx             # Day tab
+│   │   ├── WeekPage.tsx            # Week tab
+│   │   ├── HistoryPage.tsx         # History tab
+│   │   ├── AddMealPage.tsx         # Add custom meal
+│   │   ├── SettingsPage.tsx        # Settings
+│   │   └── HouseholdManagementPage.tsx # Manage household
 │   │
 │   ├── context/
-│   │   └── MealPlanContext.tsx        # React Context for global meal state
+│   │   └── MealPlanContext.tsx      # Global state (auth, plans, sync)
+│   │
+│   ├── services/
+│   │   ├── mealPlanGenerator.ts     # Core generation algorithm
+│   │   ├── activityLogger.ts        # Activity log service
+│   │   └── preferenceManager.ts     # User preferences
+│   │
+│   ├── firebase/
+│   │   ├── config.ts                # Firebase initialization
+│   │   ├── auth.ts                  # Auth functions
+│   │   └── firestore.ts             # Firestore CRUD + listeners
 │   │
 │   ├── types/
-│   │   ├── meal.ts                   # TypeScript types: Meal with suggestedFor[]
-│   │   ├── plan.ts                   # TypeScript types: DayPlan with nullable meal slots
-│   │   └── database.ts              # TypeScript types for DB rows
+│   │   └── meal.ts                  # TypeScript interfaces
 │   │
-│   ├── utils/
-│   │   ├── dateHelpers.ts            # Week calculation, date formatting
-│   │   ├── mealHelpers.ts            # Shuffle, dedupe, random pick helpers
-│   │   └── constants.ts             # App-wide constants
-│   │
-│   └── data/
-│       └── meals.json                # Pre-seeded meal data (77 Filipino dishes)
+│   └── utils/
+│       ├── dateHelpers.ts           # Date formatting, week calc
+│       └── constants.ts             # App-wide constants
 │
-├── .gitignore
-└── README.md
+└── public/
+    └── meals.json                   # 77 Filipino dishes (seed data)
 ```
 
 ---
@@ -839,31 +622,32 @@ FoodGen/
 ### 10.2 Phase 3 — Smart Features
 
 - **Shopping List**: Aggregate all ingredients from a weekly plan into a single categorized list.
-- **Manual Swap**: Long-press a meal → see alternatives of the same category → swap.
 - **Calorie Budget**: Set daily calorie target → generator respects budget.
+- **Meal Ratings**: Rate meals after cooking → improve suggestions.
 
-### 10.3 Phase 4 — Cloud & Device Ecosystem
+### 10.4 Phase 4 — PWA & Mobile
 
-- **iCloud / Google Drive Backup**: Export/import saved plans via file sharing.
-- **Widgets**: iOS home screen widget (via Expo Widgets or native module).
-- **Notifications**: Daily reminder to check today's meals.
-- **Share Plans**: Share a meal plan as text/image via iOS share sheet.
+- **PWA Install**: Add to home screen on mobile devices.
+- **Push Notifications**: Daily meal reminders.
+- **Share Plans**: Share a meal plan as text/image via native share sheet.
+- **Capacitor Wrapper**: Package as native iOS/Android app if needed.
 
-### 10.4 Phase 5 — Advanced
+### 10.5 Phase 5 — Advanced
 
-- **Custom Meal Creation**: User can add their own meals to the local database.
 - **Import from URL**: Parse meal data from a shared URL.
-- **AI-Powered Generation**: Use on-device ML (TensorFlow Lite / Core ML) to generate smarter plans.
+- **AI-Powered Generation**: Use on-device ML to generate smarter plans.
+- **Meal Planning Assistant**: Chat-based interface for custom requests.
 
 ---
 
 ## Appendix
 
-### A. Meal JSON Seed Format (Flexible Slot Assignment)
+### A. Meal JSON Seed Format
 
 ```json
 [
   {
+    "id": 1,
     "name": "Tapsilog",
     "suggestedFor": ["breakfast", "lunch"],
     "cuisine": "Filipino",
@@ -874,107 +658,49 @@ FoodGen/
     "ingredients": [
       { "name": "Beef tapa", "quantity": "200g" },
       { "name": "Garlic fried rice", "quantity": "1 cup" },
-      { "name": "Egg", "quantity": "1" },
-      { "name": "Vinegar", "quantity": "2 tbsp" },
-      { "name": "Soy sauce", "quantity": "2 tbsp" }
+      { "name": "Egg", "quantity": "1" }
     ],
     "steps": [
       "Marinate beef tapa in soy sauce, vinegar, and garlic overnight.",
       "Pan-fry the beef tapa until cooked through.",
-      "Make garlic fried rice by sautéing garlic and mixing with day-old rice.",
-      "Fry the egg sunny-side up.",
-      "Serve beef tapa, rice, and egg on a plate with vinegar dipping sauce."
+      "Serve with garlic fried rice and egg."
     ],
     "calories": 550
-  },
-  {
-    "name": "Chicken Adobo",
-    "suggestedFor": ["breakfast", "lunch", "dinner"],
-    "cuisine": "Filipino",
-    "dietaryTags": ["gluten-free"],
-    "prepTimeMinutes": 40,
-    "difficulty": "easy",
-    "emoji": "🍗",
-    "ingredients": [
-      { "name": "Chicken thighs", "quantity": "500g" },
-      { "name": "Soy sauce", "quantity": "1/4 cup" },
-      { "name": "Vinegar", "quantity": "1/4 cup" },
-      { "name": "Garlic cloves", "quantity": "5, crushed" },
-      { "name": "Bay leaves", "quantity": "2" },
-      { "name": "Black pepper", "quantity": "1 tsp" },
-      { "name": "Rice", "quantity": "1 cup, for serving" }
-    ],
-    "steps": [
-      "Combine chicken, soy sauce, vinegar, garlic, bay leaves, and pepper in a pot.",
-      "Marinate for 30 minutes (optional, for deeper flavor).",
-      "Bring to a boil, then simmer for 30-35 minutes until chicken is tender.",
-      "Optional: Pan-fry chicken to brown before serving.",
-      "Serve over steamed rice with the adobo sauce."
-    ],
-    "calories": 480
-  },
-  {
-    "name": "Lumpiang Shanghai",
-    "suggestedFor": ["snack", "lunch"],
-    "cuisine": "Filipino",
-    "dietaryTags": [],
-    "prepTimeMinutes": 30,
-    "difficulty": "medium",
-    "emoji": "🌯",
-    "ingredients": [
-      { "name": "Ground pork", "quantity": "250g" },
-      { "name": "Carrot", "quantity": "1, minced" },
-      { "name": "Onion", "quantity": "1, minced" },
-      { "name": "Garlic cloves", "quantity": "3, minced" },
-      { "name": "Lumpia wrappers", "quantity": "20 sheets" },
-      { "name": "Egg", "quantity": "1, beaten" },
-      { "name": "Oil", "quantity": "for deep frying" }
-    ],
-    "steps": [
-      "Mix ground pork, carrot, onion, and garlic in a bowl.",
-      "Place a spoonful of filling on a lumpia wrapper and roll tightly.",
-      "Seal the edge with beaten egg.",
-      "Deep fry in hot oil until golden brown and crispy.",
-      "Serve with sweet chili sauce or banana ketchup."
-    ],
-    "calories": 320
   }
 ]
 ```
 
 ### B. Generation Algorithm (v1 — Simple Random)
 
-1. Read `mealsPerDay` setting from AsyncStorage (default: 1)
-2. Fetch **all meals** from SQLite (no category filter — every dish is eligible for every slot)
+1. Read `mealsPerDay` setting from Firestore (default: 1)
+2. Fetch **all meals** from Firestore (no category filter — every dish is eligible for every slot)
 3. Determine which meal slots are active based on `mealsPerDay`:
    - 1 meal → dinner only
    - 2 meals → lunch + dinner
    - 3 meals → breakfast + lunch + dinner
+   - 4 meals → breakfast + lunch + dinner + snack
 4. For each day of the week:
    - For each active slot: pick 1 random meal from the pool
    - Ensure no meal is repeated across the week (de-duplicate)
    - If running out of unique meals, allow repeats with lower priority
 5. Return array of `DayPlan` objects (7 items)
+6. Save to Firestore and log activity
 
 ### C. Dependencies (package.json)
 
 ```json
 {
   "dependencies": {
-    "expo": "~52.0.0",
-    "expo-sqlite": "~15.0.0",
-    "@react-native-async-storage/async-storage": "^2.0.0",
-    "@react-navigation/native": "^7.0.0",
-    "@react-navigation/bottom-tabs": "^7.0.0",
-    "expo-haptics": "~14.0.0",
-    "react-native-safe-area-context": "^5.0.0",
-    "react-native-screens": "^4.0.0",
-    "react": "18.3.0",
-    "react-native": "0.76.0"
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "react-router-dom": "^7.0.0",
+    "firebase": "^11.0.0"
   },
   "devDependencies": {
     "typescript": "^5.3.0",
-    "@types/react": "~18.3.0"
+    "vite": "^6.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "@types/react": "^18.3.0"
   }
 }
 ```
@@ -982,20 +708,24 @@ FoodGen/
 ### D. Quick Start Commands
 
 ```bash
-# 1. Create the project
-npx create-expo-app FoodGen --template blank-typescript
+# 1. Clone the repo
+git clone https://github.com/mishari98/food-gen.git
+cd FoodGenWeb
 
 # 2. Install dependencies
-cd FoodGen
-npx expo install expo-sqlite @react-native-async-storage/async-storage
-npx expo install @react-navigation/native @react-navigation/bottom-tabs
-npx expo install react-native-screens react-native-safe-area-context
-npx expo install expo-haptics
+npm install
 
-# 3. Start development server
-npx expo start
+# 3. Configure Firebase
+# Copy .env.example to .env and fill in your Firebase config
 
-# 4. Scan QR code with Expo Go on iPhone
+# 4. Start development server
+npm run dev
+
+# 5. Build for production
+npm run build
+
+# 6. Deploy to Firebase Hosting
+npm run deploy
 ```
 
 ### E. Comprehensive Filipino Food Master List (MVP Seed Data — 77 Dishes)
@@ -1098,4 +828,4 @@ All dishes use the flexible `suggestedFor` model. The **generator can assign any
 
 ---
 
-*Document version 4.0 — June 2026 (Flexible meal slot assignment, 77 Filipino dishes)*
+*Document version 2.0 — June 2026 (Web app with Firebase, real-time sync, household features)*

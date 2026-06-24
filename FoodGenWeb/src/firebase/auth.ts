@@ -87,3 +87,9 @@ export function getCurrentUser(): Promise<User | null> {
 export function onAuthChange(callback: (user: User | null) => void) {
   return onAuthStateChanged(auth, callback);
 }
+
+export async function sendPasswordResetEmail(email: string): Promise<void> {
+  const { sendPasswordResetEmail } = await import('firebase/auth');
+  const { auth } = await import('./config');
+  await sendPasswordResetEmail(auth, email);
+}

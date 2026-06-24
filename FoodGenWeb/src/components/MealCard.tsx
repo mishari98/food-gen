@@ -7,9 +7,11 @@ interface Props {
   label?: string;
   status?: MealStatus;
   showRemove?: boolean;
+  showSuggestSwap?: boolean;
   onRemove?: () => void;
   onStatusClick?: () => void;
   onClick?: () => void;
+  onSuggestSwap?: () => void;
 }
 
 const STATUS_LABELS: Record<MealStatus, string> = {
@@ -26,7 +28,7 @@ const STATUS_COLORS: Record<MealStatus, string> = {
   skipped: '#9E9E9E',
 };
 
-export default function MealCard({ meal, label, status, showRemove, onRemove, onStatusClick, onClick }: Props) {
+export default function MealCard({ meal, label, status, showRemove, showSuggestSwap, onRemove, onStatusClick, onClick, onSuggestSwap }: Props) {
   if (!meal) {
     return (
       <div className="meal-card">
@@ -75,6 +77,18 @@ export default function MealCard({ meal, label, status, showRemove, onRemove, on
             }}
           >
             ✕
+          </button>
+        )}
+        {showSuggestSwap && (
+          <button
+            className="suggest-swap-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSuggestSwap?.();
+            }}
+            title="Suggest a swap"
+          >
+            🔄
           </button>
         )}
       </div>

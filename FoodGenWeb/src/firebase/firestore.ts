@@ -25,6 +25,7 @@ import type {
   UserPreferences,
   ActivityLogEntry,
   InviteCodeRecord,
+  MealSuggestion,
 } from '../types/meal';
 
 // Enable offline persistence
@@ -405,9 +406,14 @@ export async function generateNewInviteCode(householdId: string, generatedBy: st
   return newCode;
 }
 
-export async function getInviteCodeHistory(householdId: string): Promise<InviteCodeRecord[]> {
-  const snap = await getDocs(collection(db, 'households', householdId, 'inviteCodes'));
-  return snap.docs.map(d => ({ codeId: d.id, ...d.data() } as InviteCodeRecord & { codeId: string }));
+export function listenToInviteCodeHistory(householdId: string, callback: (codes: (InviteCodeRecord & { codeId: string })[], activeCode: string | null) => void): () => void {
+  const q = query(collection(db, 'households', householdId, 'inviteCodes'), orderBy('generatedAt', 'desc'));
+  const unsub = onSnapshot(q, (snap) => {
+    const codes = snap.docs.map(d => ({ codeId: d.id, ...d.data() } as InviteCodeRecord & { codeId: string }));
+    const active = codes.find(c => c.isActive)?.code || null;
+    callback(codes, active);
+  });
+  return unsub;
 }
 
 // ── Activity Log ──
@@ -478,6 +484,58 @@ export async function updateUserPreferences(uid: string, prefs: Partial<UserPref
     { ...prefs, updatedAt: new Date().toISOString() },
     { merge: true }
   );
+}
+
+// ── Meal Suggestions ──
+
+export async function createMealSuggestion(
+  householdId: string,
+  suggestion: Omit<MealSuggestion, 'createdAt' | 'updatedAt'>
+): Promise<string> {
+  const ref = doc(collection(db, 'households', householdId, 'suggestions'));
+  const now = new Date().toISOString();
+  await setDoc(ref, {
+    ...suggestion,
+    status: 'pending',
+    createdAt: now,
+    updatedAt: now,
+  });
+  return ref.id;
+}
+
+export async function updateSuggestionStatus(
+  householdId: string,
+  suggestionId: string,
+  status: 'approved' | 'rejected',
+  respondedBy: string
+): Promise<void> {
+  await setDoc(
+    doc(db, 'households', householdId, 'suggestions', suggestionId),
+    {
+      status,
+      respondedBy,
+      respondedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
+}
+
+export function listenToMealSuggestions(
+  householdId: string,
+  callback: (suggestions: (MealSuggestion & { suggestionId: string })[]) => void
+): () => void {
+  const q = query(
+    collection(db, 'households', householdId, 'suggestions'),
+    where('status', '==', 'pending')
+  );
+  const unsub = onSnapshot(q, (snap) => {
+    const suggestions = snap.docs.map(d => ({
+      suggestionId: d.id,
+      ...d.data(),
+    } as MealSuggestion & { suggestionId: string }));
+    callback(suggestions);
+  });
+  return unsub;
 }
 
 // ── Helper Functions ──

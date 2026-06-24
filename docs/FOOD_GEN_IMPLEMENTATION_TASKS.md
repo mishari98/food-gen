@@ -42,13 +42,13 @@
 |------|--------|-------|
 | OnboardingPage | ✅ Completed | Sign-up/login with email/password |
 | HouseholdDashboard | ✅ Completed | Gateway after login, create/join household |
-| **CreateHouseholdPage** | ❌ Not Started | Form: name, address, weekStartDay, etc. |
-| **JoinHouseholdPage** | ❌ Not Started | Form: invite code, role selector |
+| CreateHouseholdPage | ✅ Completed | Integrated into HouseholdDashboard |
+| JoinHouseholdPage | ✅ Completed | Integrated into HouseholdDashboard |
 | DayPage | ✅ Completed | Firestore-only, generate/add/remove meals |
 | WeekPage | ✅ Completed | Weekly plan with collapsible days |
-| **HistoryPage** | ✅ Completed | Rewritten for household-driven architecture |
+| HistoryPage | ✅ Completed | Rewritten for household-driven architecture |
 | SettingsPage | ✅ Completed | Household info, manage link, sign out |
-| HouseholdManagementPage | ✅ Completed | Members, invites, join requests |
+| HouseholdManagementPage | ✅ Completed | Members, invites, join requests, activity log, invite code history |
 | AddMealPage | ✅ Completed | Fixed data format (arrays instead of JSON strings) |
 | MealDetailModal | ✅ Complete | No changes needed |
 
@@ -56,22 +56,22 @@
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| MealCard.tsx | ✅ Complete | Status badges, remove, flex meals |
+| MealCard.tsx | ✅ Complete | Status badges, remove, flex meals, suggest swap |
 | DayRow.tsx | ✅ Complete | Rewritten for flexible meals[] array |
 | EmptyState.tsx | ✅ Complete | Role-based messages |
 | LoadingSpinner.tsx | ✅ Complete | Simple spinner component |
 | DifficultyBadge.tsx | ✅ Complete | No changes needed |
 | MealDetailModal.tsx | ✅ Complete | No changes needed |
-| **MealsPerDayPicker.tsx** | ❌ Not Started | Repurpose as generation prompt |
+| MealsPerDayPicker.tsx | ✅ Complete | Repurposed as generation prompt (1-4 meals) |
 
 ### 1.8 Preferences Manager 🔴 HIGH
-**Status**: ❌ Not Started  
+**Status**: ✅ Completed  
 **Files**: `src/services/preferenceManager.ts`
-- [ ] Remove `getMealsPerDay`, `setMealsPerDay`
-- [ ] Remove `getWeekStartDay`, `setWeekStartDay`
-- [ ] Keep: `getDisplayName`, `setDisplayName`
-- [ ] Keep: `isSeedDataLoaded`, `setSeedDataLoaded`
-- [ ] Update: localStorage wrapper for remaining preferences
+- [x] Remove `getMealsPerDay`, `setMealsPerDay`
+- [x] Remove `getWeekStartDay`, `setWeekStartDay`
+- [x] Keep: `getDisplayName`, `setDisplayName`
+- [x] Keep: `isSeedDataLoaded`, `setSeedDataLoaded`
+- [x] Update: Firestore wrapper for remaining preferences
 
 ### 1.9 Security Rules 🔴 HIGH
 **Status**: ✅ Completed  
@@ -82,21 +82,31 @@
 ## Phase 2: Enhanced Features (Medium Priority)
 
 ### 2.1 Activity Log 🟡 MEDIUM
-- [ ] Create activity logger service
-- [ ] Log: plan created, regenerated, manually edited, status updated
-- [ ] Show Activity Log in Household Management page
+**Status**: ✅ Completed
+- [x] Create activity logger service (`src/services/activityLogger.ts`)
+- [x] Log: plan created, regenerated, manually edited, status updated
+- [x] Show Activity Log in Household Management page
+- [x] Real-time listener for activity feed
 
 ### 2.2 Invite Code History 🟡 MEDIUM
-- [ ] Track old invite codes as inactive
-- [ ] Show code history in Household Management
+**Status**: ✅ Completed
+- [x] Track old invite codes as inactive
+- [x] Show code history in Household Management
+- [x] Real-time listener for invite codes
 
 ### 2.3 Viewer Suggestions 🟢 LOW
-- [ ] Add "Suggest Swap" option to meal cards
-- [ ] Add suggestion approval UI
+**Status**: ✅ Completed
+- [x] Add "Suggest Swap" option to meal cards
+- [x] Add suggestion approval UI
+- [x] Firestore `suggestions` subcollection
+- [x] Real-time listener for pending suggestions
 
 ### 2.4 Email/Password Account Recovery 🟢 LOW
-- [ ] Add "Forgot Password" link
-- [ ] Implement password reset
+**Status**: ✅ Completed
+- [x] Add "Forgot Password?" link
+- [x] Implement password reset modal
+- [x] Use Firebase `sendPasswordResetEmail()`
+- [x] Show success/error feedback
 
 ---
 
@@ -137,6 +147,7 @@
 - [x] Build production bundle (`npm run build`)
 - [x] Test production build locally
 - [x] Deploy to Firebase Hosting
+- [x] Live at: https://foodgen-85dbb.web.app
 
 ### 4.2 Polish
 - [ ] Add error handling
@@ -158,19 +169,43 @@
 
 ## Current Sprint Focus
 
-### � High Priority (Next Steps)
-1. **MealsPerDayPicker** — Repurpose as generation prompt
-2. **Preferences Manager** — Clean up old prefs
-3. **CreateHouseholdPage/JoinHouseholdPage** — Extract from dashboard if needed
+### 🔴 High Priority (Next Steps)
+1. **Testing** — Complete household flow, meal planning, role-based access
+2. **Cross-Device Sync** — Verify real-time sync works across devices
 
 ### 🟡 Medium Priority
-4. **Activity Log** — Track changes
-5. **Testing** — Role-based access, cross-device sync
+3. **Admin Direct Invite** — Send invite email to user
+4. **Join Request Flow** — Accept/reject join requests UI
 
-### 🟢 Low Priority
-6. **Viewer Suggestions** — Suggest swap
-7. **Password Reset** — Forgot password
+### � Low Priority
+5. **PWA Support** — Service worker for offline caching
+6. **Mobile Responsiveness** — Improve CSS for mobile devices
+7. **Error Handling** — Add user-friendly error messages
 
 ---
 
-*Document version 2.2 — June 2026*
+## Completed Features Summary
+
+### ✅ Phase 1: Foundation (Complete)
+- Firebase Auth (email/password)
+- Firestore database with real-time sync
+- Household create/join system
+- Day/Week/History meal planning
+- Custom meals
+- Configurable meals per day (1-4)
+- Meal status tracking
+
+### ✅ Phase 2: Enhanced Features (Complete)
+- Activity logging with real-time feed
+- Invite code history (active/inactive tracking)
+- Viewer suggestions (swap proposals)
+- Email/password recovery
+
+### 🚀 Live App
+**URL**: https://foodgen-85dbb.web.app  
+**Firebase Project**: foodgen-85dbb  
+**Platform**: Web (React + TypeScript + Vite + Firebase)
+
+---
+
+*Document version 2.3 — June 2026 (All Phase 1 & 2 features complete)*

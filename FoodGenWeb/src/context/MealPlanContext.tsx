@@ -31,6 +31,10 @@ import {
   listenToMembers,
   listenToInvites,
   listenToActivityLog,
+  listenToInviteCodeHistory,
+  listenToMealSuggestions,
+  createMealSuggestion,
+  updateSuggestionStatus,
   getUserProfile,
   updateUserProfile,
   generateNewInviteCode,
@@ -59,6 +63,9 @@ interface MealPlanContextType {
   pendingJoinRequests: JoinRequest[];
   pendingInvites: HouseholdInvite[];
   activityLog: ActivityLogEntry[];
+  inviteCodeHistory: any[];
+  activeInviteCode: string | null;
+  mealSuggestions: any[];
   createHousehold: (data: {
     name: string;
     address: Household['address'];
@@ -93,6 +100,9 @@ interface MealPlanContextType {
   setSelectedDate: (date: string) => void;
   setSelectedWeek: (week: number) => void;
   refreshPlans: () => Promise<void>;
+  suggestSwap: (date: string, mealIndex: number, suggestedMealId: number, reason?: string) => Promise<void>;
+  approveSuggestion: (suggestionId: string) => Promise<void>;
+  rejectSuggestion: (suggestionId: string) => Promise<void>;
 }
 
 const MealPlanContext = createContext<MealPlanContextType | undefined>(undefined);
@@ -105,6 +115,9 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
   const [pendingJoinRequests, setPendingJoinRequests] = useState<JoinRequest[]>([]);
   const [pendingInvites, setPendingInvites] = useState<HouseholdInvite[]>([]);
   const [activityLog, setActivityLog] = useState<ActivityLogEntry[]>([]);
+  const [inviteCodeHistory, setInviteCodeHistory] = useState<any[]>([]);
+  const [activeInviteCode, setActiveInviteCode] = useState<string | null>(null);
+  const [mealSuggestions, setMealSuggestions] = useState<any[]>([]);
   const [dayPlan, setDayPlan] = useState<HouseholdDayPlanWithMeals | null>(null);
   const [weekPlans, setWeekPlans] = useState<HouseholdDayPlanWithMeals[]>([]);
   const [allMeals, setAllMeals] = useState<Meal[]>([]);
@@ -230,6 +243,13 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
         const unsubActivityLog = listenToActivityLog(householdId, (logs) => {
           setActivityLog(logs);
         });
+        const unsubInviteCodeHistory = listenToInviteCodeHistory(householdId, (codes, activeCode) => {
+          setInviteCodeHistory(codes);
+          setActiveInviteCode(activeCode);
+        });
+        const unsubMealSuggestions = listenToMealSuggestions(householdId, (suggestions) => {
+          setMealSuggestions(suggestions);
+        });
         if (role === 'admin') {
           const requests = await getJoinRequests(householdId);
           setPendingJoinRequests(requests);
@@ -243,6 +263,8 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
           unsubMembers();
           unsubInvites();
           unsubActivityLog();
+          unsubInviteCodeHistory();
+          unsubMealSuggestions();
         };
       }
     } catch (e) {
@@ -603,6 +625,52 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
     }
   }, [household, user, enrichPlan]);
 
+  const handleSuggestSwap = useCallback(async (date: string, mealIndex: number, suggestedMealId: number, reason?: string) => {
+    if (!household?.id || !user) return;
+    try {
+      setError(null);
+      await createMealSuggestion(household.id, {
+        date,
+        mealIndex,
+        currentMealId: dayPlan?.meals[mealIndex]?.mealId || 0,
+        suggestedMealId,
+        suggestedBy: user.uid,
+        displayName: user.displayName,
+        reason,
+        status: 'pending',
+      });
+      await logActivity({
+        householdId: household.id,
+        action: 'suggestion_applied',
+        details: `Suggested swap for ${date}`,
+        performedBy: user.uid,
+        displayName: user.displayName,
+      });
+    } catch (e: any) {
+      setError(e.message || 'Failed to suggest swap');
+    }
+  }, [household, user, dayPlan]);
+
+  const handleApproveSuggestion = useCallback(async (suggestionId: string) => {
+    if (!household?.id || !user) return;
+    try {
+      setError(null);
+      await updateSuggestionStatus(household.id, suggestionId, 'approved', user.uid);
+    } catch (e: any) {
+      setError(e.message || 'Failed to approve suggestion');
+    }
+  }, [household, user]);
+
+  const handleRejectSuggestion = useCallback(async (suggestionId: string) => {
+    if (!household?.id || !user) return;
+    try {
+      setError(null);
+      await updateSuggestionStatus(household.id, suggestionId, 'rejected', user.uid);
+    } catch (e: any) {
+      setError(e.message || 'Failed to reject suggestion');
+    }
+  }, [household, user]);
+
   const refreshPlans = useCallback(async () => {
     if (!household?.id) return;
     try {
@@ -630,6 +698,9 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
     pendingJoinRequests,
     pendingInvites,
     activityLog,
+    inviteCodeHistory,
+    activeInviteCode,
+    mealSuggestions,
     createHousehold: handleCreateHousehold,
     joinHousehold: handleJoinHousehold,
     acceptInvite: handleAcceptInvite,
@@ -656,6 +727,9 @@ export function MealPlanProvider({ children }: { children: ReactNode }) {
     setSelectedDate,
     setSelectedWeek,
     refreshPlans,
+    suggestSwap: handleSuggestSwap,
+    approveSuggestion: handleApproveSuggestion,
+    rejectSuggestion: handleRejectSuggestion,
   };
 
   return <MealPlanContext.Provider value={value}>{children}</MealPlanContext.Provider>;

@@ -210,6 +210,92 @@ Uses **HashRouter** (`/#/`) for compatibility with static hosting and offline us
 | `dev:host` | `vite --host 0.0.0.0` | Start dev server accessible on network (for iPhone testing) |
 | `build` | `tsc -b && vite build` | Production build to `dist/` |
 | `preview` | `vite preview` | Preview production build locally |
+| `test` | `vitest` | Run tests in watch mode (re-runs on changes) |
+| `test:run` | `vitest run` | Run all tests once (CI-friendly) |
+| `test:coverage` | `vitest run --coverage` | Run tests with coverage report |
+
+---
+
+## 🧪 Testing
+
+FoodGenWeb uses [**Vitest**](https://vitest.dev/) (native Vite testing framework) + [**@testing-library/react**](https://testing-library.com/react) for component testing.
+
+### Test Structure
+
+```
+src/__tests__/
+├── setup.ts                          # Global setup: Firebase mocks, localStorage mock
+├── services/
+│   ├── mealPlanGenerator.test.ts     # 39 tests — core meal planning logic
+│   ├── preferenceManager.test.ts     # 10 tests — localStorage wrapper
+│   └── activityLogger.test.ts        # 3 tests — Firestore logging wrapper
+├── utils/
+│   ├── dateHelpers.test.ts           # 23 tests — date calculations & formatting
+│   └── constants.test.ts             # 15 tests — slot picker & emoji helpers
+├── firebase/
+│   └── firestore.test.ts             # 3 tests — invite code generation
+├── components/
+│   ├── MealCard.test.tsx             # 18 tests — rendering, status, events
+│   ├── MealDetailModal.test.tsx      # 18 tests — visibility, sections, close
+│   ├── DayRow.test.tsx               # 11 tests — expand/collapse, actions
+│   ├── DifficultyBadge.test.tsx      # 5 tests — colors & labels
+│   ├── EmptyState.test.tsx           # 7 tests — icons, buttons, messages
+│   ├── LoadingSpinner.test.tsx       # 5 tests — size, color, text
+│   └── MealsPerDayPicker.test.tsx    # 6 tests — selection, max prop
+└── pages/
+    ├── OnboardingPage.test.tsx       # 6 tests — form validation, modals
+    └── SettingsPage.test.tsx         # 5 tests — sections, sign out
+```
+
+**Total: 174 tests across 15 files** — all passing.
+
+### How to Run
+
+```bash
+# Run once (fastest — good for CI)
+npm run test:run
+
+# Run in watch mode (auto-re-runs on file changes)
+npm test
+
+# With coverage report
+npm run test:coverage
+```
+
+### Test Categories
+
+| Category | Tests | What's Covered |
+|----------|-------|----------------|
+| **Unit Tests** | 93 | Pure functions: meal generation, date helpers, localStorage, activity logger |
+| **Component Tests** | 70 | All 7 components: rendering, states, user interactions, edge cases |
+| **Page Tests** | 11 | Onboarding form validation, settings display |
+
+### Mocking Strategy
+
+- **Firebase:** The setup file (`src/__tests__/setup.ts`) mocks `firebase/auth` and `firebase/firestore` entirely — no real Firebase connection needed
+- **localStorage:** A mock implementation replaces the real browser API
+- **window.confirm:** Mocked to auto-confirm dialogs
+- **React Context:** Page tests wrap components in the real `MealPlanProvider` with mocked Firebase beneath
+
+### Writing New Tests
+
+To add a new test file, place it in `src/__tests__/` following the same directory structure as `src/`. For example:
+
+```ts
+// src/__tests__/components/MyComponent.test.tsx
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import MyComponent from '../../components/MyComponent';
+
+describe('MyComponent', () => {
+  it('renders correctly', () => {
+    render(<MyComponent />);
+    expect(screen.getByText('Hello')).toBeInTheDocument();
+  });
+});
+```
+
+> **Note:** TypeScript may show IDE errors for `erasableSyntaxOnly` in the setup file — these are harmless and don't affect test execution.
 
 ---
 
