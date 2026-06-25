@@ -10,11 +10,12 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "test:run": "vitest run",
+    "test:run": "vitest run --reporter=verbose",
     "test:coverage": "vitest run --coverage",
-    "prebuild": "vitest run",
-    "deploy": "vitest run && npm run build",
-    "deploy:firebase": "vitest run && npm run build && firebase deploy --only hosting"
+    "prebuild": "vitest run --reporter=verbose",
+    "deploy": "vitest run --reporter=verbose && npm run build",
+    "deploy:firebase": "vitest run --reporter=verbose && npm run build && firebase deploy --only hosting",
+    "test:report": "vitest run --reporter=verbose --reporter=html"
   },
   "dependencies": {
     "dexie": "^4.4.4",
@@ -32,6 +33,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
+    "@vitest/ui": "^4.1.9",
     "eslint": "^10.3.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
