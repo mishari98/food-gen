@@ -14,20 +14,25 @@ describe('activityLogger', () => {
   it('calls createActivityLog with formatted data', async () => {
     const { createActivityLog } = await import('../../firebase/firestore');
 
+    // The service stamps the log with the current UTC date, so the expected
+    // value must be derived at runtime rather than hard-coded (which would
+    // only match the day the test was written).
+    const today = new Date().toISOString().split('T')[0];
+
     await logActivity({
       householdId: 'household1',
       action: 'created',
-      details: 'Generated 3 meals for 2026-06-24',
+      details: `Generated 3 meals for ${today}`,
       performedBy: 'user1',
       displayName: 'Juan',
     });
 
     expect(createActivityLog).toHaveBeenCalledWith('household1', {
-      date: '2026-06-24',
+      date: today,
       action: 'created',
       performedBy: 'user1',
       displayName: 'Juan',
-      details: 'Generated 3 meals for 2026-06-24',
+      details: `Generated 3 meals for ${today}`,
     });
   });
 

@@ -12,6 +12,14 @@ dist
 dist-ssr
 *.local
 
+# Local environment overrides (use .env.example as a committed template)
+.env
+
+# Playwright E2E test reports
+test-results/
+playwright-report/
+e2e/reports/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
