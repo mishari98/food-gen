@@ -64,8 +64,9 @@ export class HistoryPage {
     return this.page.locator('button.small-btn').filter({ hasText: /Regenerate/ });
   }
 
-  async goto() {
-    await this.page.goto(ROUTES.history);
+    async goto() {
+    // In-place hash navigation — a full reload races Firebase auth restore
+    await this.page.evaluate(() => { window.location.hash = '#/history'; });
   }
 
   async clickPrevWeek() {

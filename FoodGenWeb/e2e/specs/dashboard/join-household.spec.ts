@@ -1,12 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { OnboardingPage } from '../../pages/OnboardingPage';
 import { DashboardPage } from '../../pages/DashboardPage';
-import { TEST_USERS } from '../../fixtures/test-data';
+import { removeEmulatorBanner } from '../../fixtures/emulator';
 
 test.describe('Join Household Flow (TC-DASH-007 to TC-DASH-010)', () => {
   let dashboard: DashboardPage;
 
   test.beforeEach(async ({ page }) => {
+    await removeEmulatorBanner(page);
+
     const onboarding = new OnboardingPage(page);
     await onboarding.goto();
     await onboarding.clickSignUpTab();

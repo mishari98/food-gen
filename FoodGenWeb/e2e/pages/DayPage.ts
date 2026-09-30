@@ -116,8 +116,9 @@ export class DayPage {
     return this.page.locator('p.date-text');
   }
 
-  async goto() {
-    await this.page.goto(ROUTES.day);
+    async goto() {
+    // In-place hash navigation — a full reload races Firebase auth restore
+    await this.page.evaluate(() => { window.location.hash = '#/day'; });
   }
 
   async navigateToDate(dateString: string) {
@@ -154,11 +155,12 @@ export class DayPage {
   }
 
   async clickWeekTab() {
-    await this.page.goto(ROUTES.week);
+    // In-place hash navigation — avoids the full-reload auth-restore race
+    await this.page.evaluate(() => { window.location.hash = '#/week'; });
   }
 
   async clickHistoryTab() {
-    await this.page.goto(ROUTES.history);
+    await this.page.evaluate(() => { window.location.hash = '#/history'; });
   }
 
   async expectOnPage() {
@@ -169,8 +171,8 @@ export class DayPage {
     await expect(this.emptyState).toBeVisible({ timeout: 10000 });
   }
 
-  async expectMealsVisible() {
-    await expect(this.mealCards.first()).toBeVisible({ timeout: 15000 });
+    async expectMealsVisible() {
+    await expect(this.mealCardElements.first()).toBeVisible({ timeout: 15000 });
   }
 
   async expectLoadingState() {

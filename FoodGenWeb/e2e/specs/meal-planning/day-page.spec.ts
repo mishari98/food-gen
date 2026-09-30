@@ -2,11 +2,15 @@ import { test, expect } from '@playwright/test';
 import { OnboardingPage } from '../../pages/OnboardingPage';
 import { DashboardPage } from '../../pages/DashboardPage';
 import { DayPage } from '../../pages/DayPage';
+import { removeEmulatorBanner, navigateInApp } from '../../fixtures/emulator';
+import { ROUTES } from '../../fixtures/test-data';
 
 test.describe('Day Page — Meal Planning (TC-DAY-001 to TC-DAY-038)', () => {
   let dayPage: DayPage;
 
   test.beforeEach(async ({ page }) => {
+    await removeEmulatorBanner(page);
+
     const onboarding = new OnboardingPage(page);
     await onboarding.goto();
     await onboarding.clickSignUpTab();
@@ -23,7 +27,8 @@ test.describe('Day Page — Meal Planning (TC-DAY-001 to TC-DAY-038)', () => {
     await dashboard.expectWithHouseholdState();
 
     dayPage = new DayPage(page);
-    await dayPage.goto();
+    await navigateInApp(page, ROUTES.day);
+    await dayPage.expectOnPage();
   });
 
   test('TC-DAY-001: Page loads with header', async () => {

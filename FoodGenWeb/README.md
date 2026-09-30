@@ -225,6 +225,7 @@ FoodGenWeb uses [**Vitest**](https://vitest.dev/) (native Vite testing framework
 ```
 src/__tests__/
 ├── setup.ts                          # Global setup: Firebase mocks, localStorage mock
+├── App.test.tsx                      # 3 tests — routing & auth gate
 ├── services/
 │   ├── mealPlanGenerator.test.ts     # 39 tests — core meal planning logic
 │   ├── preferenceManager.test.ts     # 10 tests — localStorage wrapper
@@ -234,6 +235,8 @@ src/__tests__/
 │   └── constants.test.ts             # 15 tests — slot picker & emoji helpers
 ├── firebase/
 │   └── firestore.test.ts             # 3 tests — invite code generation
+├── context/
+│   └── MealPlanContext.test.tsx      # 13 tests — plan state & actions
 ├── components/
 │   ├── MealCard.test.tsx             # 18 tests — rendering, status, events
 │   ├── MealDetailModal.test.tsx      # 18 tests — visibility, sections, close
@@ -243,11 +246,20 @@ src/__tests__/
 │   ├── LoadingSpinner.test.tsx       # 5 tests — size, color, text
 │   └── MealsPerDayPicker.test.tsx    # 6 tests — selection, max prop
 └── pages/
+    ├── AddMealPage.test.tsx          # 11 tests — form fields, validation
+    ├── DayPage.test.tsx              # 8 tests — meal list, generation
+    ├── HistoryPage.test.tsx          # 4 tests — week history
+    ├── HouseholdManagementPage.test.tsx # 4 tests — members & invite form
     ├── OnboardingPage.test.tsx       # 6 tests — form validation, modals
-    └── SettingsPage.test.tsx         # 5 tests — sections, sign out
+    ├── SettingsPage.test.tsx         # 5 tests — sections, sign out
+    └── WeekPage.test.tsx             # 5 tests — week grid, navigation
 ```
 
-**Total: 174 tests across 15 files** — all passing.
+**Total: 222 tests across 22 files** — all passing (`npx vitest run`).
+
+> Vitest is scoped to `src/**` in `vite.config.ts` (`test.include`/`exclude`), so the
+> Playwright specs under `e2e/` are never collected by the unit runner. End-to-end
+> coverage lives separately in `e2e/` — see [E2E testing docs](../docs/FOOD_GEN_E2E_TESTING.md).
 
 ### How to Run
 

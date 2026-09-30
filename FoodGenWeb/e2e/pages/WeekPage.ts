@@ -76,8 +76,9 @@ export class WeekPage {
     return this.page.locator('button.small-btn').filter({ hasText: /Jump to This Week/i });
   }
 
-  async goto() {
-    await this.page.goto(ROUTES.week);
+    async goto() {
+    // In-place hash navigation — a full reload races Firebase auth restore
+    await this.page.evaluate(() => { window.location.hash = '#/week'; });
   }
 
   async clickPrevWeek() {

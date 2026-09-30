@@ -75,6 +75,10 @@ test.describe('Household Management Page (TC-MGMT-001 to TC-MGMT-014)', () => {
   });
 
   test('TC-MGMT-007: Member count matches', async () => {
+    // Members load asynchronously from Firestore. locator.count() does NOT
+    // auto-wait, so without an explicit wait it can read the list before the
+    // admin row renders and return 0. Block for the first row first.
+    await management.expectMembersVisible();
     const memberCount = await management.memberRows.count();
     // At minimum the creating admin is listed
     expect(memberCount).toBeGreaterThanOrEqual(1);

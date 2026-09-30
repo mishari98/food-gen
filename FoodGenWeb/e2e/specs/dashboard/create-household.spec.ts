@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { OnboardingPage } from '../../pages/OnboardingPage';
 import { DashboardPage } from '../../pages/DashboardPage';
+import { removeEmulatorBanner } from '../../fixtures/emulator';
 
 const TEST_HOUSEHOLD = { name: 'E2E Test Family' };
 
@@ -8,6 +9,8 @@ test.describe('Create Household Flow (TC-DASH-001 to TC-DASH-006)', () => {
   let dashboard: DashboardPage;
 
   test.beforeEach(async ({ page }) => {
+    await removeEmulatorBanner(page);
+
     const onboarding = new OnboardingPage(page);
     await onboarding.goto();
     await onboarding.clickSignUpTab();

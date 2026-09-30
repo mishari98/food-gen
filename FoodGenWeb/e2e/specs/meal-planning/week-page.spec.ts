@@ -2,11 +2,15 @@ import { test, expect } from '@playwright/test';
 import { OnboardingPage } from '../../pages/OnboardingPage';
 import { DashboardPage } from '../../pages/DashboardPage';
 import { WeekPage } from '../../pages/WeekPage';
+import { removeEmulatorBanner, navigateInApp } from '../../fixtures/emulator';
+import { ROUTES } from '../../fixtures/test-data';
 
 test.describe('Week Page (TC-WEEK-001 to TC-WEEK-022)', () => {
   let weekPage: WeekPage;
 
   test.beforeEach(async ({ page }) => {
+    await removeEmulatorBanner(page);
+
     const onboarding = new OnboardingPage(page);
     await onboarding.goto();
     await onboarding.clickSignUpTab();
@@ -23,7 +27,8 @@ test.describe('Week Page (TC-WEEK-001 to TC-WEEK-022)', () => {
     await dashboard.expectWithHouseholdState();
 
     weekPage = new WeekPage(page);
-    await weekPage.goto();
+    await navigateInApp(page, ROUTES.week);
+    await weekPage.expectOnPage();
   });
 
   test('TC-WEEK-001: Page loads with header showing "Week"', async () => {
@@ -95,7 +100,7 @@ test.describe('Week Page (TC-WEEK-001 to TC-WEEK-022)', () => {
   });
 
   test('Navigate to day page and back', async ({ page }) => {
-    await page.goto('/day');
+    await page.evaluate(() => { window.location.hash = '#/day'; });
     await expect(page).toHaveURL(/\/day/);
     await weekPage.goto();
     await weekPage.expectOnPage();

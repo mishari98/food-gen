@@ -3,12 +3,16 @@ import { OnboardingPage } from '../../pages/OnboardingPage';
 import { DashboardPage } from '../../pages/DashboardPage';
 import { DayPage } from '../../pages/DayPage';
 import { HistoryPage } from '../../pages/HistoryPage';
+import { removeEmulatorBanner, navigateInApp } from '../../fixtures/emulator';
+import { ROUTES } from '../../fixtures/test-data';
 
 test.describe('History Page (TC-HIST-001 to TC-HIST-018)', () => {
   let historyPage: HistoryPage;
   let dayPage: DayPage;
 
   test.beforeEach(async ({ page }) => {
+    await removeEmulatorBanner(page);
+
     const onboarding = new OnboardingPage(page);
     await onboarding.goto();
     await onboarding.clickSignUpTab();
@@ -26,7 +30,8 @@ test.describe('History Page (TC-HIST-001 to TC-HIST-018)', () => {
 
     historyPage = new HistoryPage(page);
     dayPage = new DayPage(page);
-    await historyPage.goto();
+    await navigateInApp(page, ROUTES.history);
+    await historyPage.expectOnPage();
   });
 
   test('TC-HIST-001: Page loads with header showing "Plan History"', async () => {

@@ -2,7 +2,7 @@
 
 > **Framework:** Playwright
 > **Location:** `FoodGenWeb/e2e/`
-> **Status:** Frame done; Auth/Dashboard/Day/Week/History written; Add Meal, Settings, Household Management written & validated (Firebase emulator). **485 tests, 11 spec files, 5 browser projects.**
+> **Status:** Suite is **green** — 97 E2E tests across 11 spec files (94 passed / 0 failed / 3 intentionally skipped) on Chromium against the local Firebase emulator; 485 tests collect across all 5 browser projects. Unit suite: **222 passing**. See [Current Coverage](#current-coverage).
 > **Note:** Tests require Firebase connectivity to execute fully. See [Prerequisites](#prerequisites) below.
 
 ---
@@ -221,25 +221,25 @@ test('TC-AUTH-001: Sign up with valid data', async ({ page }) => {
 
 Tests are organized by feature and mapped to the [Manual UI Testing Checklist](FOOD_GEN_MANUAL_UI_TESTING.md). Each test case is labeled with its TC-XXX-XXX identifier.
 
-### Current Specs (485 tests)
+### Current Specs (97 per browser project; 485 collected across 5)
 
 | Spec File | Test Cases | Status | Execution |
 |-----------|-----------|--------|-----------|
-| `auth/signup.spec.ts` | TC-AUTH-001 to 006 | ✅ Written | 🔥 Requires Firebase |
-| `auth/login.spec.ts` | TC-AUTH-007 to 010 | ✅ Written | 🔥 Requires Firebase |
-| `auth/forgot-password.spec.ts` | TC-AUTH-011 to 015 | ✅ Written | ✅ UI toggle passes, modal requires Firebase |
-| `dashboard/create-household.spec.ts` | TC-DASH-001 to 006 | ✅ Written | 🔥 Requires Firebase |
-| `dashboard/join-household.spec.ts` | TC-DASH-007 to 010, 019 | ✅ Written | 🔥 Requires Firebase |
-| `meal-planning/day-page.spec.ts` | TC-DAY-001 to 038 | ✅ Written | 🚧 Flaky — needs robust-nav fix (see troubleshooting) |
-| `meal-planning/week-page.spec.ts` | TC-WEEK-001 to 022 | ✅ Written | 🚧 Flaky — needs robust-nav fix (see troubleshooting) |
-| `meal-planning/history-page.spec.ts` | TC-HIST-001 to 018 | ✅ Written | 🚧 Flaky — needs robust-nav fix (see troubleshooting) |
+| `auth/signup.spec.ts` | TC-AUTH-001 to 006 | ✅ Validated (5 pass, 1 skip) | 🔥 Requires Firebase |
+| `auth/login.spec.ts` | TC-AUTH-007 to 010 | ✅ Validated (3 pass, 1 skip) | 🔥 Requires Firebase |
+| `auth/forgot-password.spec.ts` | TC-AUTH-011 to 015 | ✅ Validated (3 pass, 1 skip) | 🔥 Requires Firebase |
+| `dashboard/create-household.spec.ts` | TC-DASH-001 to 006 | ✅ Validated (5/5) | 🔥 Requires Firebase |
+| `dashboard/join-household.spec.ts` | TC-DASH-007 to 010, 019 | ✅ Validated (3/3) | 🔥 Requires Firebase |
+| `meal-planning/day-page.spec.ts` | TC-DAY-001 to 038 | ✅ Validated (11/11) | 🔥 Requires Firebase |
+| `meal-planning/week-page.spec.ts` | TC-WEEK-001 to 022 | ✅ Validated (12/12) | 🔥 Requires Firebase |
+| `meal-planning/history-page.spec.ts` | TC-HIST-001 to 018 | ✅ Validated (11/11) | 🔥 Requires Firebase |
 | `add-meal.spec.ts` | TC-ADD-001 to 030 | ✅ Validated (24/24) | ✅ Chromium vs Firebase emulator |
 | `settings.spec.ts` | TC-SET-001 to 011 | ✅ Validated (7/7) | ✅ Chromium vs Firebase emulator |
 | `household-management.spec.ts` | TC-MGMT-001 to 014 | ✅ Validated (10/10) | ✅ Chromium vs Firebase emulator |
-| **Total** | | **97 tests × 5 browsers = 485** | |
+| **Total** | **159 documented TC IDs** | **97 automated → 94 pass / 3 intentional skips** | **485 collected = 97 × 5 browsers** |
 
 > 🔥 = Requires Firebase to be connected (see [Prerequisites](#prerequisites))
-> 🚧 = Written but intermittently failing on a live run; see [Troubleshooting](#troubleshooting-key-gotchas) for the fix pattern.
+> ℹ️ The 3 skips are static `test.skip()` markers in the auth specs (`TC-AUTH-006`, `TC-AUTH-007`, `TC-AUTH-011`): each needs a pre-existing Firebase Auth user (or outbound reset email) that the current fixtures do not seed.
 
 ### Test Naming Convention
 
@@ -276,17 +276,17 @@ TC-DASH-004: Create household redirects
 - [x] Create meal planning test specs (day page)
 - [x] Add npm scripts to `package.json`
 - [x] Update `.gitignore`
-- [x] Verify config with `--list` (170 tests discovered)
+- [x] Verify config with `--list` (485 tests discovered = 97 per browser project × 5)
 - [x] Generate documentation
 
-### Phase 2 — Week & History Pages 🚧 (Code written; passing but flaky on live run)
+### Phase 2 — Week & History Pages ✅ (Validated — Chromium vs Firebase emulator)
 
 - [x] Week page: empty state, generate week, expand/collapse
 - [x] Week page: navigate weeks, regenerate day
 - [x] History page: no household state, no plans state
 - [x] History page: history cards, week navigation, year boundaries
 - [x] History page: view day, regenerate from history
-- [ ] **Apply the robust-nav + banner-removal fix** (see [Troubleshooting](#troubleshooting-key-gotchas)) to eliminate intermittent failures
+- [x] **Robust-nav + banner-removal fix applied** — shared helpers live in `e2e/fixtures/emulator.ts` (`navigateInApp()` / `removeEmulatorBanner()`); all three meal-planning specs now pass deterministically
 
 ### Phase 3 — Add Meal & Settings ✅ (Validated — Chromium vs Firebase emulator)
 
@@ -349,7 +349,7 @@ TC-DASH-004: Create household redirects
 
 ## Troubleshooting: Key Gotchas
 
-The app uses **React Router `HashRouter`** and connects to the **Firebase emulator**, which together cause two recurring E2E failures. The fixes below (already applied to `add-meal`, `settings`, and `household-management`) are the standard pattern.
+The app uses **React Router `HashRouter`** and connects to the **Firebase emulator**, which together cause recurring E2E failures. The fixes below are the standard pattern and are already applied across the whole suite — gotchas 1–3 live in the shared helpers in `e2e/fixtures/emulator.ts`; gotchas 4–7 are infrastructure traps that will bite anyone who touches the config.
 
 ### 1. Full-page `page.goto()` after auth races and bounces to `/dashboard`
 
@@ -409,6 +409,51 @@ await page.getByPlaceholder('30').fill('45');                 // prepTime
 await page.getByRole('button', { name: /Add Ingredient/ }).click();
 await expect(page.locator('label.checkbox-label').filter({ hasText: /Breakfast/ })).toBeVisible();
 ```
+
+### 4. `webServer` starts Vite in `e2e/` — every route 404s
+
+Playwright launches `webServer.command` with **cwd = the directory containing the config file**, which here is `e2e/`. Vite then serves that folder, which has no `index.html`, so `http://localhost:5173` returns 404 and *every* spec fails at `beforeEach` - not with an assertion error but with a blank page.
+
+**Fix — pin the server to the project root:**
+
+```ts
+// e2e/playwright.config.ts
+import path from 'path';
+
+webServer: process.env.CI ? undefined : {
+  command: 'npx vite --port 5173',
+  cwd: path.resolve(__dirname, '..'), // root, where index.html lives
+  url: 'http://localhost:5173',
+  reuseExistingServer: !process.env.CI,
+}
+```
+
+### 5. `locator.count()` does not auto-wait
+
+`expect(...).toBeVisible()` retries, but `locator.count()` and `.all()` resolve **immediately**. Asserting `count()` right after navigation samples the DOM before Firestore has streamed the members back, so the count reads `0` and the test fails while the app is fine.
+
+**Fix — wait for the data first, then count:**
+
+```ts
+await management.expectMembersVisible(); // explicit wait for async render
+expect(await management.memberItems.count()).toBeGreaterThanOrEqual(1);
+```
+
+### 6. Vitest collects the Playwright specs (`test.describe is not a function`)
+
+Playwright specs are named `*.spec.ts`, which is inside Vitest default include globs. Running `npm run test:run` then executes Playwright specs in Vitest and explodes. Vitest is therefore scoped to `src/**` via `test.include` / `test.exclude` in `vite.config.ts`. Keep that exclude if you ever rename or move specs.
+
+### 7. Emulators are neither started nor waited on by Playwright
+
+`webServer` only manages Vite. The Auth (9099) and Firestore (8080) emulators must already be running: `e2e/global-setup.ts` connects to them to seed `referenceMeals` from `src/data/meals.json`, and when that fails it merely logs `Reference-meal seeding failed` and carries on. A cold start therefore surfaces as generate-flow tests that silently produce no meals, not as a clear startup error.
+
+**Fix — start the emulators first and wait for them:**
+
+```bash
+npx firebase emulators:start   # wait for "All emulators ready!" before running the suite
+```
+
+> Known gap: global setup does not poll the emulator ports, so it cannot wait for them. A readiness poll (or a `webServer` entry per emulator port) would remove the cold-start flakiness that `retries` currently absorbs.
 
 ---
 
